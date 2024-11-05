@@ -2,6 +2,8 @@
 
 ## Version X.X.X
 
+- Fix unlisted case in Collatz
+
 ## Version 0.1.0
 
 - Add integer and char arrays
