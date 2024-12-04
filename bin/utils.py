@@ -326,7 +326,8 @@ class Suite:
     def cases(self):
         with open(self.stats_folder() / "cases.txt", "r") as f:
             for r in f.readlines():
-                yield Case.from_spec(r[:-1])
+                r = r.strip()
+                yield Case.from_spec(r)
 
     def check(self):
         self.logger.info("Checking cases")
