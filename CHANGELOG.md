@@ -3,6 +3,7 @@
 ## Version X.X.X
 
 - Fix unlisted case in Collatz
+- Fix unlisted case in Calls.callsAssertFib
 
 ## Version 0.1.0
 

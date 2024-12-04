@@ -39,18 +39,20 @@ public class Calls {
   public static void callsAssertIf(boolean b) {
     assertIf(b);
   }
-
-  public static int fib(int i) {
-    if (i == 0 || i == 1)
-      return i;
-    return fib(i - 1) + fib(i - 2);
-  }
-
+  
   @Case("() -> ok")
   @Tag({ CALL })
   public static void callsAssertIfWithTrue() {
     assertIf(true);
   }
+
+  public static int fib(int i) {
+    assert i > 0;
+    if (i == 0 || i == 1)
+      return i;
+    return fib(i - 1) + fib(i - 2);
+  }
+
 
   @Case("(8) -> ok")
   @Case("(0) -> assertion error")
