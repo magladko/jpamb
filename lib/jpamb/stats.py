@@ -1,15 +1,13 @@
-#!/usr/bin/env python3
-
-from json import JSONDecodeError, encoder
 import click
 from datetime import datetime
-from collections import defaultdict
-import utils
 import math
 import numpy as np
-import sys
-import pandas as pd
 from pathlib import Path
+import json
+import pandas as pd
+
+from . import utils
+from . import suite
 
 
 def get_maxpoints():
@@ -50,6 +48,7 @@ def get_kind(technologies):
 
 
 def analyse(experiment, logger):
+
     tools = []
     all_results = []
     version = (datetime.fromtimestamp(experiment["timestamp"] / 1000),)
@@ -115,9 +114,7 @@ def stats(files, report, verbose):
     a collection of experiments.
     """
 
-    import json
-
-    logger = utils.setup_logger(verbose)
+    logger = suite.setup_logger(verbose)
 
     results = []
     tools = []
@@ -238,7 +235,3 @@ def stats(files, report, verbose):
     print(
         tools_df.set_index(["group", "tool", "version"])[["kind", "score", "relative"]]
     )
-
-
-if __name__ == "__main__":
-    stats()

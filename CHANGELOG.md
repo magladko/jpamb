@@ -2,6 +2,7 @@
 
 ## Version X.X.X
 
+- Move python packages to lib
 - Fix unlisted case in Collatz
 - Fix unlisted case in Calls.callsAssertFib
 

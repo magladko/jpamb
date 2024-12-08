@@ -1,102 +1,19 @@
-import collections
 from dataclasses import dataclass
-from io import StringIO
 from pathlib import Path
-from typing import TextIO, TypeVar
-import re
+import loguru
+from io import StringIO
 import subprocess
 import sys
-import csv
 import json
+import re
+import csv
+import collections
 
-from jpamb_utils import InputParser, JvmType, JvmValue, MethodId
+from typing import TypeVar, TextIO
 
-import loguru
+from .utils import MethodId, JvmType, InputParser
 
 W = TypeVar("W", bound=TextIO)
-
-QUERIES = [
-    "*",
-    "assertion error",
-    "divide by zero",
-    "null pointer",
-    "ok",
-    "out of bounds",
-]
-
-
-def re_parser(ctx_, parms_, expr):
-    import re
-
-    if expr:
-        return re.compile(expr)
-
-
-def build_c(input_file, logger):
-    """Build a C file (hopefully platform independent)"""
-    from os import environ
-    import platform
-    import shutil
-
-    compiler = shutil.which(environ.get("CC", "gcc"))
-
-    if not compiler:
-        logger.error("Could not find $CC or gcc compiler on PATH")
-        raise Exception("Could not find $CC or gcc compiler on PATH")
-
-    output_file = input_file.with_suffix("")
-
-    if platform.system() == "Windows":
-        output_file = output_file.with_suffix(".exe")
-    subprocess.check_call([compiler, "-o", output_file, input_file, "-lm"])
-
-    return output_file
-
-
-def setup_logger(verbose):
-    LEVELS = ["SUCCESS", "INFO", "DEBUG", "TRACE"]
-    from loguru import logger
-
-    lvl = LEVELS[verbose]
-
-    if lvl == "TRACE":
-        logger.remove()
-        logger.add(
-            sys.stderr,
-            format="<green>{elapsed}</green> | <level>{level: <8}</level> | <red>{extra[process]:<8}</red> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
-            level=LEVELS[verbose],
-        )
-    else:
-        logger.remove()
-        logger.add(
-            sys.stderr,
-            format="<red>{extra[process]:<8}</red>: <level>{message}</level>",
-            level=LEVELS[verbose],
-        )
-
-    return logger.bind(process="main")
-
-
-@dataclass(frozen=True, order=True)
-class Input:
-    val: tuple[JvmType, ...]
-
-    @staticmethod
-    def parse(string: str) -> "Input":
-        parsed_args = InputParser(string).parse_inputs()
-        input = Input(tuple(parsed_args))
-        assert string == str(input), f"{input} should formatted as {string}"
-        return input
-
-    def __str__(self) -> str:
-        return self.print(StringIO()).getvalue()
-
-    def print(self, file: W = sys.stdout) -> W:
-        open, close = "()"
-        file.write(open)
-        file.write(", ".join(map(str, self.val)))
-        file.write(close)
-        return file
 
 
 def summary64(cmd):
@@ -193,6 +110,28 @@ def runtime(*args, enable_assertions=False, **kwargs):
 
 
 @dataclass(frozen=True, order=True)
+class Input:
+    val: tuple[JvmType, ...]
+
+    @staticmethod
+    def parse(string: str) -> "Input":
+        parsed_args = InputParser(string).parse_inputs()
+        input = Input(tuple(parsed_args))
+        assert string == str(input), f"{input} should formatted as {string}"
+        return input
+
+    def __str__(self) -> str:
+        return self.print(StringIO()).getvalue()
+
+    def print(self, file: W = sys.stdout) -> W:
+        open, close = "()"
+        file.write(open)
+        file.write(", ".join(map(str, self.val)))
+        file.write(close)
+        return file
+
+
+@dataclass(frozen=True, order=True)
 class Case:
     methodid: MethodId
     input: Input
@@ -264,11 +203,45 @@ class Prediction:
         return f"{self.to_probability():0.2%}"
 
 
+def setup_logger(verbose):
+    LEVELS = ["SUCCESS", "INFO", "DEBUG", "TRACE"]
+    from loguru import logger
+
+    lvl = LEVELS[verbose]
+
+    if lvl == "TRACE":
+        logger.remove()
+        logger.add(
+            sys.stderr,
+            format="<green>{elapsed}</green> | <level>{level: <8}</level> | <red>{extra[process]:<8}</red> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
+            level=LEVELS[verbose],
+        )
+    else:
+        logger.remove()
+        logger.add(
+            sys.stderr,
+            format="<red>{extra[process]:<8}</red>: <level>{message}</level>",
+            level=LEVELS[verbose],
+        )
+
+    return logger.bind(process="main")
+
+
+QUERIES = (
+    "*",
+    "assertion error",
+    "divide by zero",
+    "null pointer",
+    "ok",
+    "out of bounds",
+)
+
+
 @dataclass(frozen=True)
 class Suite:
     workfolder: Path
-    queries: list[str]
-    logger: loguru._logger.Logger
+    logger: loguru._logger.Logger  # type: ignore
+    queries: tuple[str, ...] = QUERIES
 
     @property
     def classfiles(self) -> Path:
@@ -322,6 +295,12 @@ class Suite:
             w.writerow(["-"] + [f"{sums[t] / total:0.4%}" for t in self.queries])
 
         self.logger.info("Done")
+
+    def version(self):
+        with open(self.workfolder / "CITATION.cff") as f:
+            import yaml
+
+            return yaml.safe_load(f)["version"]
 
     def cases(self):
         with open(self.stats_folder() / "cases.txt", "r") as f:

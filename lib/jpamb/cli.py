@@ -1,24 +1,156 @@
-#!/usr/bin/env python3
-""" The jpamb evaluator
-"""
-
-from collections import defaultdict
-from datetime import datetime
-from pathlib import Path
+import sys
 import click
-import math
-import os
+from pathlib import Path
 import subprocess
+import math
+import json
+from datetime import datetime
 from time import perf_counter_ns
 
-from utils import *
+from collections import defaultdict
+
+from .suite import Suite, run_cmd, Prediction, Case, setup_logger
+
+from . import timer  # type: ignore
 
 
-def add_timeout(m):
-    return m
+def re_parser(ctx_, parms_, expr):
+    import re
+
+    if expr:
+        return re.compile(expr)
 
 
-WORKFOLDER = Path(os.path.abspath(__file__)).parent.parent
+@click.group()
+@click.option(
+    "-v",
+    "--verbose",
+    count=True,
+    help="sets the verbosity of the program, more means more information",
+)
+@click.option(
+    "--workdir",
+    type=click.Path(
+        exists=True,
+        file_okay=False,
+        path_type=Path,
+        resolve_path=True,
+    ),
+    default=".",
+    help="the base of the jpamb folder.",
+)
+@click.pass_context
+def cli(ctx, workdir: Path, verbose):
+    """This is the jpamb main entry point."""
+    logger = setup_logger(verbose)
+    ctx.obj = Suite(workdir, logger)
+
+
+@cli.command()
+@click.option(
+    "--check/--no-check",
+    default=True,
+    help="check that the cases are correct",
+)
+@click.option(
+    "--decompile/--no-decompile",
+    default=True,
+    help="decompile the class-files using jvm2json",
+)
+@click.pass_context
+def build(ctx, check, decompile):
+    """Rebuild the benchmark-suite."""
+
+    suite = ctx.find_object(Suite)
+    assert suite is not None
+
+    suite.build()
+    suite.update_cases()
+
+    if check:
+        suite.check()
+
+    if decompile:
+        suite.decompile()
+
+
+@cli.command()
+@click.option(
+    "--timeout",
+    show_default=True,
+    default=2.0,
+    help="timeout in seconds.",
+)
+@click.option(
+    "--fail-fast / --no-fail-fast",
+    default=True,
+    help="if this option is set the test will fail with the first non-zero exitcode",
+)
+@click.option(
+    "-o",
+    "--report",
+    type=click.Path(allow_dash=True),
+)
+@click.option(
+    "--filter-methods",
+    help="only take methods that matches the regex.",
+    callback=re_parser,
+)
+@click.argument("cmd", nargs=-1, type=click.Path())
+@click.pass_context
+def test(
+    ctx,
+    filter_methods,
+    cmd,
+    timeout,
+    report,
+    fail_fast,
+):
+    """test an interpreter on the benchmark suite"""
+
+    suite = ctx.find_object(Suite)
+    assert suite is not None
+    logger = suite.logger
+
+    if report:
+        fp: TextIO = click.open_file(report, "w")  # type: ignore
+        logger.add(
+            fp,
+            filter=(lambda record: record["extra"]["process"] != "main"),
+            format="{extra[process][0]}{extra[process][1]}> {message}",
+            level="DEBUG",
+        )
+
+    for case in sorted(suite.cases()):
+        if filter_methods and not filter_methods.search(str(case.methodid)):
+            logger.trace(f"{case} did not match {filter_methods}")
+            continue
+        logger.info(f"Running {case}")
+
+        result: str
+        try:
+            (result, _) = run_cmd(
+                cmd + (str(case.methodid), str(case.input)),
+                logger=logger,
+                timeout=timeout,
+            )
+        except subprocess.CalledProcessError as e:
+            logger.error(e)
+            result = e.stdout
+            if fail_fast:
+                for i in e.stderr.splitlines():
+                    logger.warning(i)
+                for i in e.stdout.splitlines():
+                    logger.warning(i)
+                logger.error("Failing fast")
+                sys.exit(-1)
+
+        test = r[-1] if (r := result.splitlines()) else ""
+        logger.info(f"Returned {test!r}")
+        if test == case.result:
+            logger.success(f"Mathed {case}: {case.result!r}")
+        else:
+            logger.error(f"Failed {case}: {test!r} != {case.result!r}")
 
 
 def tool_parser(ctx_, parms_, tools):
@@ -83,12 +215,12 @@ def experiment_parser(ctx_, parms_, experiment):
     return experiment
 
 
-def calibrate(sieve_exe, log_calibration):
+def calibrate(log_calibration):
     calibrators = [100_000, 100_000]
     calibration = 0
     for count in calibrators:
         start = perf_counter_ns()
-        subprocess.check_output([sieve_exe, str(count)])
+        timer.sieve(count)
         end = perf_counter_ns()
         diff = end - start
         calibration += diff
@@ -122,34 +254,41 @@ def calibrate(sieve_exe, log_calibration):
     default=1,
     help="number of iterations.",
 )
-@click.option("-v", "--verbose", count=True)
-@click.option("-o", "--output", show_default=True, default=WORKFOLDER / "result.json")
+@click.option(
+    "-o",
+    "--output",
+    show_default=True,
+    type=click.Path(
+        dir_okay=False,
+    ),
+    default="result.json",
+)
 @click.argument("EXPERIMENT", callback=experiment_parser)
+@click.pass_context
 def evaluate(
-    experiment, timeout, iterations, verbose, filter_methods, filter_tools, output
+    ctx,
+    experiment,
+    timeout,
+    iterations,
+    filter_methods,
+    filter_tools,
+    output,
 ):
     """Given an command check if it can predict the results."""
     import random, itertools
 
-    logger = setup_logger(verbose)
-    suite = Suite(WORKFOLDER, QUERIES, logger)
+    suite = ctx.find_object(Suite)
+    assert suite is not None
+    logger = suite.logger
+
     tools = experiment["tools"]
     by_tool = defaultdict(list)
 
-    with open(WORKFOLDER / "CITATION.cff") as f:
-        import yaml
-
-        version = yaml.safe_load(f)["version"]
-
+    version = suite.version()
     logger.info(f"Version {version}")
 
-    sieve = WORKFOLDER / "timer" / "sieve.c"
-
-    logger.info(f"Building timer from {sieve}")
-    sieve_exe = build_c(sieve, logger)
-
     for i in range(iterations):
-        calibration = calibrate(sieve_exe, lambda **kwargs: ())
+        calibration = calibrate(lambda **_: ())
         logger.info(f"Base calibrated {i}: {calibration/1_000_000:0.0f}ms")
 
     for m, cases in Case.by_methodid(suite.cases()):
@@ -182,7 +321,6 @@ def evaluate(
             time = time_ns / 1_000_000_000
             calibrations = []
             calibration = calibrate(
-                sieve_exe,
                 lambda **kwarg: calibrations.append(kwarg),
             )
             relative = time_ns / calibration
@@ -254,7 +392,3 @@ def evaluate(
         json.dump(experiment, fp)
 
     logger.success(f"Written results to {output!r}")
-
-
-if __name__ == "__main__":
-    evaluate()

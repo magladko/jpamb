@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from collections import namedtuple
 from pathlib import Path
 import re
-import sys
 
 
 JvmType: TypeAlias = (

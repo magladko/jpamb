@@ -1,0 +1,4 @@
+build
+dist
+jpamb.egg-info
+*.so
