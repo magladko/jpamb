@@ -1,16 +1,21 @@
 from jpamb import jvm
 
 
-def test_roundtrip_cases():
+def test_singletons():
 
-    methods = []
+    assert jvm.Boolean() is jvm.Boolean()
+    assert jvm.Int() is jvm.Int()
+    assert jvm.Char() is jvm.Char()
+    assert jvm.Int() is not jvm.Boolean()
 
-    with open("../stats/cases.txt") as fp:
-        for c in fp:
-            input = c.split(" ")[0]
-            absmethod = jvm.MethodID.decode_absolute(input)
-            methods.append(methods)
-            assert jvm.MethodID.encode_absolute(absmethod) == input, f"{absmethod}"
+    assert jvm.Array(jvm.Boolean()) is jvm.Array(jvm.Boolean())
+    assert jvm.Array(jvm.Boolean()) is not jvm.Array(jvm.Int())
 
-    # Make sure we can sort methods
-    assert sorted(methods) == sorted(sorted(methods))
+
+def test_value_parser():
+
+    assert jvm.ValueParser.parse("1, 's', [I:10]") == [
+        jvm.Value.int(1),
+        jvm.Value.char("s"),
+        jvm.Value.array(jvm.Int(), [10]),
+    ]
