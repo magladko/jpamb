@@ -166,6 +166,12 @@ class Suite:
             ".json"
         )
 
+    def decompile(self, cn: jvm.ClassName) -> dict:
+        import json
+
+        with open(self.decompiledfile(cn)) as fp:
+            return json.load(fp)
+
     def classes(self) -> Iterable[jvm.ClassName]:
         for file in self.classfiles():
             yield jvm.ClassName.from_parts(
@@ -207,16 +213,22 @@ class Suite:
             assert len(files) > 0, "should contain source files"
             logger.info(f"Found {len(files)} files")
 
-        with check(f"The classfiles folder should exist [{self.classfiles_folder}]."):
+        with check(f"The classfiles folder [{self.classfiles_folder}]."):
             assert self.classfiles_folder.exists(), "should exists"
             assert self.classfiles_folder.is_dir(), "should be a folder"
             files = list(self.classfiles())
             assert len(files) > 0, "should contain class files"
             logger.info(f"Found {len(files)} files")
 
-        with check(f"The decompiled folder should exist [{self.decompiled_folder}]."):
+        with check(f"The decompiled folder [{self.decompiled_folder}]."):
             assert self.decompiled_folder.exists(), "should exists"
             assert self.decompiled_folder.is_dir(), "should be a folder"
             files = list(self.decompiledfiles())
             assert len(files) > 0, "should contain decompiled class files"
             logger.info(f"Found {len(files)} files")
+
+            for cn in self.classes():
+                logger.info(f"Checking if {cn.dotted()} is decompiled.")
+                assert (
+                    self.decompile(cn)["name"] == cn.slashed()
+                ), f"could not decompile {cn.dotted()}"
