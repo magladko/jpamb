@@ -62,6 +62,19 @@ class Type(ABC):
     def __eq__(self, other):
         return self.encode() <= other.encode()
 
+    @staticmethod
+    def from_json(json: str) -> "Type":
+        match json:
+            case "integer":
+                return Int()
+            case "int":
+                return Int()
+            case typestr:
+                raise NotImplementedError(f"Not yet implemented {typestr}")
+
+    def __str__(self) -> str:
+        return self.encode()
+
 
 @dataclass(frozen=True)
 class Boolean(Type):
@@ -208,6 +221,9 @@ class ClassName:
     def dotted(self) -> str:
         return self._as_string
 
+    def __str__(self) -> str:
+        return self.dotted()
+
     @staticmethod
     def decode(input: str) -> "ClassName":
         return ClassName(input)
@@ -316,22 +332,30 @@ class Value:
 
         return self.value
 
-    @staticmethod
-    def int(n: int):
-        return Value(Int(), n)
+    @classmethod
+    def int(cls, n: int) -> Self:
+        return cls(Int(), n)
 
-    @staticmethod
-    def boolean(n: bool):
-        return Value(Boolean(), n)
+    @classmethod
+    def boolean(cls, n: bool) -> Self:
+        return cls(Boolean(), n)
 
-    @staticmethod
-    def char(char: str):
+    @classmethod
+    def char(cls, char: str) -> Self:
         assert len(char) == 1
-        return Value(Char(), char)
+        return cls(Char(), char)
 
-    @staticmethod
-    def array(type: Type, content: Iterable):
-        return Value(Array(type), tuple(content))
+    @classmethod
+    def array(cls, type: Type, content: Iterable) -> Self:
+        return cls(Array(type), tuple(content))
+
+    @classmethod
+    def from_json(cls, json: dict) -> Self:
+        type = Type.from_json(json["type"])
+        return cls(type, json["value"])
+
+    def __str__(self) -> str:
+        return f"{self.value}:{self.type}"
 
 
 @dataclass

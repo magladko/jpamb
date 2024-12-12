@@ -14,8 +14,8 @@ def test_singletons():
 
 def test_value_parser():
 
-    assert jvm.ValueParser.parse("1, 's', [I:10]") == [
+    assert jvm.ValueParser.parse("1, 's', [I:10, 32]") == [
         jvm.Value.int(1),
         jvm.Value.char("s"),
-        jvm.Value.array(jvm.Int(), [10]),
+        jvm.Value.array(jvm.Int(), [10, 32]),
     ]
