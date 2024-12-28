@@ -203,30 +203,6 @@ class Prediction:
         return f"{self.to_probability():0.2%}"
 
 
-def setup_logger(verbose):
-    LEVELS = ["SUCCESS", "INFO", "DEBUG", "TRACE"]
-    from loguru import logger
-
-    lvl = LEVELS[verbose]
-
-    if lvl == "TRACE":
-        logger.remove()
-        logger.add(
-            sys.stderr,
-            format="<green>{elapsed}</green> | <level>{level: <8}</level> | <red>{extra[process]:<8}</red> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
-            level=LEVELS[verbose],
-        )
-    else:
-        logger.remove()
-        logger.add(
-            sys.stderr,
-            format="<red>{extra[process]:<8}</red>: <level>{message}</level>",
-            level=LEVELS[verbose],
-        )
-
-    return logger.bind(process="main")
-
-
 QUERIES = (
     "*",
     "assertion error",

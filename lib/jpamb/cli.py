@@ -1,10 +1,8 @@
-from contextlib import contextmanager
 import click
 from pathlib import Path
 
-from loguru import logger
-
-from . import model
+from . import model, logger
+from .logger import log
 
 
 @click.group()
@@ -28,7 +26,8 @@ from . import model
 @click.pass_context
 def cli(ctx, workdir: Path, verbose):
     """This is the jpamb main entry point."""
-    # logger = setup_logger(verbose)
+    logger.initialize(verbose)
+    log.debug(f"Setup suite in {workdir}")
     ctx.obj = model.Suite(workdir)
 
 

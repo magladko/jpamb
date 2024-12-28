@@ -2,8 +2,10 @@ from jpamb import jvm, model
 
 from pathlib import Path
 
+from jpamb.jvm import opcode as jvm
 
-def skip_test_bytecode():
+
+def test_bytecode():
 
     suite = model.Suite(Path("../").absolute())
 

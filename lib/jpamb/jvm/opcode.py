@@ -28,6 +28,14 @@ class Opcode(ABC):
                 opr = NewArray
             case "dup":
                 opr = Dup
+            case "array_store":
+                opr = ArrayStore
+            case "store":
+                opr = Store
+            case "load":
+                opr = Load
+            case "arraylength":
+                opr = ArrayLength
             case opr:
                 raise NotImplementedError(
                     f"Unhandled opcode {opr!r} (implement yourself)"
@@ -51,7 +59,7 @@ class Push(Opcode):
     bc[i].opr = 'push'
     bc[i].value = v
     -------------------------[push]
-    (i, s) -> (i+1, s + [v])
+    bc |- (i, s) -> (i+1, s + [v])
     """
 
     value: jvm.Value
@@ -81,8 +89,9 @@ class Push(Opcode):
                         return "iconst_4"
                     case 5:
                         return "iconst_5"
+                return f"ldc [{self.value.value}]"
 
-        raise NotImplementedError(f"Unhandled real opcode {self.value!r}")
+        raise NotImplementedError(f"Unhandled {self!r}")
 
     def __str__(self):
         return f"push {self.value}"
@@ -149,3 +158,85 @@ class Dup(Opcode):
 
     def __str__(self):
         return f"dup {self.words}"
+
+
+@dataclass(frozen=True)
+class ArrayStore(Opcode):
+    """The Array Store command that stores a value in the array."""
+
+    docs = [
+        "https://docs.oracle.com/javase/specs/jvms/se23/html/jvms-6.html#jvms-6.5.aastore"
+        "https://docs.oracle.com/javase/specs/jvms/se23/html/jvms-6.html#jvms-6.5.iastore"
+    ]
+
+    type: jvm.Type
+
+    @classmethod
+    def from_json(cls, json: dict) -> Opcode:
+        return cls(
+            offset=json["offset"],
+            type=jvm.Type.from_json(json["type"]),
+        )
+
+    def real(self) -> str:
+        match self.type:
+            case jvm.Reference():
+                return "aastore"
+            case jvm.Int():
+                return "iastore"
+
+        return super().real()
+
+    def __str__(self):
+        return f"array_store {self.type}"
+
+
+@dataclass(frozen=True)
+class Store(Opcode):
+
+    docs = []
+
+    type: jvm.Type
+
+    @classmethod
+    def from_json(cls, json: dict) -> Opcode:
+        return cls(
+            offset=json["offset"],
+            type=jvm.Type.from_json(json["type"]),
+        )
+
+    def __str__(self):
+        return f"store {self.type}"
+
+
+@dataclass(frozen=True)
+class Load(Opcode):
+
+    docs = []
+
+    type: jvm.Type
+
+    @classmethod
+    def from_json(cls, json: dict) -> Opcode:
+        return cls(
+            offset=json["offset"],
+            type=jvm.Type.from_json(json["type"]),
+        )
+
+    def __str__(self):
+        return f"load {self.type}"
+
+
+@dataclass(frozen=True)
+class ArrayLength(Opcode):
+
+    docs = []
+
+    @classmethod
+    def from_json(cls, json: dict) -> Opcode:
+        return cls(
+            offset=json["offset"],
+        )
+
+    def __str__(self):
+        return f"arraylength"

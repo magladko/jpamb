@@ -18,6 +18,48 @@ from dataclasses import dataclass
 from typing import *  # type: ignore
 
 
+@dataclass(frozen=True, order=True)
+class ClassName:
+    """The name of a class, inner classes must use the $ syntax"""
+
+    _as_string: str
+
+    @property
+    def packages(self) -> list[str]:
+        """Get a list of packages"""
+        return self.parts[:-1]
+
+    @property
+    def name(self) -> str:
+        """Get the unqualified name"""
+        return self.parts[-1]
+
+    @property
+    def parts(self) -> list[str]:
+        """Get the elements of the name"""
+        return self._as_string.split(".")
+
+    def encode(self) -> str:
+        return self._as_string
+
+    def slashed(self) -> str:
+        return "/".join(self.parts)
+
+    def dotted(self) -> str:
+        return self._as_string
+
+    def __str__(self) -> str:
+        return self.dotted()
+
+    @staticmethod
+    def decode(input: str) -> "ClassName":
+        return ClassName(input)
+
+    @staticmethod
+    def from_parts(*args: str) -> "ClassName":
+        return ClassName(".".join(args))
+
+
 @total_ordering
 class Type(ABC):
     """A jvm type"""
@@ -69,6 +111,8 @@ class Type(ABC):
                 return Int()
             case "int":
                 return Int()
+            case "ref":
+                return Reference()
             case typestr:
                 raise NotImplementedError(f"Not yet implemented {typestr}")
 
@@ -145,6 +189,43 @@ class Char(Type):
 
 
 @dataclass(frozen=True, order=True)
+class Reference(Type):
+    """An unknown reference"""
+
+    _instance = None
+
+    def __new__(cls) -> "Reference":
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def encode(self):
+        return "A"
+
+
+@dataclass(frozen=True, order=True)
+class Object(Type):
+    """
+    A list of types
+    """
+
+    _instance = dict()
+
+    def __new__(cls, subtype) -> "Array":
+        if subtype not in cls._instance:
+            cls._instance[subtype] = super().__new__(cls)
+        return cls._instance[subtype]
+
+    name: ClassName
+
+    def __post_init__(self):
+        assert self.name is not None
+
+    def encode(self):
+        return "L" + self.name.slashed() + ";"  # ]
+
+
+@dataclass(frozen=True, order=True)
 class Array(Type):
     """
     A list of types
@@ -189,48 +270,6 @@ class ParameterType:
             params.append(tt)
 
         return ParameterType(tuple(params))
-
-
-@dataclass(frozen=True, order=True)
-class ClassName:
-    """The name of a class, inner classes must use the $ syntax"""
-
-    _as_string: str
-
-    @property
-    def packages(self) -> list[str]:
-        """Get a list of packages"""
-        return self.parts[:-1]
-
-    @property
-    def name(self) -> str:
-        """Get the unqualified name"""
-        return self.parts[-1]
-
-    @property
-    def parts(self) -> list[str]:
-        """Get the elements of the name"""
-        return self._as_string.split(".")
-
-    def encode(self) -> str:
-        return self._as_string
-
-    def slashed(self) -> str:
-        return "/".join(self.parts)
-
-    def dotted(self) -> str:
-        return self._as_string
-
-    def __str__(self) -> str:
-        return self.dotted()
-
-    @staticmethod
-    def decode(input: str) -> "ClassName":
-        return ClassName(input)
-
-    @staticmethod
-    def from_parts(*args: str) -> "ClassName":
-        return ClassName(".".join(args))
 
 
 METHOD_ID_RE_RAW = r"(?P<method_name>.*)\:\((?P<params>.*)\)(?P<return>.*)"
