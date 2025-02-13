@@ -113,6 +113,8 @@ class Type(ABC):
                 return Int()
             case "ref":
                 return Reference()
+            case 'boolean':
+                return Boolean()
             case typestr:
                 raise NotImplementedError(f"Not yet implemented {typestr}")
 
@@ -513,3 +515,27 @@ class ValueParser:
             inputs.append(parser())
 
         return inputs
+
+
+@dataclass(frozen=True, order=True)
+class FieldID:
+    """A field ID consists of a name and a type."""
+    
+    name: str
+    type: Type
+
+    def encode(self) -> str:
+        return f"{self.name}:{self.type.encode()}"
+
+    @staticmethod
+    def decode(input: str) -> "FieldID":
+        if ":" not in input:
+            raise ValueError(f"invalid field id format: {input}")
+        name, type_str = input.split(":", 1)
+        type_obj, remaining = Type.decode(type_str)
+        if remaining:
+            raise ValueError(f"extra characters in field type: {remaining}")
+        return FieldID(name=name, type=type_obj)
+
+    def __str__(self) -> str:
+        return self.encode()
