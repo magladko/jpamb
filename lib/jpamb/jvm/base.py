@@ -81,6 +81,12 @@ class Type(ABC):
                     r = Byte()
                 case "C":
                     r = Char()
+                case "J":
+                    r = Long()
+                case "F":
+                    r = Float()
+                case "D":
+                    r = Double()
                 case "[":  # ]
                     stack.append(Array)
                     i += 1
@@ -248,6 +254,53 @@ class Array(Type):
     def encode(self):
         return "[" + self.contains.encode()  # ]
 
+
+@dataclass(frozen=True)
+class Long(Type):
+    """
+    A 64bit signed integer
+    """
+    _instance = None
+
+    def __new__(cls) -> "Long":
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def encode(self):
+        return "J"  # J is used for long in JVM
+
+
+@dataclass(frozen=True)
+class Float(Type):
+    """
+    A 32bit floating point number
+    """
+    _instance = None
+
+    def __new__(cls) -> "Float":
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def encode(self):
+        return "F"
+
+
+@dataclass(frozen=True)
+class Double(Type):
+    """
+    A 64bit floating point number
+    """
+    _instance = None
+
+    def __new__(cls) -> "Double":
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def encode(self):
+        return "D"
 
 @dataclass(frozen=True, order=True)
 class ParameterType:
