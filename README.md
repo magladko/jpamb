@@ -164,7 +164,7 @@ Also, if you want more debug information you can add multiples `-vvv` to get mor
 ### Source code
 
 The source code is located under the `src/main/java`. 
-A simple solution that analyze the source code directly using the [tree-sitter
+A simple solution that analyzes the source code directly using the [tree-sitter
 library](https://tree-sitter.github.io/tree-sitter/) is located at
 `solutions/syntaxer.py`.
 
