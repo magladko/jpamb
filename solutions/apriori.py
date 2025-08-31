@@ -13,6 +13,7 @@ if sys.argv[1] == "info":
     jpamb.printinfo(
         "apriori",
         "1.0",
+        "The Rice Theorem Cookers",
         ["cheat", "python", "stats"],
         for_science=True,
     )

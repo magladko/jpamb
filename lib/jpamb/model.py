@@ -106,15 +106,16 @@ class AnalysisInfo:
 
     name: str
     version: str
+    group: str
     tags: tuple[str]
     system: str | None
 
     @staticmethod
     def parse(output: str):
         try:
-            [name, version, ltags, lsystem] = output.splitlines()
+            [name, version, group, ltags, lsystem] = output.splitlines()
         except ValueError:
-            raise ValueError(f"Expected 4 lines, but got {len(output.splitlines())}")
+            raise ValueError(f"Expected 5 lines, but got {len(output.splitlines())}")
 
         tags = list()
         for t in ltags.split(","):
@@ -125,7 +126,7 @@ class AnalysisInfo:
         else:
             system = lsystem.strip()
 
-        return AnalysisInfo(name.strip(), version.strip(), tags, system)
+        return AnalysisInfo(name.strip(), version.strip(), group.strip(), tags, system)
 
 
 @dataclass(frozen=True)

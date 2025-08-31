@@ -5,11 +5,13 @@ from jpamb.model import Suite
 def printinfo(
     name: str,
     version: str,
+    group: str,
     tags: list[str],
     for_science: bool,
 ):
     print(name)
     print(version)
+    print(group)
     print(",".join(tags))
     if for_science:
         import platform

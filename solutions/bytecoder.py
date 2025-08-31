@@ -10,6 +10,7 @@ if sys.argv[1] == "info":
     jpamb.printinfo(
         "bytecoder",
         "1.0",
+        "The Rice Theorem Cookers",
         ["syntatic", "python"],
         for_science=True,
     )

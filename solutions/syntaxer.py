@@ -11,6 +11,7 @@ if sys.argv[1] == "info":
     jpamb.printinfo(
         "syntaxer",
         "1.0",
+        "The Rice Theorem Cookers",
         ["syntatic", "python"],
         for_science=True,
     )

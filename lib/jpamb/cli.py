@@ -95,6 +95,7 @@ def test(ctx, program, report, filter, fail_fast):
     def run(arg):
         args = list(program + (arg,))
         output(f"Run {args}")
+        report.flush()
 
         out = subprocess.run(
             args,

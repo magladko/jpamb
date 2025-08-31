@@ -9,7 +9,13 @@ import jpamb
 methodid = sys.argv[1]
 
 if methodid == "info":
-    jpamb.printinfo("cheater", "0.1", ["cheat", "python"], for_science=True)
+    jpamb.printinfo(
+        "cheater",
+        "0.1",
+        "The Rice Theorem Cookers",
+        ["cheat", "python"],
+        for_science=True,
+    )
 
 queries = set()
 
