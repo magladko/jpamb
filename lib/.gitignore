@@ -2,3 +2,6 @@ build
 dist
 jpamb.egg-info
 *.so
+
+# Environemnts - add installation to toml - use 
+venv/
