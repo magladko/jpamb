@@ -8,7 +8,7 @@ ext-modules = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["jpamb"]  
+include = ["jpamb", "jpamb.jvm"]  
 
 
 [project]
@@ -18,19 +18,18 @@ dependencies = [
   "PyYAML==6.0.2",
   "click==8.1.7",
   "loguru==0.7.2",
-  "tree-sitter-java==0.23.1",
-  "tree-sitter==0.23.0",
+  "tree-sitter-java==0.23.5",
+  "tree-sitter==0.25.1",
   "z3-solver==4.13.3.0",
 ]
 authors = [
   { name = "Christian Gram Kalhauge", email = "chrg@dtu.dk" }
 ]
 description = "Utilities for working with the jpamb benchmark suite"
-requires-python = ">=3.11"
-license = { text = "BSD-3-Clause" }
+requires-python = ">=3.13"
+license = "BSD-3-Clause"
 classifiers = [
-    "License :: OSI Approved :: BSD 3-Clause",
-    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.13",
     "Operating System :: OS Independent",
 ]
 

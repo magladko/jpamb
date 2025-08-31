@@ -31,7 +31,7 @@ static PyObject* sieve(PyObject* self, PyObject* args) {
     int i;
     PyArg_ParseTuple(args, "i", &i);
     int nth_prime = sieve_of_eratosthenes(i);
-    return PyLong_FromLong(nth_prime);  // Return the integer 42
+    return PyLong_FromLong(nth_prime);  
 }
 
 static PyMethodDef TimerMethods[] = {

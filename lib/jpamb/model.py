@@ -10,11 +10,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from loguru import logger
 import collections
+from collections import defaultdict
 import re
 
-from typing import *  # type: ignore
+from typing import Iterable
 
-from . import jvm
+from jpamb import jvm
+from jpamb import timer
 
 
 @dataclass(frozen=True, order=True)
@@ -89,14 +91,126 @@ def _check(reason, failfast=False):
     except AssertionError as e:
         msg = str(e)
         if msg:
-            logger.error(f"FAILED: {e}")
+            logger.error(f"{reason} FAILED: {e}")
         else:
-            logger.error(f"FAILED")
+            logger.error(f"{reason} FAILED")
         if failfast:
             e.args = (reason, *e.args)
             raise
     else:
-        logger.info("ok")
+        logger.success(f"{reason} ok")
+
+
+@dataclass(frozen=True)
+class AnalysisInfo:
+
+    name: str
+    version: str
+    tags: tuple[str]
+    system: str | None
+
+    @staticmethod
+    def parse(output: str):
+        try:
+            [name, version, ltags, lsystem] = output.splitlines()
+        except ValueError:
+            raise ValueError(f"Expected 4 lines, but got {len(output.splitlines())}")
+
+        tags = list()
+        for t in ltags.split(","):
+            tags.append(t.strip())
+
+        if lsystem.strip().lower() == "no":
+            system = None
+        else:
+            system = lsystem.strip()
+
+        return AnalysisInfo(name.strip(), version.strip(), tags, system)
+
+
+@dataclass(frozen=True)
+class Prediction:
+    wager: float
+
+    @staticmethod
+    def parse(string: str) -> "Prediction":
+        if m := re.match(r"([^%]*)\%", string):
+            p = float(m.group(1)) / 100
+            return Prediction.from_probability(p)
+        else:
+            return Prediction(float(string))
+
+    @staticmethod
+    def from_probability(p: float) -> "Prediction":
+        negate = False
+        if p < 0.5:
+            p = 1 - p
+            negate = True
+        if p == 1:
+            x = float("inf")
+        else:
+            x = (1 - 2 * p) / (-1 + p) / 2
+        return Prediction(-x if negate else x)
+
+    def to_probability(self) -> float:
+        if self.wager == float("-inf"):
+            return 0
+        if self.wager == float("inf"):
+            return 0
+        w = abs(self.wager) * 2
+        r = (w + 1) / (w + 2)
+        return r if self.wager > 0 else 1 - r
+
+    def score(self, happens: bool):
+        wager = (-1 if not happens else 1) * self.wager
+        if wager > 0:
+            if wager == float("inf"):
+                return 1
+            else:
+                return 1 - 1 / (wager + 1)
+        else:
+            return wager
+
+    def __str__(self):
+        return f"{self.to_probability():0.2%}"
+
+
+QUERIES = (
+    "*",
+    "assertion error",
+    "divide by zero",
+    "null pointer",
+    "ok",
+    "out of bounds",
+)
+
+
+@dataclass(frozen=True)
+class Response:
+    predictions: dict[str, Prediction]
+
+    @staticmethod
+    def parse(out):
+        predictions = {}
+        for line in out.splitlines():
+            try:
+                query, pred = line.split(";")
+                logger.debug(f"response: {line}")
+            except ValueError:
+                logger.warning(line)
+                continue
+            if query not in QUERIES:
+                logger.warning(f"{query!r} not a known query")
+                continue
+            prediction = Prediction.parse(pred)
+            predictions[query] = prediction
+        return Response(predictions)
+
+    def score(self, correct):
+        total = 0
+        for q, prd in self.predictions.items():
+            total += prd.score(q in correct)
+        return total
 
 
 class Suite:
@@ -109,12 +223,14 @@ class Suite:
 
     _instances = dict()
 
-    def __new__(cls, workfolder: Path):
+    def __new__(cls, workfolder: Path | None = None):
+        workfolder = workfolder or Path.cwd()
         if workfolder not in cls._instances:
             cls._instances[workfolder] = super().__new__(cls)
         return cls._instances[workfolder]
 
-    def __init__(self, workfolder: Path):
+    def __init__(self, workfolder: Path | None = None):
+        workfolder = workfolder or Path.cwd()
         assert workfolder.is_absolute(), f"Assuming that {workfolder} is absolute."
         self.workfolder = workfolder
         self.invalidate_cache()
@@ -166,11 +282,28 @@ class Suite:
             ".json"
         )
 
-    def decompile(self, cn: jvm.ClassName) -> dict:
+    def findclass(self, cn: jvm.ClassName) -> dict:
         import json
 
         with open(self.decompiledfile(cn)) as fp:
             return json.load(fp)
+
+    def findmethod(self, methodid: jvm.Absolute[jvm.MethodID]) -> jvm:
+        methods = self.findclass(methodid.classname)["methods"]
+        for method in methods:
+            if (
+                method["name"] == methodid.extension.name
+                and jvm.ParameterType.from_json(method["params"])
+                == methodid.extension.params
+            ):
+                break
+        else:
+            assert False, f"Could not find {methodid}"
+        return method
+
+    def method_opcodes(self, method: jvm.Absolute[jvm.MethodID]) -> list[jvm.Opcode]:
+        for op in self.findmethod(method)["code"]["bytecode"]:
+            yield jvm.Opcode.from_json(op)
 
     def classes(self) -> Iterable[jvm.ClassName]:
         for file in self.classfiles():
@@ -196,31 +329,39 @@ class Suite:
                 self._cases = tuple(Case.decode(line) for line in f)
         return self._cases
 
+    def case_methods(self) -> Iterable[tuple[jvm.Absolute[jvm.MethodID], set[str]]]:
+        methods = defaultdict(set)
+
+        for case in self.cases:
+            methods[case.methodid].add(case.result)
+
+        return methods.items()
+
     def checkhealth(self, failfast=False):
         """Checks the health of the repository through a sequence of tests"""
 
-        check = lambda msg: _check(msg, failfast)
+        def check(msg):
+            return _check(msg, failfast)
 
-        with check(f"The case file [{self.case_file}]."):
-            assert self.case_file.exists(), "should exist"
-            assert len(self.cases) > 0, "cases should be parsable and at least one"
-            logger.info(f"Found {len(self.cases)} cases")
+        with check("The timer"):
+            x = timer.sieve(1000)
+            assert x == 7919, "should find correct prime."
 
-        with check(f"The source folder [{self.sourcefiles_folder}]."):
+        with check(f"The source folder [{self.sourcefiles_folder}]"):
             assert self.sourcefiles_folder.exists(), "should exists"
             assert self.sourcefiles_folder.is_dir(), "should be a folder"
             files = list(self.sourcefiles())
             assert len(files) > 0, "should contain source files"
             logger.info(f"Found {len(files)} files")
 
-        with check(f"The classfiles folder [{self.classfiles_folder}]."):
+        with check(f"The classfiles folder [{self.classfiles_folder}]"):
             assert self.classfiles_folder.exists(), "should exists"
             assert self.classfiles_folder.is_dir(), "should be a folder"
             files = list(self.classfiles())
             assert len(files) > 0, "should contain class files"
             logger.info(f"Found {len(files)} files")
 
-        with check(f"The decompiled folder [{self.decompiled_folder}]."):
+        with check(f"The decompiled folder [{self.decompiled_folder}]"):
             assert self.decompiled_folder.exists(), "should exists"
             assert self.decompiled_folder.is_dir(), "should be a folder"
             files = list(self.decompiledfiles())
@@ -228,7 +369,23 @@ class Suite:
             logger.info(f"Found {len(files)} files")
 
             for cn in self.classes():
+                x = self.findclass(cn)
                 logger.info(f"Checking if {cn.dotted()} is decompiled.")
-                assert (
-                    self.decompile(cn)["name"] == cn.slashed()
-                ), f"could not decompile {cn.dotted()}"
+                assert x["name"] == cn.slashed(), f"could not decompile {cn.dotted()}"
+
+        with check(f"The case file [{self.case_file}]"):
+            assert self.case_file.exists(), "should exist"
+            assert len(self.cases) > 0, "cases should be parsable and at least one"
+            logger.info(f"Found {len(self.cases)} cases")
+
+        methods = set(case.methodid for case in self.cases)
+        for method in methods:
+            with check(f"The method: [{method}]"):
+                try:
+                    for opr in self.method_opcodes(method):
+                        str(opr)
+                        str(opr.real())
+                except NotImplementedError as e:
+                    assert (
+                        False
+                    ), f"All operations should be supported in {method}, but {e}"

@@ -1,11 +1,22 @@
 #!/usr/bin/env python3
-""" The cheating solution. 
+"""Another cheating solution.
 
 This solution uses apriori knowledge about the distribution of the test-cases
 to gain an advantage.
 """
 
-import sys, csv
+import sys
+import csv
+import jpamb
+
+if sys.argv[1] == "info":
+    jpamb.printinfo(
+        "apriori",
+        "1.0",
+        ["cheat", "python", "stats"],
+        for_science=True,
+    )
+
 
 with open("stats/distribution.csv") as f:
     distribution = list(csv.DictReader(f))[-1]

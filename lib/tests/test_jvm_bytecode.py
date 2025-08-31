@@ -2,8 +2,6 @@ from jpamb import jvm, model
 
 from pathlib import Path
 
-from jpamb.jvm import opcode as jvm
-
 
 def test_bytecode():
     suite = model.Suite(Path("../").absolute())
@@ -14,7 +12,7 @@ def test_bytecode():
                 break
         else:
             assert False, f"Could not find {c.methodid}"
-        
+
         opcode_count = 0
         for opcode in method["code"]["bytecode"]:
             print(opcode)
@@ -22,6 +20,7 @@ def test_bytecode():
             print(result, "/", result.real())
             assert not isinstance(result, dict), opcode
             opcode_count += 1
-        
+
         assert opcode_count > 0, "No opcodes were processed"
         break
+

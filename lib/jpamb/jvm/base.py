@@ -1,10 +1,10 @@
 """
 jpamb.jvm.base
 
-This module provides primitives to talk about the contents of java bytefiles, 
+This module provides primitives to talk about the contents of java bytefiles,
 as well as names and types.
 
-It is recommended to import this module qualified 
+It is recommended to import this module qualified
 
 from jpamb import jvm
 
@@ -81,6 +81,8 @@ class Type(ABC):
                     r = Byte()
                 case "C":
                     r = Char()
+                case "S":
+                    r = Short()
                 case "J":
                     r = Long()
                 case "F":
@@ -117,12 +119,26 @@ class Type(ABC):
                 return Int()
             case "int":
                 return Int()
+            case "char":
+                return Char()
+            case "short":
+                return Short()
             case "ref":
                 return Reference()
-            case 'boolean':
+            case "boolean":
                 return Boolean()
             case typestr:
                 raise NotImplementedError(f"Not yet implemented {typestr}")
+
+    @staticmethod
+    def from_json_type(json: dict) -> "Type":
+        if "base" in json:
+            return Type.from_json(json["base"])
+        match json["kind"]:
+            case "array":
+                return Array(Type.from_json_type(json["type"]))
+
+        raise NotImplementedError(f"Not yet implemented {json}")
 
     def __str__(self) -> str:
         return self.encode()
@@ -196,6 +212,23 @@ class Char(Type):
         return "C"
 
 
+@dataclass(frozen=True)
+class Short(Type):
+    """
+    An 16bit signed integer
+    """
+
+    _instance = None
+
+    def __new__(cls) -> "Short":
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def encode(self):
+        return "S"
+
+
 @dataclass(frozen=True, order=True)
 class Reference(Type):
     """An unknown reference"""
@@ -260,6 +293,7 @@ class Long(Type):
     """
     A 64bit signed integer
     """
+
     _instance = None
 
     def __new__(cls) -> "Long":
@@ -276,6 +310,7 @@ class Float(Type):
     """
     A 32bit floating point number
     """
+
     _instance = None
 
     def __new__(cls) -> "Float":
@@ -292,6 +327,7 @@ class Double(Type):
     """
     A 64bit floating point number
     """
+
     _instance = None
 
     def __new__(cls) -> "Double":
@@ -301,6 +337,7 @@ class Double(Type):
 
     def encode(self):
         return "D"
+
 
 @dataclass(frozen=True, order=True)
 class ParameterType:
@@ -322,6 +359,15 @@ class ParameterType:
         params = []
         while input:
             (tt, input) = Type.decode(input)
+            params.append(tt)
+
+        return ParameterType(tuple(params))
+
+    @staticmethod
+    def from_json(inputs: list[dict]) -> "ParameterType":
+        params = []
+        for t in inputs:
+            tt = Type.from_json_type(t["type"])
             params.append(tt)
 
         return ParameterType(tuple(params))
@@ -385,11 +431,14 @@ class Absolute[T: Encodable]:
     def encode(self) -> str:
         return f"{self.classname.encode()}.{self.extension.encode()}"
 
+    def __str__(self):
+        return self.encode()
+
 
 @dataclass(frozen=True, order=True)
 class Value:
     type: Type
-    value: Any
+    value: object
 
     @staticmethod
     def decode_many(input) -> list["Value"]:
@@ -444,7 +493,9 @@ class Value:
         return cls(Array(type), tuple(content))
 
     @classmethod
-    def from_json(cls, json: dict) -> Self:
+    def from_json(cls, json: dict | None) -> Self:
+        if json is None:
+            return cls(Reference(), None)
         type = Type.from_json(json["type"])
         return cls(type, json["value"])
 
@@ -573,7 +624,7 @@ class ValueParser:
 @dataclass(frozen=True, order=True)
 class FieldID:
     """A field ID consists of a name and a type."""
-    
+
     name: str
     type: Type
 

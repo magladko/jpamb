@@ -1,7 +1,29 @@
 # JPAMB: Java Program Analysis Micro Benchmarks
 
 The goal of this benchmark suite is to make a collection of interesting
-micro-benchmarks to be solved by either dynamic or static analysis.
+micro-benchmarks to be solved by some program analysis.
+
+## Installing
+
+To get started you need to first install Python on your system. 
+The easiest way to do that is by downloading and running the `uv` package manager. 
+Please see the [instructions](https://docs.astral.sh/uv/getting-started/installation/) for how 
+to get setup.
+
+To install the jpamb tool, you can simply install it using the `uv tool install` command:
+
+```bash
+# On linux
+uv tool install -e ./lib
+# On windows (I think)
+uv tool install -e .\lib
+```
+
+Now you should be able to run the tool using the following command, which should spit out a number of checks, that all should be green.
+
+```bash
+uvx jpamb checkhealth
+```
 
 ## Rules of the Game
 
@@ -31,13 +53,6 @@ And the query is one of:
 And the prediction is either a wager (`-3`, `inf`) (the number of points you 
 want to bet on you being right) or a probability (`30%`, `72%`)
 
-Your analysis should look like this:
-
-```shell
-$> ./analysis "jpamb.cases.Simple.assertPositive:(I)V" 
-divide by zero;5 
-ok;25%
-```
 
 A wager is the number of points waged [`-inf`, `inf`] on your prediction. A negative wager is against the query, and 
 a positive is for the query. A failed wager is subtracted from your points, however 
@@ -82,39 +97,86 @@ $$\mathtt{wager} = \frac{1 - 2 p }{2 (p - 1)}$$
 |    90% |      8 |
 |   100% |    inf | 
 
-## Evaluating
+## Getting Started
 
-To get started evaluating your tool you can run the `bin/evaluate.py` script, it requires 
-the `click` and `loguru` libraries and python 3.10 or above. You can install these dependencies using pip
-in your favorite [environment](https://www.pythonguis.com/tutorials/python-virtual-environments/).
+To get started create your first program analysis. The recommended implementation language is Python (as there is extra support via the library), but any language you can run from the command line will do.
+
+Your analysis should supprot two modes. The first is info mode:
 
 ```shell
-$> python -m venv .venv
-# on unix systems
-$> source .venv/bin/activate
-# or on windows
-PS> .venv\Scripts\activate
-# now install stuff
-$> python -m pip install -r requirements.txt -r requirements-treesitter.txt
-# And the utils
-$> python -m pip install -e .
-```
+$> ./analysis info
+<name>
+<version>
+<comma seperated tags>
+<system string, if you want to paticipate in science> else "no"
+````
 
-Furthermore, to do good time reporting it uses a C compiler to compile the program `timer/sieve.c` and 
-execute it alongside the analyses to calibrate the results.
-Essentially, this computes a relative time (in relation to calculating the first 100,000 primes), as well as 
-an absolute time. Make sure the environment variable `CC` is set to the name of your compiler, or 
-that `gcc` is on your `PATH`.
+And the second is prediction mode. Here running your analysis should look like this:
 
-First create a YAML file describing your experiment, see the `sample.yaml` file for an example.
-And then to evaluate your analysis you should be able to run:
 ```shell
-$> python bin/evaluate.py experiment.yaml -o experiment.json
+$> ./analysis "jpamb.cases.Simple.assertPositive:(I)V" 
+divide by zero;5 
+ok;25%
 ```
+
+### Test
+
+To test your script simply run the following command:
+
+```shell
+uvx jpamb -- test ./analysis
+```
+It will spit out a report.
+
+You can also filter the report on some methods. In the begining it might be a good idea to focus on the simple cases:
+
+```shell
+uvx jpamb -- test --filter "Simple" ./analysis
+```
+
+### Evaluating
+
+When your script is working, you can evaluate it using the `evaluate` command.
+This will produce a json report you can share with others.
+
+
+```shell
+uvx jpamb -- evaluate ./analysis > report.json
+```
+
 
 If you have problems getting started, please file an [issue](https://github.com/kalhauge/jpamb/issues).
 
-### Windows
+
+### Source code
+
+The source code is located under the `src/main/java`. 
+A simple solution that analyzes the source code directly using the [tree-sitter
+library](https://tree-sitter.github.io/tree-sitter/) is located at
+`solutions/syntaxer.py`.
+
+### Byte code
+
+To write more advanced analysis it makes sense to make use of the byte-code. To lower the bar to entrance, the byte code of the benchmarks have already been decompiled by the 
+[`jvm2json`](https://github.com/kalhauge/jvm2json) tool. 
+The codec for the output is described [here](https://github.com/kalhauge/jvm2json/blob/main/CODEC.txt).
+
+Some sample code for how to get started can be seen in `solutions/bytecoder.py`.
+
+There is an interface for using the opcode directly in `lib/jpamb/jvm/opcode.py`. 
+
+
+### Debug
+
+You can debug your code by running some of the methods or some of the tools, like this: 
+
+```shell
+$> ./evaluate your-experiment.yaml --filter-methods=Simple --filter-tools=syntaxer -o experiment.json
+```
+
+Also, if you want more debug information you can add multiples `-vvv` to get more information.
+
+## Windows
 
 The instructions above should also work for windows, but it is less straight forward.
 The easy way out of this is to install Linux as a subsystem on your Windows machine. 
@@ -151,47 +213,16 @@ If you prefer staying in Windows land, here are some tips and pointers:
 
 If you have any problems getting started on windows, please file an issue.
 
-### Debug
-
-You can debug your code by running some of the methods or some of the tools, like this: 
-
-```shell
-$> ./evaluate your-experiment.yaml --filter-methods=Simple --filter-tools=syntaxer -o experiment.json
-```
-
-Also, if you want more debug information you can add multiples `-vvv` to get more information.
-
-### Source code
-
-The source code is located under the `src/main/java`. 
-A simple solution that analyzes the source code directly using the [tree-sitter
-library](https://tree-sitter.github.io/tree-sitter/) is located at
-`solutions/syntaxer.py`.
-
-### Byte code
-
-To write more advanced analysis it makes sense to make use of the byte-code. To
-lower the bar to entrance, the byte code of the benchmarks have already been decompiled by the 
-[`jvm2json`](https://github.com/kalhauge/jvm2json) tool. 
-The codec for the output is described [here](https://github.com/kalhauge/jvm2json/blob/main/CODEC.txt).
-
-Some sample code for how to get started can be seen in `solutions/bytecoder.py`.
 
 ## Interpreting
 
-You can run an interpreter for each of the cases using the `bin/test.py` command.
+... pending ...
 
 
 ## Developing
 
-Before making a pull-request, please run `./bin/build.py` first.
-The easiest way to do that is to run use the [nix tool](https://nixos.org/download/#download-nix) to download all dependencies. 
-
-```shell
-nix develop -c ./bin/build.py
-```
+... pending ...
 
 ## Citation
 
-To cite this work, please use the cite bottom on the right.
-
+To cite this work, please use the cite botton on the right.
