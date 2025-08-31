@@ -15,7 +15,6 @@
 └ Info
 ┌ Case jpamb.cases.Arrays.arrayContent:()V
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Arrays.arrayContent:()V']
-Got ['jpamb.cases.Arrays.arrayContent:()V']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -34,7 +33,6 @@ Got ['jpamb.cases.Arrays.arrayContent:()V']
 └ Case jpamb.cases.Arrays.arrayContent:()V
 ┌ Case jpamb.cases.Arrays.arrayInBounds:()V
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Arrays.arrayInBounds:()V']
-Got ['jpamb.cases.Arrays.arrayInBounds:()V']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -53,7 +51,6 @@ Got ['jpamb.cases.Arrays.arrayInBounds:()V']
 └ Case jpamb.cases.Arrays.arrayInBounds:()V
 ┌ Case jpamb.cases.Arrays.arrayIsNull:()V
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Arrays.arrayIsNull:()V']
-Got ['jpamb.cases.Arrays.arrayIsNull:()V']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -72,7 +69,6 @@ Got ['jpamb.cases.Arrays.arrayIsNull:()V']
 └ Case jpamb.cases.Arrays.arrayIsNull:()V
 ┌ Case jpamb.cases.Arrays.arrayIsNullLength:()V
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Arrays.arrayIsNullLength:()V']
-Got ['jpamb.cases.Arrays.arrayIsNullLength:()V']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -91,7 +87,6 @@ Got ['jpamb.cases.Arrays.arrayIsNullLength:()V']
 └ Case jpamb.cases.Arrays.arrayIsNullLength:()V
 ┌ Case jpamb.cases.Arrays.arrayLength:()V
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Arrays.arrayLength:()V']
-Got ['jpamb.cases.Arrays.arrayLength:()V']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -110,7 +105,6 @@ Got ['jpamb.cases.Arrays.arrayLength:()V']
 └ Case jpamb.cases.Arrays.arrayLength:()V
 ┌ Case jpamb.cases.Arrays.arrayNotEmpty:([I)V
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Arrays.arrayNotEmpty:([I)V']
-Got ['jpamb.cases.Arrays.arrayNotEmpty:([I)V']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -129,7 +123,6 @@ Got ['jpamb.cases.Arrays.arrayNotEmpty:([I)V']
 └ Case jpamb.cases.Arrays.arrayNotEmpty:([I)V
 ┌ Case jpamb.cases.Arrays.arrayOutOfBounds:()V
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Arrays.arrayOutOfBounds:()V']
-Got ['jpamb.cases.Arrays.arrayOutOfBounds:()V']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -148,7 +141,6 @@ Got ['jpamb.cases.Arrays.arrayOutOfBounds:()V']
 └ Case jpamb.cases.Arrays.arrayOutOfBounds:()V
 ┌ Case jpamb.cases.Arrays.arraySometimesNull:(I)V
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Arrays.arraySometimesNull:(I)V']
-Got ['jpamb.cases.Arrays.arraySometimesNull:(I)V']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -167,7 +159,6 @@ Got ['jpamb.cases.Arrays.arraySometimesNull:(I)V']
 └ Case jpamb.cases.Arrays.arraySometimesNull:(I)V
 ┌ Case jpamb.cases.Arrays.arraySpellsHello:([C)V
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Arrays.arraySpellsHello:([C)V']
-Got ['jpamb.cases.Arrays.arraySpellsHello:([C)V']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -186,7 +177,6 @@ Got ['jpamb.cases.Arrays.arraySpellsHello:([C)V']
 └ Case jpamb.cases.Arrays.arraySpellsHello:([C)V
 ┌ Case jpamb.cases.Arrays.arraySumIsLarge:([I)V
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Arrays.arraySumIsLarge:([I)V']
-Got ['jpamb.cases.Arrays.arraySumIsLarge:([I)V']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -205,7 +195,6 @@ Got ['jpamb.cases.Arrays.arraySumIsLarge:([I)V']
 └ Case jpamb.cases.Arrays.arraySumIsLarge:([I)V
 ┌ Case jpamb.cases.Arrays.binarySearch:(I)V
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Arrays.binarySearch:(I)V']
-Got ['jpamb.cases.Arrays.binarySearch:(I)V']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -224,7 +213,6 @@ Got ['jpamb.cases.Arrays.binarySearch:(I)V']
 └ Case jpamb.cases.Arrays.binarySearch:(I)V
 ┌ Case jpamb.cases.Calls.allPrimesArePositive:(I)V
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Calls.allPrimesArePositive:(I)V']
-Got ['jpamb.cases.Calls.allPrimesArePositive:(I)V']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -243,7 +231,6 @@ Got ['jpamb.cases.Calls.allPrimesArePositive:(I)V']
 └ Case jpamb.cases.Calls.allPrimesArePositive:(I)V
 ┌ Case jpamb.cases.Calls.callsAssertFalse:()V
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Calls.callsAssertFalse:()V']
-Got ['jpamb.cases.Calls.callsAssertFalse:()V']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -262,7 +249,6 @@ Got ['jpamb.cases.Calls.callsAssertFalse:()V']
 └ Case jpamb.cases.Calls.callsAssertFalse:()V
 ┌ Case jpamb.cases.Calls.callsAssertFib:(I)V
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Calls.callsAssertFib:(I)V']
-Got ['jpamb.cases.Calls.callsAssertFib:(I)V']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -281,7 +267,6 @@ Got ['jpamb.cases.Calls.callsAssertFib:(I)V']
 └ Case jpamb.cases.Calls.callsAssertFib:(I)V
 ┌ Case jpamb.cases.Calls.callsAssertIf:(Z)V
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Calls.callsAssertIf:(Z)V']
-Got ['jpamb.cases.Calls.callsAssertIf:(Z)V']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -300,7 +285,6 @@ Got ['jpamb.cases.Calls.callsAssertIf:(Z)V']
 └ Case jpamb.cases.Calls.callsAssertIf:(Z)V
 ┌ Case jpamb.cases.Calls.callsAssertIfWithTrue:()V
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Calls.callsAssertIfWithTrue:()V']
-Got ['jpamb.cases.Calls.callsAssertIfWithTrue:()V']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -319,7 +303,6 @@ Got ['jpamb.cases.Calls.callsAssertIfWithTrue:()V']
 └ Case jpamb.cases.Calls.callsAssertIfWithTrue:()V
 ┌ Case jpamb.cases.Calls.callsAssertTrue:()V
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Calls.callsAssertTrue:()V']
-Got ['jpamb.cases.Calls.callsAssertTrue:()V']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -338,7 +321,6 @@ Got ['jpamb.cases.Calls.callsAssertTrue:()V']
 └ Case jpamb.cases.Calls.callsAssertTrue:()V
 ┌ Case jpamb.cases.Loops.forever:()V
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Loops.forever:()V']
-Got ['jpamb.cases.Loops.forever:()V']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -357,7 +339,6 @@ Got ['jpamb.cases.Loops.forever:()V']
 └ Case jpamb.cases.Loops.forever:()V
 ┌ Case jpamb.cases.Loops.neverAsserts:()V
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Loops.neverAsserts:()V']
-Got ['jpamb.cases.Loops.neverAsserts:()V']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -376,7 +357,6 @@ Got ['jpamb.cases.Loops.neverAsserts:()V']
 └ Case jpamb.cases.Loops.neverAsserts:()V
 ┌ Case jpamb.cases.Loops.neverDivides:()I
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Loops.neverDivides:()I']
-Got ['jpamb.cases.Loops.neverDivides:()I']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -395,7 +375,6 @@ Got ['jpamb.cases.Loops.neverDivides:()I']
 └ Case jpamb.cases.Loops.neverDivides:()I
 ┌ Case jpamb.cases.Loops.terminates:()V
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Loops.terminates:()V']
-Got ['jpamb.cases.Loops.terminates:()V']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -414,7 +393,6 @@ Got ['jpamb.cases.Loops.terminates:()V']
 └ Case jpamb.cases.Loops.terminates:()V
 ┌ Case jpamb.cases.Simple.assertBoolean:(Z)V
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Simple.assertBoolean:(Z)V']
-Got ['jpamb.cases.Simple.assertBoolean:(Z)V']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -433,7 +411,6 @@ Got ['jpamb.cases.Simple.assertBoolean:(Z)V']
 └ Case jpamb.cases.Simple.assertBoolean:(Z)V
 ┌ Case jpamb.cases.Simple.assertFalse:()V
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Simple.assertFalse:()V']
-Got ['jpamb.cases.Simple.assertFalse:()V']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -452,7 +429,6 @@ Got ['jpamb.cases.Simple.assertFalse:()V']
 └ Case jpamb.cases.Simple.assertFalse:()V
 ┌ Case jpamb.cases.Simple.assertInteger:(I)V
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Simple.assertInteger:(I)V']
-Got ['jpamb.cases.Simple.assertInteger:(I)V']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -471,7 +447,6 @@ Got ['jpamb.cases.Simple.assertInteger:(I)V']
 └ Case jpamb.cases.Simple.assertInteger:(I)V
 ┌ Case jpamb.cases.Simple.assertPositive:(I)V
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Simple.assertPositive:(I)V']
-Got ['jpamb.cases.Simple.assertPositive:(I)V']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -490,7 +465,6 @@ Got ['jpamb.cases.Simple.assertPositive:(I)V']
 └ Case jpamb.cases.Simple.assertPositive:(I)V
 ┌ Case jpamb.cases.Simple.checkBeforeAssert:(I)V
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Simple.checkBeforeAssert:(I)V']
-Got ['jpamb.cases.Simple.checkBeforeAssert:(I)V']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -509,7 +483,6 @@ Got ['jpamb.cases.Simple.checkBeforeAssert:(I)V']
 └ Case jpamb.cases.Simple.checkBeforeAssert:(I)V
 ┌ Case jpamb.cases.Simple.checkBeforeDivideByN2:(I)I
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Simple.checkBeforeDivideByN2:(I)I']
-Got ['jpamb.cases.Simple.checkBeforeDivideByN2:(I)I']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -528,7 +501,6 @@ Got ['jpamb.cases.Simple.checkBeforeDivideByN2:(I)I']
 └ Case jpamb.cases.Simple.checkBeforeDivideByN2:(I)I
 ┌ Case jpamb.cases.Simple.checkBeforeDivideByN:(I)I
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Simple.checkBeforeDivideByN:(I)I']
-Got ['jpamb.cases.Simple.checkBeforeDivideByN:(I)I']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -547,7 +519,6 @@ Got ['jpamb.cases.Simple.checkBeforeDivideByN:(I)I']
 └ Case jpamb.cases.Simple.checkBeforeDivideByN:(I)I
 ┌ Case jpamb.cases.Simple.divideByN:(I)I
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Simple.divideByN:(I)I']
-Got ['jpamb.cases.Simple.divideByN:(I)I']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -566,7 +537,6 @@ Got ['jpamb.cases.Simple.divideByN:(I)I']
 └ Case jpamb.cases.Simple.divideByN:(I)I
 ┌ Case jpamb.cases.Simple.divideByNMinus10054203:(I)I
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Simple.divideByNMinus10054203:(I)I']
-Got ['jpamb.cases.Simple.divideByNMinus10054203:(I)I']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -585,7 +555,6 @@ Got ['jpamb.cases.Simple.divideByNMinus10054203:(I)I']
 └ Case jpamb.cases.Simple.divideByNMinus10054203:(I)I
 ┌ Case jpamb.cases.Simple.divideByZero:()I
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Simple.divideByZero:()I']
-Got ['jpamb.cases.Simple.divideByZero:()I']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -604,7 +573,6 @@ Got ['jpamb.cases.Simple.divideByZero:()I']
 └ Case jpamb.cases.Simple.divideByZero:()I
 ┌ Case jpamb.cases.Simple.divideZeroByZero:(II)I
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Simple.divideZeroByZero:(II)I']
-Got ['jpamb.cases.Simple.divideZeroByZero:(II)I']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -623,7 +591,6 @@ Got ['jpamb.cases.Simple.divideZeroByZero:(II)I']
 └ Case jpamb.cases.Simple.divideZeroByZero:(II)I
 ┌ Case jpamb.cases.Simple.earlyReturn:()I
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Simple.earlyReturn:()I']
-Got ['jpamb.cases.Simple.earlyReturn:()I']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -642,7 +609,6 @@ Got ['jpamb.cases.Simple.earlyReturn:()I']
 └ Case jpamb.cases.Simple.earlyReturn:()I
 ┌ Case jpamb.cases.Simple.justReturn:()I
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Simple.justReturn:()I']
-Got ['jpamb.cases.Simple.justReturn:()I']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -661,7 +627,6 @@ Got ['jpamb.cases.Simple.justReturn:()I']
 └ Case jpamb.cases.Simple.justReturn:()I
 ┌ Case jpamb.cases.Simple.justReturnNothing:()V
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Simple.justReturnNothing:()V']
-Got ['jpamb.cases.Simple.justReturnNothing:()V']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -680,7 +645,6 @@ Got ['jpamb.cases.Simple.justReturnNothing:()V']
 └ Case jpamb.cases.Simple.justReturnNothing:()V
 ┌ Case jpamb.cases.Simple.multiError:(Z)I
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Simple.multiError:(Z)I']
-Got ['jpamb.cases.Simple.multiError:(Z)I']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%
@@ -699,7 +663,6 @@ Got ['jpamb.cases.Simple.multiError:(Z)I']
 └ Case jpamb.cases.Simple.multiError:(Z)I
 ┌ Case jpamb.cases.Tricky.collatz:(I)V
 │ Run ['python', 'solutions/apriori.py', 'jpamb.cases.Tricky.collatz:(I)V']
-Got ['jpamb.cases.Tricky.collatz:(I)V']
 │ Out
 │ *;8.1081%
 │ assertion error;48.6486%

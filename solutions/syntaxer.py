@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """A very stupid syntatic analysis, that only checks for assertion errors."""
 
-import sys
 import logging
 import tree_sitter
 import tree_sitter_java
 import jpamb
+import sys
 
-if sys.argv[1] == "info":
-    jpamb.printinfo(
-        "syntaxer",
-        "1.0",
-        "The Rice Theorem Cookers",
-        ["syntatic", "python"],
-        for_science=True,
-    )
+
+methodid = jpamb.getmethodid(
+    "syntaxer",
+    "1.0",
+    "The Rice Theorem Cookers",
+    ["syntatic", "python"],
+    for_science=True,
+)
 
 
 JAVA_LANGUAGE = tree_sitter.Language(tree_sitter_java.language())
@@ -23,16 +23,14 @@ parser = tree_sitter.Parser(JAVA_LANGUAGE)
 log = logging
 log.basicConfig(level=logging.DEBUG)
 
-(name,) = sys.argv[1:]
-method = jpamb.parse_methodid(name)
 
-srcfile = jpamb.Suite().sourcefile(method.classname)
+srcfile = jpamb.Suite().sourcefile(methodid.classname)
 
 with open(srcfile, "rb") as f:
     log.debug("parse sourcefile %s", srcfile)
     tree = parser.parse(f.read())
 
-simple_classname = str(method.classname.name)
+simple_classname = str(methodid.classname.name)
 
 log.debug(f"{simple_classname}")
 
@@ -50,11 +48,12 @@ for node in tree_sitter.QueryCursor(class_q).captures(tree.root_node)["class"]:
     break
 else:
     log.error(f"could not find a class of name {simple_classname} in {srcfile}")
+
     sys.exit(-1)
 
 log.debug("Found class %s", node.range)
 
-method_name = method.extension.name
+method_name = methodid.extension.name
 
 method_q = JAVA_LANGUAGE.query(
     f"""
@@ -72,13 +71,13 @@ for node in tree_sitter.QueryCursor(method_q).captures(node)["method"]:
 
     params = [c for c in p.children if c.type == "formal_parameter"]
 
-    if len(params) != len(method.extension.params):
+    if len(params) != len(methodid.extension.params):
         continue
 
-    log.debug(method.extension.params)
+    log.debug(methodid.extension.params)
     log.debug(params)
 
-    for tn, t in zip(method.extension.params, params):
+    for tn, t in zip(methodid.extension.params, params):
         if (tp := t.child_by_field_name("type")) is None:
             break
 

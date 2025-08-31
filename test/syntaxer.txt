@@ -17,10 +17,10 @@
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Arrays.arrayContent:()V']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Arrays.java
 DEBUG:root:Arrays
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(5, 0), end_point=(109, 1), start_byte=86, end_byte=2383>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=())
 DEBUG:root:[]
@@ -31,7 +31,7 @@ DEBUG:root:line:     for (int i = 0; i < array.length; i++) {
 DEBUG:root:line:       assert i > 0;
 DEBUG:root:line:     }
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Found assertion
 │ Out
@@ -44,10 +44,10 @@ DEBUG:root:Found assertion
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Arrays.arrayInBounds:()V']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Arrays.java
 DEBUG:root:Arrays
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(5, 0), end_point=(109, 1), start_byte=86, end_byte=2383>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=())
 DEBUG:root:[]
@@ -56,7 +56,7 @@ DEBUG:root:line: {
 DEBUG:root:line:     int array[] = { 0, 0 };
 DEBUG:root:line:     array[1] = 1;
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Did not find any assertions
 │ Out
@@ -69,10 +69,10 @@ DEBUG:root:Did not find any assertions
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Arrays.arrayIsNull:()V']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Arrays.java
 DEBUG:root:Arrays
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(5, 0), end_point=(109, 1), start_byte=86, end_byte=2383>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=())
 DEBUG:root:[]
@@ -81,7 +81,7 @@ DEBUG:root:line: {
 DEBUG:root:line:     int array[] = null;
 DEBUG:root:line:     array[1] = 10;
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Did not find any assertions
 │ Out
@@ -94,10 +94,10 @@ DEBUG:root:Did not find any assertions
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Arrays.arrayIsNullLength:()V']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Arrays.java
 DEBUG:root:Arrays
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(5, 0), end_point=(109, 1), start_byte=86, end_byte=2383>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=())
 DEBUG:root:[]
@@ -106,7 +106,7 @@ DEBUG:root:line: {
 DEBUG:root:line:     int array[] = null;
 DEBUG:root:line:     assert array.length == 0;
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Found assertion
 │ Out
@@ -119,10 +119,10 @@ DEBUG:root:Found assertion
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Arrays.arrayLength:()V']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Arrays.java
 DEBUG:root:Arrays
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(5, 0), end_point=(109, 1), start_byte=86, end_byte=2383>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=())
 DEBUG:root:[]
@@ -131,7 +131,7 @@ DEBUG:root:line: {
 DEBUG:root:line:     int array[] = { 0, 0 };
 DEBUG:root:line:     assert array.length == 2;
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Found assertion
 │ Out
@@ -144,10 +144,10 @@ DEBUG:root:Found assertion
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Arrays.arrayNotEmpty:([I)V']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Arrays.java
 DEBUG:root:Arrays
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(5, 0), end_point=(109, 1), start_byte=86, end_byte=2383>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=(Array(contains=Int()),))
 DEBUG:root:[<Node type=formal_parameter, start_point=(83, 35), end_point=(83, 46)>]
@@ -155,7 +155,7 @@ DEBUG:root:Found method arrayNotEmpty <Range start_point=(80, 2), end_point=(85,
 DEBUG:root:line: {
 DEBUG:root:line:     assert array.length > 0;
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Found assertion
 │ Out
@@ -168,10 +168,10 @@ DEBUG:root:Found assertion
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Arrays.arrayOutOfBounds:()V']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Arrays.java
 DEBUG:root:Arrays
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(5, 0), end_point=(109, 1), start_byte=86, end_byte=2383>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=())
 DEBUG:root:[]
@@ -180,7 +180,7 @@ DEBUG:root:line: {
 DEBUG:root:line:     int array[] = { 0, 0 };
 DEBUG:root:line:     array[3] = 0;
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Did not find any assertions
 │ Out
@@ -193,10 +193,10 @@ DEBUG:root:Did not find any assertions
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Arrays.arraySometimesNull:(I)V']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Arrays.java
 DEBUG:root:Arrays
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(5, 0), end_point=(109, 1), start_byte=86, end_byte=2383>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=(Int(),))
 DEBUG:root:[<Node type=formal_parameter, start_point=(45, 40), end_point=(45, 45)>]
@@ -208,7 +208,7 @@ DEBUG:root:line:       array = new int[] { i };
 DEBUG:root:line:     }
 DEBUG:root:line:     array[1] = 10;
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Did not find any assertions
 │ Out
@@ -221,10 +221,10 @@ DEBUG:root:Did not find any assertions
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Arrays.arraySpellsHello:([C)V']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Arrays.java
 DEBUG:root:Arrays
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(5, 0), end_point=(109, 1), start_byte=86, end_byte=2383>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=(Array(contains=Char()),))
 DEBUG:root:[<Node type=formal_parameter, start_point=(91, 38), end_point=(91, 50)>]
@@ -236,7 +236,7 @@ DEBUG:root:line:         && array[2] == 'l'
 DEBUG:root:line:         && array[3] == 'l'
 DEBUG:root:line:         && array[4] == 'o';
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Found assertion
 │ Out
@@ -249,10 +249,10 @@ DEBUG:root:Found assertion
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Arrays.arraySumIsLarge:([I)V']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Arrays.java
 DEBUG:root:Arrays
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(5, 0), end_point=(109, 1), start_byte=86, end_byte=2383>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=(Array(contains=Int()),))
 DEBUG:root:[<Node type=formal_parameter, start_point=(102, 37), end_point=(102, 48)>]
@@ -264,7 +264,7 @@ DEBUG:root:line:       sum += array[i];
 DEBUG:root:line:     }
 DEBUG:root:line:     assert sum > 300;
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Found assertion
 │ Out
@@ -277,10 +277,10 @@ DEBUG:root:Found assertion
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Arrays.binarySearch:(I)V']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Arrays.java
 DEBUG:root:Arrays
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(5, 0), end_point=(109, 1), start_byte=86, end_byte=2383>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=(Int(),))
 DEBUG:root:[<Node type=formal_parameter, start_point=(65, 34), end_point=(65, 39)>]
@@ -299,7 +299,7 @@ DEBUG:root:line:         r = m - 1;
 DEBUG:root:line:     }
 DEBUG:root:line:     assert false;
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Found assertion
 │ Out
@@ -312,10 +312,10 @@ DEBUG:root:Found assertion
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Calls.allPrimesArePositive:(I)V']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Calls.java
 DEBUG:root:Calls
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(6, 0), end_point=(97, 1), start_byte=113, end_byte=1918>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=(Int(),))
 DEBUG:root:[<Node type=formal_parameter, start_point=(91, 42), end_point=(91, 52)>]
@@ -325,7 +325,7 @@ DEBUG:root:line:     for (int p : generatePrimeArray(number)) {
 DEBUG:root:line:       assert p > 0;
 DEBUG:root:line:     }
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Found assertion
 │ Out
@@ -338,10 +338,10 @@ DEBUG:root:Found assertion
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Calls.callsAssertFalse:()V']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Calls.java
 DEBUG:root:Calls
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(6, 0), end_point=(97, 1), start_byte=113, end_byte=1918>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=())
 DEBUG:root:[]
@@ -349,7 +349,7 @@ DEBUG:root:Found method callsAssertFalse <Range start_point=(29, 2), end_point=(
 DEBUG:root:line: {
 DEBUG:root:line:     assertFalse();
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Did not find any assertions
 │ Out
@@ -362,10 +362,10 @@ DEBUG:root:Did not find any assertions
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Calls.callsAssertFib:(I)V']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Calls.java
 DEBUG:root:Calls
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(6, 0), end_point=(97, 1), start_byte=113, end_byte=1918>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=(Int(),))
 DEBUG:root:[<Node type=formal_parameter, start_point=(59, 36), end_point=(59, 41)>]
@@ -373,7 +373,7 @@ DEBUG:root:Found method callsAssertFib <Range start_point=(56, 2), end_point=(61
 DEBUG:root:line: {
 DEBUG:root:line:     assert fib(i) == 21;
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Found assertion
 │ Out
@@ -386,10 +386,10 @@ DEBUG:root:Found assertion
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Calls.callsAssertIf:(Z)V']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Calls.java
 DEBUG:root:Calls
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(6, 0), end_point=(97, 1), start_byte=113, end_byte=1918>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=(Boolean(),))
 DEBUG:root:[<Node type=formal_parameter, start_point=(38, 35), end_point=(38, 44)>]
@@ -397,7 +397,7 @@ DEBUG:root:Found method callsAssertIf <Range start_point=(35, 2), end_point=(40,
 DEBUG:root:line: {
 DEBUG:root:line:     assertIf(b);
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Did not find any assertions
 │ Out
@@ -410,10 +410,10 @@ DEBUG:root:Did not find any assertions
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Calls.callsAssertIfWithTrue:()V']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Calls.java
 DEBUG:root:Calls
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(6, 0), end_point=(97, 1), start_byte=113, end_byte=1918>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=())
 DEBUG:root:[]
@@ -421,7 +421,7 @@ DEBUG:root:Found method callsAssertIfWithTrue <Range start_point=(42, 2), end_po
 DEBUG:root:line: {
 DEBUG:root:line:     assertIf(true);
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Did not find any assertions
 │ Out
@@ -434,10 +434,10 @@ DEBUG:root:Did not find any assertions
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Calls.callsAssertTrue:()V']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Calls.java
 DEBUG:root:Calls
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(6, 0), end_point=(97, 1), start_byte=113, end_byte=1918>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=())
 DEBUG:root:[]
@@ -445,7 +445,7 @@ DEBUG:root:Found method callsAssertTrue <Range start_point=(24, 2), end_point=(2
 DEBUG:root:line: {
 DEBUG:root:line:     assertTrue();
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Did not find any assertions
 │ Out
@@ -458,10 +458,10 @@ DEBUG:root:Did not find any assertions
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Loops.forever:()V']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Loops.java
 DEBUG:root:Loops
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(5, 0), end_point=(40, 1), start_byte=86, end_byte=655>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=())
 DEBUG:root:[]
@@ -470,7 +470,7 @@ DEBUG:root:line: {
 DEBUG:root:line:     while (true) {
 DEBUG:root:line:     }
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Did not find any assertions
 │ Out
@@ -483,10 +483,10 @@ DEBUG:root:Did not find any assertions
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Loops.neverAsserts:()V']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Loops.java
 DEBUG:root:Loops
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(5, 0), end_point=(40, 1), start_byte=86, end_byte=655>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=())
 DEBUG:root:[]
@@ -497,7 +497,7 @@ DEBUG:root:line:     while (i > 0) {
 DEBUG:root:line:     }
 DEBUG:root:line:     assert false;
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Found assertion
 │ Out
@@ -510,10 +510,10 @@ DEBUG:root:Found assertion
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Loops.neverDivides:()I']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Loops.java
 DEBUG:root:Loops
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(5, 0), end_point=(40, 1), start_byte=86, end_byte=655>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=())
 DEBUG:root:[]
@@ -524,7 +524,7 @@ DEBUG:root:line:     while (i > 0) {
 DEBUG:root:line:     }
 DEBUG:root:line:     return 0 / 0;
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Did not find any assertions
 │ Out
@@ -537,10 +537,10 @@ DEBUG:root:Did not find any assertions
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Loops.terminates:()V']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Loops.java
 DEBUG:root:Loops
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(5, 0), end_point=(40, 1), start_byte=86, end_byte=655>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=())
 DEBUG:root:[]
@@ -551,7 +551,7 @@ DEBUG:root:line:     while (i++ != 0) {
 DEBUG:root:line:     }
 DEBUG:root:line:     assert false;
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Found assertion
 │ Out
@@ -564,10 +564,10 @@ DEBUG:root:Found assertion
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Simple.assertBoolean:(Z)V']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Simple.java
 DEBUG:root:Simple
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(4, 0), end_point=(104, 1), start_byte=48, end_byte=1987>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=(Boolean(),))
 DEBUG:root:[<Node type=formal_parameter, start_point=(13, 35), end_point=(13, 53)>]
@@ -575,7 +575,7 @@ DEBUG:root:Found method assertBoolean <Range start_point=(11, 2), end_point=(15,
 DEBUG:root:line: {
 DEBUG:root:line:     assert shouldFail;
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Found assertion
 │ Out
@@ -588,10 +588,10 @@ DEBUG:root:Found assertion
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Simple.assertFalse:()V']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Simple.java
 DEBUG:root:Simple
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(4, 0), end_point=(104, 1), start_byte=48, end_byte=1987>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=())
 DEBUG:root:[]
@@ -599,7 +599,7 @@ DEBUG:root:Found method assertFalse <Range start_point=(6, 2), end_point=(9, 3),
 DEBUG:root:line: {
 DEBUG:root:line:     assert false;
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Found assertion
 │ Out
@@ -612,10 +612,10 @@ DEBUG:root:Found assertion
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Simple.assertInteger:(I)V']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Simple.java
 DEBUG:root:Simple
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(4, 0), end_point=(104, 1), start_byte=48, end_byte=1987>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=(Int(),))
 DEBUG:root:[<Node type=formal_parameter, start_point=(19, 35), end_point=(19, 40)>]
@@ -623,7 +623,7 @@ DEBUG:root:Found method assertInteger <Range start_point=(17, 2), end_point=(21,
 DEBUG:root:line: {
 DEBUG:root:line:     assert n != 0;
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Found assertion
 │ Out
@@ -636,10 +636,10 @@ DEBUG:root:Found assertion
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Simple.assertPositive:(I)V']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Simple.java
 DEBUG:root:Simple
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(4, 0), end_point=(104, 1), start_byte=48, end_byte=1987>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=(Int(),))
 DEBUG:root:[<Node type=formal_parameter, start_point=(25, 36), end_point=(25, 43)>]
@@ -647,7 +647,7 @@ DEBUG:root:Found method assertPositive <Range start_point=(23, 2), end_point=(27
 DEBUG:root:line: {
 DEBUG:root:line:     assert num > 0;
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Found assertion
 │ Out
@@ -660,10 +660,10 @@ DEBUG:root:Found assertion
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Simple.checkBeforeAssert:(I)V']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Simple.java
 DEBUG:root:Simple
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(4, 0), end_point=(104, 1), start_byte=48, end_byte=1987>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=(Int(),))
 DEBUG:root:[<Node type=formal_parameter, start_point=(81, 39), end_point=(81, 44)>]
@@ -674,7 +674,7 @@ DEBUG:root:line:       return;
 DEBUG:root:line:     }
 DEBUG:root:line:     assert 1 / n > 0;
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Found assertion
 │ Out
@@ -687,10 +687,10 @@ DEBUG:root:Found assertion
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Simple.checkBeforeDivideByN2:(I)I']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Simple.java
 DEBUG:root:Simple
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(4, 0), end_point=(104, 1), start_byte=48, end_byte=1987>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=(Int(),))
 DEBUG:root:[<Node type=formal_parameter, start_point=(71, 42), end_point=(71, 47)>]
@@ -702,7 +702,7 @@ DEBUG:root:line:     }
 DEBUG:root:line:     assert 10 > n;
 DEBUG:root:line:     return 0;
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Found assertion
 │ Out
@@ -715,10 +715,10 @@ DEBUG:root:Found assertion
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Simple.checkBeforeDivideByN:(I)I']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Simple.java
 DEBUG:root:Simple
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(4, 0), end_point=(104, 1), start_byte=48, end_byte=1987>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=(Int(),))
 DEBUG:root:[<Node type=formal_parameter, start_point=(64, 41), end_point=(64, 46)>]
@@ -727,7 +727,7 @@ DEBUG:root:line: {
 DEBUG:root:line:     assert n != 0;
 DEBUG:root:line:     return 1 / n;
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Found assertion
 │ Out
@@ -740,10 +740,10 @@ DEBUG:root:Found assertion
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Simple.divideByN:(I)I']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Simple.java
 DEBUG:root:Simple
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(4, 0), end_point=(104, 1), start_byte=48, end_byte=1987>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=(Int(),))
 DEBUG:root:[<Node type=formal_parameter, start_point=(36, 30), end_point=(36, 35)>]
@@ -751,7 +751,7 @@ DEBUG:root:Found method divideByN <Range start_point=(34, 2), end_point=(38, 3),
 DEBUG:root:line: {
 DEBUG:root:line:     return 1 / n;
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Did not find any assertions
 │ Out
@@ -764,10 +764,10 @@ DEBUG:root:Did not find any assertions
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Simple.divideByNMinus10054203:(I)I']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Simple.java
 DEBUG:root:Simple
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(4, 0), end_point=(104, 1), start_byte=48, end_byte=1987>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=(Int(),))
 DEBUG:root:[<Node type=formal_parameter, start_point=(100, 43), end_point=(100, 48)>]
@@ -775,7 +775,7 @@ DEBUG:root:Found method divideByNMinus10054203 <Range start_point=(98, 2), end_p
 DEBUG:root:line: {
 DEBUG:root:line:     return 1 / (n - 10054203);
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Did not find any assertions
 │ Out
@@ -788,10 +788,10 @@ DEBUG:root:Did not find any assertions
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Simple.divideByZero:()I']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Simple.java
 DEBUG:root:Simple
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(4, 0), end_point=(104, 1), start_byte=48, end_byte=1987>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=())
 DEBUG:root:[]
@@ -799,7 +799,7 @@ DEBUG:root:Found method divideByZero <Range start_point=(29, 2), end_point=(32, 
 DEBUG:root:line: {
 DEBUG:root:line:     return 1 / 0;
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Did not find any assertions
 │ Out
@@ -812,10 +812,10 @@ DEBUG:root:Did not find any assertions
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Simple.divideZeroByZero:(II)I']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Simple.java
 DEBUG:root:Simple
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(4, 0), end_point=(104, 1), start_byte=48, end_byte=1987>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=(Int(), Int()))
 DEBUG:root:[<Node type=formal_parameter, start_point=(42, 37), end_point=(42, 42)>, <Node type=formal_parameter, start_point=(42, 44), end_point=(42, 49)>]
@@ -823,7 +823,7 @@ DEBUG:root:Found method divideZeroByZero <Range start_point=(40, 2), end_point=(
 DEBUG:root:line: {
 DEBUG:root:line:     return a / b;
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Did not find any assertions
 │ Out
@@ -836,10 +836,10 @@ DEBUG:root:Did not find any assertions
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Simple.earlyReturn:()I']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Simple.java
 DEBUG:root:Simple
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(4, 0), end_point=(104, 1), start_byte=48, end_byte=1987>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=())
 DEBUG:root:[]
@@ -851,7 +851,7 @@ DEBUG:root:line:     }
 DEBUG:root:line:     assert false;
 DEBUG:root:line:     return 0;
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Found assertion
 │ Out
@@ -864,10 +864,10 @@ DEBUG:root:Found assertion
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Simple.justReturn:()I']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Simple.java
 DEBUG:root:Simple
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(4, 0), end_point=(104, 1), start_byte=48, end_byte=1987>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=())
 DEBUG:root:[]
@@ -875,7 +875,7 @@ DEBUG:root:Found method justReturn <Range start_point=(88, 2), end_point=(91, 3)
 DEBUG:root:line: {
 DEBUG:root:line:     return 0;
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Did not find any assertions
 │ Out
@@ -888,10 +888,10 @@ DEBUG:root:Did not find any assertions
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Simple.justReturnNothing:()V']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Simple.java
 DEBUG:root:Simple
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(4, 0), end_point=(104, 1), start_byte=48, end_byte=1987>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=())
 DEBUG:root:[]
@@ -899,7 +899,7 @@ DEBUG:root:Found method justReturnNothing <Range start_point=(93, 2), end_point=
 DEBUG:root:line: {
 DEBUG:root:line:     return;
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Did not find any assertions
 │ Out
@@ -912,10 +912,10 @@ DEBUG:root:Did not find any assertions
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Simple.multiError:(Z)I']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Simple.java
 DEBUG:root:Simple
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(4, 0), end_point=(104, 1), start_byte=48, end_byte=1987>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=(Boolean(),))
 DEBUG:root:[<Node type=formal_parameter, start_point=(48, 31), end_point=(48, 40)>]
@@ -924,7 +924,7 @@ DEBUG:root:line: {
 DEBUG:root:line:     assert b;
 DEBUG:root:line:     return 1 / 0;
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Found assertion
 │ Out
@@ -937,10 +937,10 @@ DEBUG:root:Found assertion
 │ Run ['python', 'solutions/syntaxer.py', 'jpamb.cases.Tricky.collatz:(I)V']
 DEBUG:root:parse sourcefile /Users/chrg/Develop/repos/jpamb/src/main/java/jpamb/cases/Tricky.java
 DEBUG:root:Tricky
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:41: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:39: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   class_q = JAVA_LANGUAGE.query(
 DEBUG:root:Found class <Range start_point=(5, 0), end_point=(21, 1), start_byte=86, end_byte=364>
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:59: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:58: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   method_q = JAVA_LANGUAGE.query(
 DEBUG:root:ParameterType(_elements=(Int(),))
 DEBUG:root:[<Node type=formal_parameter, start_point=(10, 29), end_point=(10, 34)>]
@@ -955,7 +955,7 @@ DEBUG:root:line:         n = n * 3 + 1;
 DEBUG:root:line:       }
 DEBUG:root:line:     }
 DEBUG:root:line:   }
-/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:102: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
+/Users/chrg/Develop/repos/jpamb/solutions/syntaxer.py:101: DeprecationWarning: query() is deprecated. Use the Query() constructor instead.
   assert_q = JAVA_LANGUAGE.query(f"""(assert_statement) @assert""")
 DEBUG:root:Found assertion
 │ Out
