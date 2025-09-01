@@ -2,20 +2,28 @@
 import sys
 
 if len(sys.argv) == 2 and sys.argv[1] == "info":
-    # Info mode - tell JPAMB about your analyzer
-    print("My First Analyzer")        # name
-    print("1.0")                      # version  
-    print("Student Name")             # group/team
-    print("simple,python")            # tags
-    print("no")                       # privacy mode - use "yes" to share system info to help us improve
+    # Output the 5 required info lines
+    print("My First Analyzer")
+    print("1.0")
+    print("Student Name")
+    print("simple,python")
+    print("no")  # Use "yes" to share system info
 else:
-    # Analysis mode - make predictions
+    # Get the method we need to analyze
     method_name = sys.argv[1]
     
-    # Simple strategy: guess everything just works
-    print("ok;90%")
-    print("divide by zero;10%") 
-    print("assertion error;5%")
-    print("out of bounds;0%")
-    print("null pointer;0%")
-    print("*;0%")
+    # Make predictions (improve these by looking at the Java code!)
+    ok_chance = "90%"
+    divide_by_zero_chance = "10%"
+    assertion_error_chance = "5%"
+    out_of_bounds_chance = "0%"
+    null_pointer_chance = "0%"
+    infinite_loop_chance = "0%"
+    
+    # Output predictions for all 6 possible outcomes
+    print(f"ok;{ok_chance}")
+    print(f"divide by zero;{divide_by_zero_chance}") 
+    print(f"assertion error;{assertion_error_chance}")
+    print(f"out of bounds;{out_of_bounds_chance}")
+    print(f"null pointer;{null_pointer_chance}")
+    print(f"*;{infinite_loop_chance}")
