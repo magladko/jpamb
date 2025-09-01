@@ -45,4 +45,3 @@ test = [
 
 [project.scripts]
 jpamb = "jpamb.cli:cli"
-jpamb_stats = "jpamb.stats:stats"

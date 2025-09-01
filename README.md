@@ -10,20 +10,58 @@ The easiest way to do that is by downloading and running the `uv` package manage
 Please see the [instructions](https://docs.astral.sh/uv/getting-started/installation/) for how 
 to get setup.
 
-To install the jpamb tool, you can simply install it using the `uv tool install` command:
+
+First you should build the repository:
 
 ```bash
-# On linux
-uv tool install -e ./lib
-# On windows (I think)
-uv tool install -e .\lib
+$> uv build
 ```
 
-Now you should be able to run the tool using the following command, which should spit out a number of checks, that all should be green.
+After which you should be able to run the tool using the following command, which should spit out a number of checks, that all should be green.
+```bash
+$> uv run jpamb checkhealth
+```
+
+You should also check that the base analysis work: 
+```bash
+$> uv run solutions/apriori.py info
+```
+
+Which should allow you to run the tool like this:
+```bash
+$> uv run jpamb test uv run solutions/apriori.py
+```
+
+### Giving Your Analysis Access to JPAMB
+
+It is possible to add the `jpamb` dependencies to a python script by running 
+the following command:
 
 ```bash
-uvx jpamb checkhealth
+$> uv add --editable --script=your_analysis.py .
 ```
+
+You can even add other dependencies you might need:
+
+```bash
+$> uv add --script=your_analysis.py z3
+```
+
+Now you can run it from anywhere like so:
+
+```bash
+$> uv run --script your_analysis.py info
+```
+
+## Troubleshooting
+
+Here is a list of common problems you might encounter while running the code.
+
+### Windows: C++ version 14 not installed.
+
+Download the requested upgrader and make sure to press "modify" before installing 
+and add the C++ tools to the tool-chain.
+
 
 ## Rules of the Game
 
@@ -175,43 +213,6 @@ $> ./evaluate your-experiment.yaml --filter-methods=Simple --filter-tools=syntax
 ```
 
 Also, if you want more debug information you can add multiples `-vvv` to get more information.
-
-## Windows
-
-The instructions above should also work for windows, but it is less straight forward.
-The easy way out of this is to install Linux as a subsystem on your Windows machine. 
-This is supported directly on [Windows](https://learn.microsoft.com/en-us/windows/wsl/install).
-This will require you to do all of your development in this environment though.
-
-If you prefer staying in Windows land, here are some tips and pointers:
-
--   Sometimes paths needs to be inverted in the examples `/` to `\`.
-
--   It is extra important to use [virtual environments](https://www.pythonguis.com/tutorials/python-virtual-environments/), 
-    when using windows, that way you can keep different versions of python separate.
-
--   To support compiling with `gcc` and to make your life easier you 
-    should install [MSYS2](https://www.msys2.org/) with mingw-w64 GCC.
-    You can do this by following the guide in the link above (step 6 - 9.).
-    After this you would also have to install python and pip, before setting up the environment:
-
-    ```powershell
-    > pacman -S python
-    > pacman -S python-pip
-    ```
-
--  Alternatively, after installing CSS through MSYS2, one can just add 
-   `"C:\msys64\ucrt64\bin"` (or wherever they have gcc.exe installed) to their
-   environment variable `"Path"`, and then GCC should work in a normal
-   terminal. To do this on Windows 11:
-
-    -   Click on Start and search for "edit the system environment variables"; click on it.
-    -   Click "Environment Variables..." at the bottom right (you should be on the tap "Advanced").
-    -   Find `"Path"`, either under "System variables" or "User variables" (whether you want it to work on the computer in general, or only when you are logged into your Windows account); double click it.
-    -   Click "New", and write the path to the bin-directory.
-    -   You can now close all the popups you have created by clicking "OK" on each.
-
-If you have any problems getting started on windows, please file an issue.
 
 
 ## Interpreting
