@@ -2,6 +2,7 @@ import click
 from pathlib import Path
 import shlex
 import math
+import sys
 
 from jpamb import model, logger
 from jpamb.logger import log
@@ -147,6 +148,11 @@ def run(cmd: list[str], /, timeout=2.0, logout=None, logerr=None, **kwargs):
 @cli.command()
 @click.pass_context
 @click.option(
+    "--with-python/--no-with-python",
+    help="the analysis is a python script, which should run in the same interpreter as jpamb.",
+    default=None,
+)
+@click.option(
     "--fail-fast/--no-fail-fast",
     help="if we should stop after the first error.",
 )
@@ -164,10 +170,22 @@ def run(cmd: list[str], /, timeout=2.0, logout=None, logerr=None, **kwargs):
     help="A file to write the report to. (Good for golden testing)",
 )
 @click.argument("PROGRAM", nargs=-1)
-def test(ctx, program, report, filter, fail_fast):
+def test(ctx, program, report, filter, fail_fast, with_python):
     """Test run a PROGRAM."""
 
     prefix = ""
+
+    if with_python is None:
+        if str(program[0]).lower().endswith(".py"):
+            log.warning(
+                "Automatically prepending the current python interpreter to the command. To disable this warning add the '--with-python' flag or prepend intented python interpreter to the command."
+            )
+            with_python = True
+        else:
+            with_python = False
+
+    if with_python:
+        program = (sys.executable,) + program
 
     @contextmanager
     def context(title):
@@ -225,6 +243,11 @@ def test(ctx, program, report, filter, fail_fast):
 @cli.command()
 @click.pass_context
 @click.option(
+    "--with-python/--no-with-python",
+    help="the analysis is a python script, which should run in the same interpreter as jpamb.",
+    default=None,
+)
+@click.option(
     "--iterations",
     "-N",
     show_default=True,
@@ -245,8 +268,20 @@ def test(ctx, program, report, filter, fail_fast):
     help="A file to write the report to",
 )
 @click.argument("PROGRAM", nargs=-1)
-def evaluate(ctx, program, report, timeout, iterations):
+def evaluate(ctx, program, report, timeout, iterations, with_python):
     """Evaluate the PROGRAM."""
+
+    if with_python is None:
+        if str(program[0]).lower().endswith(".py"):
+            log.warning(
+                "Automatically prepending the current python interpreter to the command. To disable this warning add the '--with-python' flag or prepend intented python interpreter to the command."
+            )
+            with_python = True
+        else:
+            with_python = False
+
+    if with_python:
+        program = (sys.executable,) + program
 
     def calibrate(count=100_000):
         from time import perf_counter_ns

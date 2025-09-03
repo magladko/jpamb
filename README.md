@@ -36,8 +36,16 @@ $> uv run jpamb test uv run solutions/apriori.py
 
 ### Giving Your Analysis Access to JPAMB
 
-It is possible to add the `jpamb` dependencies to a python script by running 
-the following command:
+The simple way to give a python access to the jpamb library, is to run the
+python script with the same interpreter of the `jpamb` project. To do this you
+can simply add the `--with-python` flag.
+
+```bash
+$> uv run jpamb test --with-python solutions/apriori.py
+```
+
+Another way is to add the `jpamb` dependencies to a python script. 
+You do this by running the following command:
 
 ```bash
 $> uv add --editable --script=your_analysis.py .
