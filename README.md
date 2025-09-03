@@ -1,256 +1,327 @@
 # JPAMB: Java Program Analysis Micro Benchmarks
 
-The goal of this benchmark suite is to make a collection of interesting
-micro-benchmarks to be solved by some program analysis.
+## What is this?
 
-## Installing
+JPAMB is a collection of small Java programs with various behaviors (crashes, infinite loops, normal completion). Your task is to build a program analysis tool that can predict what will happen when these programs run.
 
-To get started you need to first install Python on your system. 
-The easiest way to do that is by downloading and running the `uv` package manager. 
-Please see the [instructions](https://docs.astral.sh/uv/getting-started/installation/) for how 
-to get setup.
+Think of it like a fortune teller for code: given a Java method, can your analysis predict if it will crash, run forever, or complete successfully?
 
+## Quick Links
 
-First you should build the repository:
+- **[uv documentation](https://docs.astral.sh/uv/)** - Python package manager we use
+- **[Tree-sitter Java](https://tree-sitter.github.io/tree-sitter/using-parsers)** - For parsing Java source code
+- **[JVM2JSON codec](https://github.com/kalhauge/jvm2json/blob/main/CODEC.txt)** - Understanding bytecode format
+- **[Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022)** - Windows C++ compiler
+- **[JPAMB GitHub Issues](https://github.com/kalhauge/jpamb/issues)** - Get help if stuck
 
+## Setup 
+
+### Step 1: Install GCC (required for compilation)
+
+**Ubuntu/Debian:**
 ```bash
-$> uv build
+sudo apt update
+sudo apt install build-essential
 ```
 
-After which you should be able to run the tool using the following command, which should spit out a number of checks, that all should be green.
+**Windows:**
 ```bash
-$> uv run jpamb checkhealth
+# Install Microsoft Visual C++ 14.0 (required for Python C extensions)
+# Download from: https://visualstudio.microsoft.com/visual-cpp-build-tools/
+# Or install via Visual Studio Installer and select "C++ build tools"
+
+# Alternative: Install Visual Studio Community (includes build tools)
+winget install Microsoft.VisualStudio.2022.Community
 ```
 
-You should also be able to run the prebuild analysis in the project environment. You can do that like so: 
+**Mac:**
 ```bash
-$> uv run solutions/apriori.py info
-<lines of info>
+# Install Xcode command line tools
+xcode-select --install
 ```
 
-Which should allow you to test any analysis.
+### Step 2: Install uv (Python package manager)
 ```bash
-$> uv run jpamb test <CMD>
-<lines of information>
+# On Linux/Mac:
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# On Windows (PowerShell):
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-Where you replace `<CMD>` by any analysis you can run from the commandline like
-`<CMD> info`. 
-For example you can run the prebuild analysis from above, like so:
+**Important:** Restart your terminal/command prompt after installing uv!
+
+### Step 3: Install JPAMB
 
 ```bash
-$> uv run jpamb test uv run solutions/apriori.py
-<lines of information>
+# Navigate to this directory and run:
+uv tool install -e .
 ```
 
-### Installing JPAMB as a tool
+The `-e` means that the tool is installed editable, which means 
+that if you download a new version of the repository this will follow.
 
-You can also intall the JPAMB as a tool, by running the `uv tool install -e .` command.
-This will allow you to run the commans above without the `uv run` prefix.
-The `-e` stands for editable, which means that if you download new versions of the code, the tool will update as well.
-
-In this case and if your analysis is a python script, you might want to read the next section.
-
-### Giving Your Analysis Access to JPAMB
-
-The simple way to give a python script access to the jpamb library is to run the
-python script with the same interpreter of the JPAMB project. To do this you
-can simply add the `--with-python` flag.
+### Step 4: Verify everything works
 
 ```bash
-$> uv run jpamb test --with-python solutions/apriori.py
+uvx jpamb checkhealth
+```
+You should see several green "ok" messages. If you see any red errors, check troubleshooting below!
+
+## How It Works
+
+### Your Task
+Build a program that analyzes Java methods and predicts what will happen when they run.
+
+### Your Program Must Support Two Commands:
+
+Here we use `./your_analyzer` to be name of the program you are going to 
+write.
+
+**1. Info command** - tells us about your analyzer:
+```bash
+./your_analyzer info
+```
+This should output 5 lines:
+- Your analyzer's name
+- Version number  
+- Your team/group name
+- Tags describing your approach (e.g., "static,dataflow")
+- Either your system info (to help us improve and for science) or "no" (for privacy)
+
+**2. Analysis command** - makes predictions:
+```bash
+./your_analyzer "jpamb.cases.Simple.divideByZero:()I"
 ```
 
-Another way is to add the `jpamb` dependencies to a python script. 
-You do this by running the following command:
+### What Can Happen to Java Methods?
+
+Your analyzer need to predict if there exist an input to the method where 
+one of these possible outcomes can happen:
+
+| Outcome | What it means |
+|---------|---------------|
+| `ok` | Method runs and finishes normally |
+| `divide by zero` | Method tries to divide by zero |
+| `assertion error` | Method fails an assertion (like `assert x > 0`) |
+| `out of bounds` | Method accesses array outside its bounds |
+| `null pointer` | Method tries to use a null reference |
+| `*` | Method runs forever (infinite loop) |
+
+### Making Predictions
+
+For each outcome, you give either:
+- **A percentage**: `75%` means "75% of all methods that looks like this will have this outcome"
+- **A wager**: `5` means "bet 5 points this will happen", `-10` means "bet 10 points this WON'T happen"
+
+**Example output:**
+```
+ok;80%
+divide by zero;20%
+assertion error;0%
+out of bounds;5
+null pointer;0%
+*;0%
+```
+
+
+## Your First Analyzer
+
+### Step 1: Look at Example Java Code
+
+Check out the test cases in `src/main/java/jpamb/cases/Simple.java` - these are
+(some of) the methods your analyzer will predict the behavior of.
+
+For example, `assertBoolean` has two known outcomes. If given `false` it throws 
+an `assertion error`, and if given `true` it finishes normally `ok`.
+
+```java
+@Case("(false) -> assertion error")
+@Case("(true) -> ok")
+public static void assertBoolean(boolean shouldFail) {
+    assert shouldFail;
+}
+```
+
+### Step 2: Create Your First Analyzer
+
+Create a file called `my_analyzer.py`:
+
+```python
+import sys
+import re
+
+if len(sys.argv) == 2 and sys.argv[1] == "info":
+    # Output the 5 required info lines
+    print("My First Analyzer")
+    print("1.0")
+    print("Student Group Name")
+    print("simple,python")
+    print("no")  # Use any other string to share system info
+else:
+    # Get the method we need to analyze
+    classname, methodname, args = re.match(r"(.*)\.(.*):(.*)", sys.argv[1])
+    
+    # Make predictions (improve these by looking at the Java code!)
+    ok_chance = "90%"
+    divide_by_zero_chance = "10%"
+    assertion_error_chance = "5%"
+    out_of_bounds_chance = "0%"
+    null_pointer_chance = "0%"
+    infinite_loop_chance = "0%"
+    
+    # Output predictions for all 6 possible outcomes
+    print(f"ok;{ok_chance}")
+    print(f"divide by zero;{divide_by_zero_chance}") 
+    print(f"assertion error;{assertion_error_chance}")
+    print(f"out of bounds;{out_of_bounds_chance}")
+    print(f"null pointer;{null_pointer_chance}")
+    print(f"*;{infinite_loop_chance}")
+```
+
+### Step 3: Run Your Analyzer
+
+First, make sure that your script runs outside the JPAMB framework. If you 
+have python installed on your system you can run:
 
 ```bash
-$> uv add --editable --script=your_analysis.py .
+python ./my_analyzer.py info
 ```
 
-You can even add other dependencies you might need:
+But, you can also run it with the same interpreter as the JPAMB framework, 
+like so:
 
 ```bash
-$> uv add --script=your_analysis.py z3-solver
+uv run ./my_analyzer.py info
 ```
 
-Now you can run it from anywhere like so:
+This command should output the data from above. 
+You should also be able to run it with a method name like `jpamb.cases.Simple.divideByZero:()I`.
+
+### Step 4: Test Your Analyzer
+
+Now you should be able to test the analyser.
+In the begining we recommend adding the `--filter "Simple"`, which 
+focuses you on the methods from the `src/main/java/jpamb/cases/Simple.java` 
+file:
 
 ```bash
-$> uv run --script your_analysis.py info
+# Test on just the Simple cases to start
+# Linux/Mac/Windows (all the same):
+uvx jpamb test --filter "Simple" <your-intepreter> my_analyzer.py
 ```
+
+You should see output showing scores for each test case. Don't worry about the scores yet - focus on getting it working!
+
+Also if you are using python, you can use the `--with-python` flag, which 
+runs the analyser with the same interpreter as JPAMB.
+
+```bash
+uvx jpamb test --filter "Simple" <your-intepreter> my_analyzer.py
+```
+
+### Step 5: Improve Your Analyzer
+
+*Mini Task:* To improve your analyser you first have to find the class 
+and then the method in that class. In Java, classes are always placed 
+after their classnames, so you can find `jpamb.cases.Simple` in the source file `src/main/java/jpamb/cases/Simple.java`.
+
+*Tip* you might use a regular expression to find the content of a method. 
+[`r"assertFalse.*{([^}]*)}"`](https://regex101.com/r/jDSC6S/1) and pythons 
+[re](https://docs.python.org/3/library/re.html#re.Match) library.
+
+Now look at the Java code and try to make better predictions. For example:
+- If you see `1/0` in the code, predict `divide by zero;100%`
+- If you see `assert false`, predict `assertion error;100%`
+- If you see `while(true)`, predict `*;100%` (infinite loop)
+
+## Using the JPAMB library
+
+When writing more complex analysed you might want to make use of the jpamb
+library, especially, the modules in `jpamb/model.py` and `jpamb/jvm/`. One
+useful utility method is the `getmethodid` method, which prints the correct
+stats and parses the method for you:
+
+```python
+import jpamb
+
+methodid = jpamb.getmethodid(
+    "apriori",
+    "1.0",
+    "The Rice Theorem Cookers",
+    ["cheat", "python", "stats"],
+    for_science=True,
+)
+
+# ... rest of the analysis
+```
+
+To use this library, do this you have include `jpamb` in your interpreter.
+The easiest way to do that its just to use the interpreter used by `jpamb`. 
+In the `jpamb` directory you can do this by the command `uv run`:
+
+```bash
+uv run ./my_analysis.py info
+```
+
+
+## Scoring (Advanced)
+
+**For most assignments, you can ignore this section and just use percentages!**
+
+Instead of percentages, you can use **wagers** (betting points):
+- Positive wager (e.g., `divide by zero;5`) means "I bet 5 points this WILL happen"  
+- Negative wager (e.g., `divide by zero;-10`) means "I bet 10 points this WON'T happen"
+- Higher wagers = higher risk/reward
+
+The scoring formula: `points = 1 - 1/(wager + 1)` if you win, `-wager` if you lose.
+
+## Testing Your Analyzer
+
+```bash
+# Test on simple cases first
+uvx jpamb test --filter "Simple" python my_analyzer.py
+
+# Test on all cases  
+uvx jpamb test python my_analyzer.py
+
+# Generate final evaluation report
+uvx jpamb evaluate python my_analyzer.py > my_results.json
+```
+
+## Advanced: Analyzing Approaches
+
+### Source Code Analysis
+- Java source code is in `src/main/java/jpamb/cases/`
+- Example: `solutions/syntaxer.py` uses tree-sitter to parse Java
+
+### Bytecode Analysis  
+- Pre-decompiled JVM bytecode in `decompiled/` directory
+- Example: `solutions/bytecoder.py` analyzes JVM opcodes
+- Python interface: `lib/jpamb/jvm/opcode.py`
+
+### Statistics-Based
+- Historical data in `stats/distribution.csv`
+- Example: `solutions/apriori.py` uses statistical patterns
 
 ## Troubleshooting
 
-Here is a list of common problems you might encounter while running the code.
+**"Command not found" errors:**
+- Make sure you restart your terminal after installing uv
+- Try `which uvx` to see if it's installed correctly
 
-### Windows: C++ version 14 not installed.
+**"Health check fails":**
+- Make sure you're in the jpamb directory
+- Make sure GCC is installed (Step 1 above)
+- Try `mvn compile` to build the Java code first
 
-Download the requested upgrader and make sure to press "modify" before installing 
-and add the C++ tools to the tool-chain.
+**"Permission denied" when running analyzer:**
+- Linux/Mac: Use `chmod +x my_analyzer.py` to make it executable
+- All platforms: Use `python my_analyzer.py` instead of `./my_analyzer.py`
 
+**Windows users:**
+- Use PowerShell or Command Prompt
+- Replace `/` with `\` in file paths if needed
+- Consider using [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) for easier setup
 
-## Rules of the Game
-
-The goal is to build a program analysis that takes a method ID as an argument, and 
-returns a list of lines, each line consisting of a query and a prediction separated by semicolon `;`.
-A method ID is the fully qualified name of the class, the method name, ":", and 
-then the [method descriptor](https://docs.oracle.com/javase/specs/jvms/se22/html/jvms-4.html#jvms-4.3.3), 
-for example:
-```
-jpamb.cases.Simple.assertPositive:(I)V
-jpamb.cases.Simple.divideByZero:()I 
-jpamb.cases.Simple.divideZeroByZero:(II)I
-jpamb.cases.Arrays.arraySpellsHello:([C)V
-```
-
-And the query is one of: 
-
-| query              | description                               |
-| :-----             | :-----                                    |
-| `assertion error`  | an execution throws an assertion error    |
-| `ok`               | an execution runs to completion           | 
-| `*`                | an execution runs forever                 | 
-| `divide by zero`   | an execution divides by zero              | 
-| `out of bounds`    | an execution index an array out of bounds | 
-| `null pointer`     | an execution throws an null pointer exeception | 
-
-And the prediction is either a wager (`-3`, `inf`) (the number of points you 
-want to bet on you being right) or a probability (`30%`, `72%`)
-
-
-A wager is the number of points waged [`-inf`, `inf`] on your prediction. A negative wager is against the query, and 
-a positive is for the query. A failed wager is subtracted from your points, however 
-a successful wager is converted into points like so:
-$$\mathtt{points} = 1 - \frac{1}{\mathtt{wager} + 1}$$
-
-If you are sure that the method being analyzed does not contain an "assertion error", 
-you can wager -200 points. If you are wrong, and the program does exhibit an assertion error, 
-you lose 200 point, but if you are correct, you gain $1 - 1 / 201 = 0.995$ points.
-
-Below are some example values. Note that small wagers equal smaller risk.
-
-|  wager | points |
-|   ---: |    ---:|
-|   0.00 |   0.00 |
-|   0.25 |   0.20 |
-|   0.50 |   0.33 |
-|   1.00 |   0.50 | 
-|   3.00 |   0.75 | 
-|   9.00 |   0.90 | 
-|  99.00 |   0.99 | 
-|    inf |   1.00 | 
-
-Examples of such scripts can be seen in `solutions/`.
-
-You can also respond with a probability [`0%`: `100%`], which is automatically converted into 
-the optimal wager. An example of this is in `solutions/apriori.py`, which uses the distribution 
-of errors from `stats/distribution.csv` to gain an advantage (which is cheating :D).
-
-If you are curious, the optimal wager is found by solving the following quadratic function, where $p$ is the probability:
-$$(1 - p) \cdot \mathtt{wager} = p \cdot \mathtt{points} = p \cdot (1 - \frac{1}{\mathtt{wager} + 1})$$
-And dividing by 2 to get the optimal wager:
-$$\mathtt{wager} = \frac{1 - 2 p }{2 (p - 1)}$$
-
-|   prob |  wager |
-|   ---: |    ---:|
-|     0% |   -inf |
-|    10% |     -8 |
-|    25% |     -2 |
-|    50% |      0 |
-|    75% |      2 |
-|    90% |      8 |
-|   100% |    inf | 
-
-## Getting Started
-
-To get started create your first program analysis. The recommended implementation language is Python (as there is extra support via the library), but any language you can run from the command line will do.
-
-Your analysis should supprot two modes. The first is info mode:
-
-```shell
-$> ./analysis info
-<name>
-<version>
-<comma seperated tags>
-<system string, if you want to paticipate in science> else "no"
-````
-
-And the second is prediction mode. Here running your analysis should look like this:
-
-```shell
-$> ./analysis "jpamb.cases.Simple.assertPositive:(I)V" 
-divide by zero;5 
-ok;25%
-```
-
-### Test
-
-To test your script simply run the following command:
-
-```shell
-uvx jpamb -- test ./analysis
-```
-It will spit out a report.
-
-You can also filter the report on some methods. In the begining it might be a good idea to focus on the simple cases:
-
-```shell
-uvx jpamb -- test --filter "Simple" ./analysis
-```
-
-### Evaluating
-
-When your script is working, you can evaluate it using the `evaluate` command.
-This will produce a json report you can share with others.
-
-
-```shell
-uvx jpamb -- evaluate ./analysis > report.json
-```
-
-
-If you have problems getting started, please file an [issue](https://github.com/kalhauge/jpamb/issues).
-
-
-### Source code
-
-The source code is located under the `src/main/java`. 
-A simple solution that analyzes the source code directly using the [tree-sitter
-library](https://tree-sitter.github.io/tree-sitter/) is located at
-`solutions/syntaxer.py`.
-
-### Byte code
-
-To write more advanced analysis it makes sense to make use of the byte-code. To lower the bar to entrance, the byte code of the benchmarks have already been decompiled by the 
-[`jvm2json`](https://github.com/kalhauge/jvm2json) tool. 
-The codec for the output is described [here](https://github.com/kalhauge/jvm2json/blob/main/CODEC.txt).
-
-Some sample code for how to get started can be seen in `solutions/bytecoder.py`.
-
-There is an interface for using the opcode directly in `lib/jpamb/jvm/opcode.py`. 
-
-
-### Debug
-
-You can debug your code by running some of the methods or some of the tools, like this: 
-
-```shell
-$> ./evaluate your-experiment.yaml --filter-methods=Simple --filter-tools=syntaxer -o experiment.json
-```
-
-Also, if you want more debug information you can add multiples `-vvv` to get more information.
-
-
-## Interpreting
-
-... pending ...
-
-
-## Developing
-
-... pending ...
-
-## Citation
-
-To cite this work, please use the cite botton on the right.
+**Still stuck?** Check the example solutions in `solutions/` directory or ask for help!
