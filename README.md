@@ -1,223 +1,241 @@
 # JPAMB: Java Program Analysis Micro Benchmarks
 
-The goal of this benchmark suite is to make a collection of interesting
-micro-benchmarks to be solved by some program analysis.
+## What is this?
 
-## Installing
+JPAMB is a collection of small Java programs with various behaviors (crashes, infinite loops, normal completion). Your task is to build a program analysis tool that can predict what will happen when these programs run.
 
-To get started you need to first install Python on your system.
-The easiest way to do that is by downloading and running the `uv` package manager.
-Please see the [instructions](https://docs.astral.sh/uv/getting-started/installation/) for how
-to get setup.
+Think of it like a fortune teller for code: given a Java method, can your analysis predict if it will crash, run forever, or complete successfully?
 
-To install the jpamb tool, you can simply install it using the `uv tool install` command:
+## Quick Links
 
+- **[uv documentation](https://docs.astral.sh/uv/)** - Python package manager we use
+- **[Tree-sitter Java](https://tree-sitter.github.io/tree-sitter/using-parsers)** - For parsing Java source code
+- **[JVM2JSON codec](https://github.com/kalhauge/jvm2json/blob/main/CODEC.txt)** - Understanding bytecode format
+- **[Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022)** - Windows C++ compiler
+- **[JPAMB GitHub Issues](https://github.com/kalhauge/jpamb/issues)** - Get help if stuck
+
+## Setup 
+
+### Step 1: Install GCC (required for compilation)
+
+**Ubuntu/Debian:**
 ```bash
-# On linux
-uv tool install -e ./lib
-# On windows (I think)
-uv tool install -e .\lib
+sudo apt update
+sudo apt install build-essential
 ```
 
-Now you should be able to run the tool using the following command, which should spit out a number of checks, that all should be green.
+**Windows:**
+```bash
+# Install Microsoft Visual C++ 14.0 (required for Python C extensions)
+# Download from: https://visualstudio.microsoft.com/visual-cpp-build-tools/
+# Or install via Visual Studio Installer and select "C++ build tools"
 
+# Alternative: Install Visual Studio Community (includes build tools)
+winget install Microsoft.VisualStudio.2022.Community
+```
+
+**Mac:**
+```bash
+# Install Xcode command line tools
+xcode-select --install
+```
+
+### Step 2: Install uv (Python package manager)
+```bash
+# On Linux/Mac:
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# On Windows (PowerShell):
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+**Important:** Restart your terminal/command prompt after installing uv!
+
+### Step 3: Install JPAMB
+```bash
+# Navigate to this directory and run:
+uv tool install -e ./lib
+```
+
+### Step 4: Verify everything works
 ```bash
 uvx jpamb checkhealth
 ```
+You should see several green "ok" messages. If you see any red errors, check troubleshooting below!
 
-## Rules of the Game
+## How It Works
 
-The goal is to build a program analysis that takes a method ID as an argument, and
-returns a list of lines, each line consisting of a query and a prediction separated by semicolon `;`.
-A method ID is the fully qualified name of the class, the method name, ":", and
-then the [method descriptor](https://docs.oracle.com/javase/specs/jvms/se22/html/jvms-4.html#jvms-4.3.3),
-for example:
+### Your Task
+Build a program that analyzes Java methods and predicts what will happen when they run.
 
+### Your Program Must Support Two Commands:
+
+**1. Info command** - tells us about your analyzer:
+```bash
+./your_analyzer info
 ```
-jpamb.cases.Simple.assertPositive:(I)V
-jpamb.cases.Simple.divideByZero:()I
-jpamb.cases.Simple.divideZeroByZero:(II)I
-jpamb.cases.Arrays.arraySpellsHello:([C)V
-```
+This should output 5 lines:
+- Your analyzer's name
+- Version number  
+- Your team/group name
+- Tags describing your approach (e.g., "static,dataflow")
+- Either your system info (to help us improve) or "no" (for privacy)
 
-The query is one of:
-
-| query             | description                                    |
-| :---------------- | :--------------------------------------------- |
-| `assertion error` | an execution throws an assertion error         |
-| `ok`              | an execution runs to completion                |
-| `*`               | an execution runs forever                      |
-| `divide by zero`  | an execution divides by zero                   |
-| `out of bounds`   | an execution index an array out of bounds      |
-| `null pointer`    | an execution throws an null pointer exeception |
-
-And the prediction is either a wager (`-3`, `inf`) (the number of points you
-want to bet on you being right) or a probability (`30%`, `72%`)
-
-A wager is the number of points waged [`-inf`, `inf`] on your prediction. A negative wager is against the query, and
-a positive is for the query. A failed wager is subtracted from your points, whereas
-a successful wager is added. The amount of points you win or lose are calculated based on the wager in the following way:
-$$\mathtt{points} = 1 - \frac{1}{\mathtt{wager} + 1}$$
-
-If you are sure that the method being analyzed does not contain an "assertion error",
-you can wager -200 points. If you are wrong, and the program does exhibit an assertion error,
-you lose 200 point, but if you are correct, you gain $1 - 1 / 201 = 0.995$ points.
-
-Below are some example values. Note that small wagers equals a smaller risk.
-
-| wager | points |
-| ----: | -----: |
-|  0.00 |   0.00 |
-|  0.25 |   0.20 |
-|  0.50 |   0.33 |
-|  1.00 |   0.50 |
-|  3.00 |   0.75 |
-|  9.00 |   0.90 |
-| 99.00 |   0.99 |
-|   inf |   1.00 |
-
-Examples of scripts, producing wagers on cases, can be seen in `solutions/`.
-
-You can also respond with a probability [`0%`: `100%`], which is automatically converted into
-the optimal wager. An example of this is in `solutions/apriori.py`, which uses the distribution
-of errors from `stats/distribution.csv` to gain an advantage (which is cheating :D).
-
-If you are curious, the optimal wager is found by solving the following quadratic function, where $p$ is the probability:
-$$(1 - p) \cdot \mathtt{wager} = p \cdot \mathtt{points} = p \cdot (1 - \frac{1}{\mathtt{wager} + 1})$$
-And dividing by 2 to get the optimal wager:
-$$\mathtt{wager} = \frac{1 - 2 p }{2 (p - 1)}$$
-
-| prob | wager |
-| ---: | ----: |
-|   0% |  -inf |
-|  10% |    -8 |
-|  25% |    -2 |
-|  50% |     0 |
-|  75% |     2 |
-|  90% |     8 |
-| 100% |   inf |
-
-## Getting Started
-
-To get started create your first program analysis. The recommended implementation language is Python (as there is extra support via the library), but any language you can run from the command line will do.
-
-Your analysis should support two modes. The first is info mode:
-
-```shell
-$> ./analysis info
-<name>
-<version>
-<groupname>
-<comma seperated tags>
-<system string, if you want to paticipate in science> else "no"
+**2. Analysis command** - makes predictions:
+```bash
+./your_analyzer "jpamb.cases.Simple.divideByZero:()I"
 ```
 
-And the second is prediction mode. Here running your analysis should look like this:
+### What Can Happen to Java Methods?
 
-```shell
-$> ./analysis "jpamb.cases.Simple.assertPositive:(I)V"
-divide by zero;5
-ok;25%
+Your analyzer predicts these possible outcomes:
+
+| Outcome | What it means |
+|---------|---------------|
+| `ok` | Method runs and finishes normally |
+| `divide by zero` | Method tries to divide by zero |
+| `assertion error` | Method fails an assertion (like `assert x > 0`) |
+| `out of bounds` | Method accesses array outside its bounds |
+| `null pointer` | Method tries to use a null reference |
+| `*` | Method runs forever (infinite loop) |
+
+### Making Predictions
+
+For each outcome, you give either:
+- **A percentage**: `75%` means "75% confident this will happen"
+- **A wager**: `5` means "bet 5 points this will happen", `-10` means "bet 10 points this WON'T happen"
+
+**Example output:**
+```
+ok;80%
+divide by zero;20%
+assertion error;0%
+out of bounds;0%
+null pointer;0%
+*;0%
 ```
 
-### Test
 
-To test your script simply run the following command:
+## Your First Analyzer
 
-```shell
-uvx jpamb -- test ./analysis
+### Step 1: Look at Example Java Code
+Check out the test cases in `src/main/java/jpamb/cases/Simple.java` - these are the methods your analyzer will predict.
+
+### Step 2: Create Your First Analyzer
+Create a file called `my_analyzer.py`:
+
+```python
+#!/usr/bin/env python3
+import sys
+
+if len(sys.argv) == 2 and sys.argv[1] == "info":
+    # Output the 5 required info lines
+    print("My First Analyzer")
+    print("1.0")
+    print("Student Group Name")
+    print("simple,python")
+    print("no")  # Use "yes" to share system info
+else:
+    # Get the method we need to analyze
+    method_name = sys.argv[1]
+    
+    # Make predictions (improve these by looking at the Java code!)
+    ok_chance = "90%"
+    divide_by_zero_chance = "10%"
+    assertion_error_chance = "5%"
+    out_of_bounds_chance = "0%"
+    null_pointer_chance = "0%"
+    infinite_loop_chance = "0%"
+    
+    # Output predictions for all 6 possible outcomes
+    print(f"ok;{ok_chance}")
+    print(f"divide by zero;{divide_by_zero_chance}") 
+    print(f"assertion error;{assertion_error_chance}")
+    print(f"out of bounds;{out_of_bounds_chance}")
+    print(f"null pointer;{null_pointer_chance}")
+    print(f"*;{infinite_loop_chance}")
 ```
 
-It will spit out a report.
+Make it executable:
+```bash
+# Linux/Mac:
+chmod +x my_analyzer.py
 
-You can also filter the report on some methods. In the begining it might be a good idea to focus on the simple cases:
-
-```shell
-uvx jpamb -- test --filter "Simple" ./analysis
+# Windows: No need - Python files run directly
 ```
 
-### Evaluating
-
-When your script is working, you can evaluate it using the `evaluate` command.
-This will produce a json report you can share with others.
-
-```shell
-uvx jpamb -- evaluate ./analysis > report.json
+### Step 3: Test Your Analyzer
+```bash
+# Test on just the Simple cases to start
+# Linux/Mac/Windows (all the same):
+uvx jpamb test --filter "Simple" python my_analyzer.py
 ```
 
-If you have problems getting started, please file an [issue](https://github.com/kalhauge/jpamb/issues).
+You should see output showing scores for each test case. Don't worry about the scores yet - focus on getting it working!
 
-### Source code
+### Step 4: Improve Your Analyzer
+Now look at the Java code and try to make better predictions. For example:
+- If you see `1/0` in the code, predict `divide by zero;100%`
+- If you see `assert false`, predict `assertion error;100%`
+- If you see `while(true)`, predict `*;100%` (infinite loop)
 
-The source code is located under the `src/main/java`.
-A simple solution that analyzes the source code directly using the [tree-sitter
-library](https://tree-sitter.github.io/tree-sitter/) is located at
-`solutions/syntaxer.py`.
+## Scoring (Advanced)
 
-### Byte code
+**For most assignments, you can ignore this section and just use percentages!**
 
-To write more advanced analysis it makes sense to make use of the byte-code. To lower the bar to entrance, the byte code of the benchmarks have already been decompiled by the
-[`jvm2json`](https://github.com/kalhauge/jvm2json) tool.
-The codec for the output is described [here](https://github.com/kalhauge/jvm2json/blob/main/CODEC.txt).
+Instead of percentages, you can use **wagers** (betting points):
+- Positive wager (e.g., `divide by zero;5`) means "I bet 5 points this WILL happen"  
+- Negative wager (e.g., `divide by zero;-10`) means "I bet 10 points this WON'T happen"
+- Higher wagers = higher risk/reward
 
-Some sample code for how to get started can be seen in `solutions/bytecoder.py`.
+The scoring formula: `points = 1 - 1/(wager + 1)` if you win, `-wager` if you lose.
 
-There is an interface for using the opcode directly in `lib/jpamb/jvm/opcode.py`.
+## Testing Your Analyzer
 
-### Debug
+```bash
+# Test on simple cases first
+uvx jpamb test --filter "Simple" python my_analyzer.py
 
-You can debug your code by running some of the methods or some of the tools, like this:
+# Test on all cases  
+uvx jpamb test python my_analyzer.py
 
-```shell
-$> ./evaluate your-experiment.yaml --filter-methods=Simple --filter-tools=syntaxer -o experiment.json
+# Generate final evaluation report
+uvx jpamb evaluate python my_analyzer.py > my_results.json
 ```
 
-Also, if you want more debug information you can add multiples `-vvv` to get more information.
+## Advanced: Analyzing Approaches
 
-## Windows
+### Source Code Analysis
+- Java source code is in `src/main/java/jpamb/cases/`
+- Example: `solutions/syntaxer.py` uses tree-sitter to parse Java
 
-The instructions above should also work for windows, but it is less straight forward.
-The easy way out of this is to install Linux as a subsystem on your Windows machine.
-This is supported directly on [Windows](https://learn.microsoft.com/en-us/windows/wsl/install).
-This will require you to do all of your development in this environment though.
+### Bytecode Analysis  
+- Pre-decompiled JVM bytecode in `decompiled/` directory
+- Example: `solutions/bytecoder.py` analyzes JVM opcodes
+- Python interface: `lib/jpamb/jvm/opcode.py`
 
-If you prefer staying in Windows land, here are some tips and pointers:
+### Statistics-Based
+- Historical data in `stats/distribution.csv`
+- Example: `solutions/apriori.py` uses statistical patterns
 
-- Sometimes paths needs to be inverted in the examples `/` to `\`.
+## Troubleshooting
 
-- It is extra important to use [virtual environments](https://www.pythonguis.com/tutorials/python-virtual-environments/),
-  when using windows, that way you can keep different versions of python separate.
+**"Command not found" errors:**
+- Make sure you restart your terminal after installing uv
+- Try `which uvx` to see if it's installed correctly
 
-- To support compiling with `gcc` and to make your life easier you
-  should install [MSYS2](https://www.msys2.org/) with mingw-w64 GCC.
-  You can do this by following the guide in the link above (step 6 - 9.).
-  After this you would also have to install python and pip, before setting up the environment:
+**"Health check fails":**
+- Make sure you're in the jpamb directory
+- Make sure GCC is installed (Step 1 above)
+- Try `mvn compile` to build the Java code first
 
-  ```powershell
-  > pacman -S python
-  > pacman -S python-pip
-  ```
+**"Permission denied" when running analyzer:**
+- Linux/Mac: Use `chmod +x my_analyzer.py` to make it executable
+- All platforms: Use `python my_analyzer.py` instead of `./my_analyzer.py`
 
-- Alternatively, after installing CSS through MSYS2, one can just add
-  `"C:\msys64\ucrt64\bin"` (or wherever they have gcc.exe installed) to their
-  environment variable `"Path"`, and then GCC should work in a normal
-  terminal. To do this on Windows 11:
-  - Click on Start and search for "edit the system environment variables"; click on it.
-  - Click "Environment Variables..." at the bottom right (you should be on the tap "Advanced").
-  - Find `"Path"`, either under "System variables" or "User variables" (whether you want it to work on the computer in general, or only when you are logged into your Windows account); double click it.
-  - Click "New", and write the path to the bin-directory.
-  - You can now close all the popups you have created by clicking "OK" on each.
+**Windows users:**
+- Use PowerShell or Command Prompt
+- Replace `/` with `\` in file paths if needed
+- Consider using [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) for easier setup
 
-If you have any problems getting started on windows, please file an issue.
-
-## Interpreting
-
-... pending ...
-
-## Developing
-
-... pending ...
-
-## Citation
-
-To cite this work, please use the cite botton on the right.
+**Still stuck?** Check the example solutions in `solutions/` directory or ask for help!
