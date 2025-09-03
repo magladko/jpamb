@@ -217,7 +217,7 @@ Also if you are using python, you can use the `--with-python` flag, which
 runs the analyser with the same interpreter as JPAMB.
 
 ```bash
-uvx jpamb test --filter "Simple" <your-intepreter> my_analyzer.py
+uvx jpamb test --filter "Simple" --with-python my_analyzer.py
 ```
 
 ### Step 5: Improve Your Analyzer
