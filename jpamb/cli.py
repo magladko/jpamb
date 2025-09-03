@@ -1,5 +1,6 @@
 import click
 from pathlib import Path
+import shlex
 import math
 
 from jpamb import model, logger
@@ -50,6 +51,99 @@ def re_parser(ctx_, parms_, expr):
         return re.compile(expr)
 
 
+def run(cmd: list[str], /, timeout=2.0, logout=None, logerr=None, **kwargs):
+    import threading
+    from time import monotonic, perf_counter_ns
+
+    if not logerr:
+
+        def logerr(a):
+            pass
+
+    if not logout:
+
+        def logout(a):
+            pass
+
+    cp = None
+    stdout = []
+    stderr = []
+    tout = None
+    try:
+        start = monotonic()
+        start_ns = perf_counter_ns()
+
+        if timeout:
+            end = start + timeout
+        else:
+            end = None
+
+        cp = subprocess.Popen(
+            cmd,
+            stderr=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            text=True,
+            **kwargs,
+        )
+        assert cp and cp.stdout and cp.stderr
+
+        def log_lines(cp):
+            assert cp.stderr
+            with cp.stderr:
+                for line in iter(cp.stderr.readline, ""):
+                    stderr.append(line)
+                    logerr(line[:-1])
+
+        def save_result(cp):
+            assert cp.stdout
+            with cp.stdout:
+                for line in iter(cp.stdout.readline, ""):
+                    stdout.append(line)
+                    logout(line[:-1])
+
+        terr = threading.Thread(
+            target=log_lines,
+            args=(cp,),
+            daemon=True,
+        )
+        terr.start()
+        tout = threading.Thread(
+            target=save_result,
+            args=(cp,),
+            daemon=True,
+        )
+        tout.start()
+
+        terr.join(end and end - monotonic())
+        tout.join(end and end - monotonic())
+        exitcode = cp.wait(end and end - monotonic())
+        end_ns = perf_counter_ns()
+
+        if exitcode != 0:
+            raise subprocess.CalledProcessError(
+                cmd=cmd,
+                returncode=exitcode,
+                stderr="".join(stderr),
+                output="".join(stdout),
+            )
+
+        return ("".join(stdout), end_ns - start_ns)
+    except subprocess.CalledProcessError as e:
+        if tout:
+            tout.join()
+        e.stderr = "".join(stderr)
+        e.stdout = "".join(stdout)
+        raise e
+    except subprocess.TimeoutExpired:
+        if cp:
+            cp.terminate()
+            if cp.stdout:
+                cp.stdout.close()
+            if cp.stderr:
+                cp.stderr.close()
+        raise
+
+
 @cli.command()
 @click.pass_context
 @click.option(
@@ -79,11 +173,11 @@ def test(ctx, program, report, filter, fail_fast):
     def context(title):
         nonlocal prefix
         old = prefix
-        print(f"{prefix}┌ {title}", file=report)
-        prefix = f"{prefix}│ "
+        print(f"{prefix[:-1]}┌ {title}", file=report)
+        prefix = f"{prefix[:-1]}│ "
         yield
         prefix = old
-        print(f"{prefix}└ {title}", file=report)
+        print(f"{prefix[:-1]}└ {title}", file=report)
 
     def output(msgs):
         if not isinstance(msgs, str):
@@ -92,27 +186,23 @@ def test(ctx, program, report, filter, fail_fast):
         for msg in msgs.splitlines():
             print(f"{prefix}{msg}", file=report)
 
-    def run(arg):
-        args = list(program + (arg,))
-        output(f"Run {args}")
-        report.flush()
+    def output_run(*args):
+        program_ = program + args
+        with context(f"Run {shlex.join(program_)}"):
+            with context("Stderr"):
+                out, time = run(program_, logerr=output)
+            with context("Stdout"):
+                output(out)
+            return out
 
-        out = subprocess.run(
-            args,
-            stderr=report,
-            stdout=subprocess.PIPE,
-            check=fail_fast,
-            text=True,
-        )
-        output("Out")
-        output(out.stdout)
-        output(f"Done {out.returncode}")
-        return out.stdout
+    if not filter:
+        with context("Info"):
+            out = output_run("info")
+            info = model.AnalysisInfo.parse(out)
 
-    with context("Info"):
-        info = model.AnalysisInfo.parse(run("info"))
-        for k, v in sorted(dataclasses.asdict(info).items()):
-            output(f"- {k}: {v}")
+            with context("Results"):
+                for k, v in sorted(dataclasses.asdict(info).items()):
+                    output(f"- {k}: {v}")
 
     total = 0
     for methodid, correct in ctx.obj.case_methods():
@@ -120,33 +210,16 @@ def test(ctx, program, report, filter, fail_fast):
             continue
 
         with context(f"Case {methodid}"):
-            out = run(methodid.encode())
+            out = output_run(str(methodid))
             response = model.Response.parse(out)
-            for k, v in sorted(response.predictions.items()):
-                output(f"- {k}: {v} {v.wager:0.2f}")
+            with context("Results"):
+                for k, v in sorted(response.predictions.items()):
+                    output(f"- {k}: {v} {v.wager:0.2f}")
             score = response.score(correct)
             output(f"Score {score:0.2f}")
             total += score
 
     output(f"Total {total:0.2f}")
-
-
-def calibrate(log_calibration):
-    from time import perf_counter_ns
-    from jpamb import timer
-
-    calibrators = [100_000, 100_000]
-    calibration = 0
-    for count in calibrators:
-        start = perf_counter_ns()
-        timer.sieve(count)
-        end = perf_counter_ns()
-        diff = end - start
-        calibration += diff
-        log_calibration(count=count, time=diff)
-
-    calibration /= len(calibrators)
-    return calibration
 
 
 @cli.command()

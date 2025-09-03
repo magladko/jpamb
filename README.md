@@ -22,14 +22,16 @@ After which you should be able to run the tool using the following command, whic
 $> uv run jpamb checkhealth
 ```
 
-You should also check that the base analysis work: 
+You should also check that prebuild analyses work: 
 ```bash
 $> uv run solutions/apriori.py info
+<lines of info>
 ```
 
 Which should allow you to run the tool like this:
 ```bash
 $> uv run jpamb test uv run solutions/apriori.py
+<lines of information>
 ```
 
 ### Giving Your Analysis Access to JPAMB
@@ -44,7 +46,7 @@ $> uv add --editable --script=your_analysis.py .
 You can even add other dependencies you might need:
 
 ```bash
-$> uv add --script=your_analysis.py z3
+$> uv add --script=your_analysis.py z3-solver
 ```
 
 Now you can run it from anywhere like so:
