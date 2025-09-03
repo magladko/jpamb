@@ -22,22 +22,39 @@ After which you should be able to run the tool using the following command, whic
 $> uv run jpamb checkhealth
 ```
 
-You should also check that prebuild analyses work: 
+You should also be able to run the prebuild analysis in the project environment. You can do that like so: 
 ```bash
 $> uv run solutions/apriori.py info
 <lines of info>
 ```
 
-Which should allow you to run the tool like this:
+Which should allow you to test any analysis.
+```bash
+$> uv run jpamb test <CMD>
+<lines of information>
+```
+
+Where you replace `<CMD>` by any analysis you can run from the commandline like
+`<CMD> info`. 
+For example you can run the prebuild analysis from above, like so:
+
 ```bash
 $> uv run jpamb test uv run solutions/apriori.py
 <lines of information>
 ```
 
+### Installing JPAMB as a tool
+
+You can also intall the JPAMB as a tool, by running the `uv tool install -e .` command.
+This will allow you to run the commans above without the `uv run` prefix.
+The `-e` stands for editable, which means that if you download new versions of the code, the tool will update as well.
+
+In this case and if your analysis is a python script, you might want to read the next section.
+
 ### Giving Your Analysis Access to JPAMB
 
-The simple way to give a python access to the jpamb library, is to run the
-python script with the same interpreter of the `jpamb` project. To do this you
+The simple way to give a python script access to the jpamb library is to run the
+python script with the same interpreter of the JPAMB project. To do this you
 can simply add the `--with-python` flag.
 
 ```bash
