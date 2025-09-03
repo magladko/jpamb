@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 import sys
-
+#this example shows minimal working program without any imports.
+#  this is especially useful for people building it in other programming languages
 if len(sys.argv) == 2 and sys.argv[1] == "info":
     # Output the 5 required info lines
     print("My First Analyzer")
     print("1.0")
-    print("Student Name")
+    print("Student Group Name")
     print("simple,python")
     print("no")  # Use "yes" to share system info
 else:
