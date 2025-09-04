@@ -11,10 +11,10 @@ def test_cases_roundtrip():
 
     cases = []
 
-    with open("../stats/cases.txt") as fp:
+    with open("stats/cases.txt") as fp:
         for line in fp:
             methodid, input, _ = model.Case.match(line).groups()
-            absmethod = jvm.Absolute.decode(methodid, jvm.MethodID.decode)
+            absmethod = jvm.AbsMethodID.decode(methodid)
             assert absmethod.encode() == methodid, f"{absmethod}"
 
             values = model.Input.decode(input)
@@ -30,8 +30,7 @@ def test_cases_roundtrip():
 
 
 def test_checkhealth():
-    path = Path("../").absolute()
-    model.Suite(path).checkhealth(failfast=True)
+    model.Suite().checkhealth(failfast=True)
 
 
 def test_classlookup():

@@ -13,7 +13,7 @@ if len(sys.argv) == 2 and sys.argv[1] == "info":
     print("no")  # Use any other string to share system info
 else:
     # Get the method we need to analyze
-    classname, methodname, args = re.match(r"(.*)\.(.*):(.*)", sys.argv[1])
+    classname, methodname, args = re.match(r"(.*)\.(.*):(.*)", sys.argv[1]).groups()
 
     # Make predictions (improve these by looking at the Java code!)
     ok_chance = "90%"
@@ -30,4 +30,3 @@ else:
     print(f"out of bounds;{out_of_bounds_chance}")
     print(f"null pointer;{null_pointer_chance}")
     print(f"*;{infinite_loop_chance}")
-

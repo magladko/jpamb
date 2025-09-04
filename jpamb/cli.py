@@ -149,6 +149,7 @@ def run(cmd: list[str], /, timeout=2.0, logout=None, logerr=None, **kwargs):
 @click.pass_context
 @click.option(
     "--with-python/--no-with-python",
+    "-W/-noW",
     help="the analysis is a python script, which should run in the same interpreter as jpamb.",
     default=None,
 )
@@ -206,7 +207,9 @@ def test(ctx, program, report, filter, fail_fast, with_python):
 
     def output_run(*args):
         program_ = program + args
-        with context(f"Run {shlex.join(program_)}"):
+        pp = list(program_)
+        pp[0] = str(Path(pp[0]).relative_to(Path.cwd()))
+        with context(f"Run {shlex.join(pp)}"):
             with context("Stderr"):
                 out, time = run(program_, logerr=output)
             with context("Stdout"):
@@ -244,6 +247,7 @@ def test(ctx, program, report, filter, fail_fast, with_python):
 @click.pass_context
 @click.option(
     "--with-python/--no-with-python",
+    "-W/-noW",
     help="the analysis is a python script, which should run in the same interpreter as jpamb.",
     default=None,
 )
@@ -365,3 +369,7 @@ def evaluate(ctx, program, report, timeout, iterations, with_python):
         report,
         indent=2,
     )
+
+
+if __name__ == "__main__":
+    cli()

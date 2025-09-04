@@ -1,6 +1,10 @@
 from jpamb import jvm
 from jpamb.model import Suite
 
+from typing import NoReturn, Any
+
+from pathlib import Path
+
 
 def getmethodid(
     name: str,
@@ -8,7 +12,7 @@ def getmethodid(
     group: str,
     tags: list[str],
     for_science: bool,
-):
+) -> jvm.AbsMethodID:
     import sys
 
     mid = sys.argv[1]
@@ -24,7 +28,7 @@ def printinfo(
     group: str,
     tags: list[str],
     for_science: bool,
-):
+) -> NoReturn:
     print(name)
     print(version)
     print(group)
@@ -39,5 +43,13 @@ def printinfo(
     sys.exit(0)
 
 
-def parse_methodid(mid):
-    return jvm.Absolute.decode(mid, jvm.MethodID.decode)
+def sourcefile(lookup: jvm.Absolute[Any] | jvm.ClassName) -> Path:
+    return Suite().sourcefile(lookup.classname)
+
+
+def classfile(lookup: jvm.Absolute[Any] | jvm.ClassName) -> Path:
+    return Suite().classfile(lookup.classname)
+
+
+def parse_methodid(mid) -> jvm.AbsMethodID:
+    return jvm.AbsMethodID.decode(mid)

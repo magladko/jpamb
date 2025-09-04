@@ -108,6 +108,8 @@ You can rely on the following assumptions:
 
 2. All methods presented to the analysis comes from files in the `src/main/java/jpamb/cases/` folder, and can be uniquely identified by their method name.
 
+3. Only the stdout is captured by JPAMB, so you can output debug information in the stderr.
+
 ### What Can Happen to Java Methods?
 
 Your analyzer need to predict if there exist an input to the method where 
@@ -175,7 +177,7 @@ if len(sys.argv) == 2 and sys.argv[1] == "info":
     print("no")  # Use any other string to share system info
 else:
     # Get the method we need to analyze
-    classname, methodname, args = re.match(r"(.*)\.(.*):(.*)", sys.argv[1])
+    classname, methodname, args = re.match(r"(.*)\.(.*):(.*)", sys.argv[1]).groups()
     
     # Make predictions (improve these by looking at the Java code!)
     ok_chance = "90%"
@@ -253,7 +255,7 @@ Now look at the Java code and try to make better predictions. For example:
 ## Using the JPAMB library
 
 When writing more complex analysed you might want to make use of the jpamb
-library, especially, the modules in `jpamb/model.py` and `jpamb/jvm/`. To use
+library, especially, the modules `jpamb/__init__.py`, `jpamb/model.py`, and in `jpamb/jvm/`. To use
 this library, do this you have include `jpamb` in your interpreter. The easiest
 way to do that its just to use the interpreter used by `jpamb`. In the `jpamb`
 directory you can do this by the command `uv run`:
@@ -277,13 +279,21 @@ methodid = jpamb.getmethodid(
     ["cheat", "python", "stats"],
     for_science=True,
 )
+# methodid is of type `jpamb.jvm.AbsMethodID`
 
 # ... rest of the analysis
 ```
 
-### 
+### Source file lookup with `sourcefile`
 
+You can use the `sourcefile` method to get the source file of 
+the corresponding method or class.
 
+```python
+src = jpamb.sourcefile(methodid)
+
+txt = open(src).read()
+```
 
 ## Scoring (Advanced)
 
@@ -320,7 +330,7 @@ uvx jpamb evaluate python my_analyzer.py > my_results.json
 - Example: `solutions/bytecoder.py` analyzes JVM opcodes
 - Python interface: `lib/jpamb/jvm/opcode.py`
 
-### Statistics-Based
+### Statistics or Cheat-Based
 - Historical data in `stats/distribution.csv`
 - Example: `solutions/apriori.py` uses statistical patterns
 

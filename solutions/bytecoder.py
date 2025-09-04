@@ -17,14 +17,11 @@ methodid = jpamb.getmethodid(
 log = logging
 log.basicConfig(level=logging.DEBUG)
 
-(name,) = sys.argv[1:]
-
 log.debug("check assertion")
 log.debug("read the method name")
-method = jpamb.parse_methodid(name)
 
 log.debug("looking up method")
-m = jpamb.Suite().findmethod(method)
+m = jpamb.Suite().findmethod(methodid)
 
 log.debug("trying to find an assertion error being created")
 for inst in m["code"]["bytecode"]:
