@@ -16,6 +16,11 @@ Think of it like a fortune teller for code: given a Java method, can your analys
 
 ## Setup 
 
+### Step 0: Get familiar with your shell
+
+If you do not already know how your shell works, consider looking at the first couple of 
+lectures of the [MIT Missing Semester]{https://missing.csail.mit.edu/}.
+
 ### Step 1: Install GCC (required for compilation)
 
 **Ubuntu/Debian:**
@@ -93,6 +98,15 @@ This should output 5 lines:
 ```bash
 ./your_analyzer "jpamb.cases.Simple.divideByZero:()I"
 ```
+Given the encoded name of a method (see [`cases.txt`](stats/cases.txt) for a full list of examples), this should output 0 or more lines containing predictions, which you can read about in the next section.
+
+**Assumptions**
+
+You can rely on the following assumptions:
+
+1. Your program will always run in the JPAMB folder. This means that you can access files like `src/main/java/jpamb/cases/Simple.java` from your program.
+
+2. All methods presented to the analysis comes from files in the `src/main/java/jpamb/cases/` folder, and can be uniquely identified by their method name.
 
 ### What Can Happen to Java Methods?
 
@@ -127,7 +141,7 @@ null pointer;0%
 
 ## Your First Analyzer
 
-### Step 1: Look at Example Java Code
+### Step 1: Look at example Java code
 
 Check out the test cases in `src/main/java/jpamb/cases/Simple.java` - these are
 (some of) the methods your analyzer will predict the behavior of.
@@ -143,9 +157,10 @@ public static void assertBoolean(boolean shouldFail) {
 }
 ```
 
-### Step 2: Create Your First Analyzer
+### Step 2: Create your first analyzer
 
-Create a file called `my_analyzer.py`:
+Create a file called `my_analyzer.py` in the root directory. If you place it somewhere 
+else replace `my_analyzer.py` with the path to your script or executable:
 
 ```python
 import sys
@@ -179,7 +194,7 @@ else:
     print(f"*;{infinite_loop_chance}")
 ```
 
-### Step 3: Run Your Analyzer
+### Step 3: Run your analyzer
 
 First, make sure that your script runs outside the JPAMB framework. If you 
 have python installed on your system you can run:
@@ -198,7 +213,7 @@ uv run ./my_analyzer.py info
 This command should output the data from above. 
 You should also be able to run it with a method name like `jpamb.cases.Simple.divideByZero:()I`.
 
-### Step 4: Test Your Analyzer
+### Step 4: Test your analyzer
 
 Now you should be able to test the analyser.
 In the begining we recommend adding the `--filter "Simple"`, which 
@@ -220,7 +235,7 @@ runs the analyser with the same interpreter as JPAMB.
 uvx jpamb test --filter "Simple" --with-python my_analyzer.py
 ```
 
-### Step 5: Improve Your Analyzer
+### Step 5: Improve your analyzer
 
 *Mini Task:* To improve your analyser you first have to find the class 
 and then the method in that class. In Java, classes are always placed 
@@ -238,8 +253,18 @@ Now look at the Java code and try to make better predictions. For example:
 ## Using the JPAMB library
 
 When writing more complex analysed you might want to make use of the jpamb
-library, especially, the modules in `jpamb/model.py` and `jpamb/jvm/`. One
-useful utility method is the `getmethodid` method, which prints the correct
+library, especially, the modules in `jpamb/model.py` and `jpamb/jvm/`. To use
+this library, do this you have include `jpamb` in your interpreter. The easiest
+way to do that its just to use the interpreter used by `jpamb`. In the `jpamb`
+directory you can do this by the command `uv run`:
+
+```bash
+uv run ./my_analysis.py info
+```
+
+### Automatic script setup with `getmethodid` 
+
+One useful utility method is the `getmethodid` method, which prints the correct
 stats and parses the method for you:
 
 ```python
@@ -256,13 +281,8 @@ methodid = jpamb.getmethodid(
 # ... rest of the analysis
 ```
 
-To use this library, do this you have include `jpamb` in your interpreter.
-The easiest way to do that its just to use the interpreter used by `jpamb`. 
-In the `jpamb` directory you can do this by the command `uv run`:
+### 
 
-```bash
-uv run ./my_analysis.py info
-```
 
 
 ## Scoring (Advanced)
