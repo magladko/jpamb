@@ -27,33 +27,104 @@ parser = tree_sitter.Parser(JAVA_LANGUAGE)
 log = logging
 log.basicConfig(level=logging.DEBUG)
 
-log.debug(jpamb.Suite().findmethod(methodid))
 
-# #this example shows minimal working program without any imports.
-# #  this is especially useful for people building it in other programming languages
-# if len(sys.argv) == 2 and sys.argv[1] == "info":
-#     # Output the 5 required info lines
-#     print("My First Analyzer")
-#     print("1.0")
-#     print("Student Group Name")
-#     print("simple,python")
-#     print("no")  # Use "yes" to share system info
-# else:
-#     # Get the method we need to analyze
-#     method_name = sys.argv[1]
-    
-#     # Make predictions (improve these by looking at the Java code!)
-#     ok_chance = "90%"
-#     divide_by_zero_chance = "10%"
-#     assertion_error_chance = "5%"
-#     out_of_bounds_chance = "0%"
-#     null_pointer_chance = "0%"
-#     infinite_loop_chance = "0%"
-    
-#     # Output predictions for all 6 possible outcomes
-#     print(f"ok;{ok_chance}")
-#     print(f"divide by zero;{divide_by_zero_chance}") 
-#     print(f"assertion error;{assertion_error_chance}")
-#     print(f"out of bounds;{out_of_bounds_chance}")
-#     print(f"null pointer;{null_pointer_chance}")
-#     print(f"*;{infinite_loop_chance}")
+srcfile = jpamb.Suite().sourcefile(methodid.classname)
+
+with open(srcfile, "rb") as f:
+    log.debug("parse sourcefile %s", srcfile)
+    tree = parser.parse(f.read())
+
+simple_classname = str(methodid.classname.name)
+
+log.debug(f"{simple_classname}")
+
+# To figure out how to write these you can consult the
+# https://tree-sitter.github.io/tree-sitter/playground
+class_q = tree_sitter.Query(JAVA_LANGUAGE,
+    f"""
+    (class_declaration 
+        name: ((identifier) @class-name 
+               (#eq? @class-name "{simple_classname}"))) @class
+    """)
+
+for node in tree_sitter.QueryCursor(class_q).captures(tree.root_node)["class"]:
+    break
+else:
+    log.error(f"could not find a class of name {simple_classname} in {srcfile}")
+
+    sys.exit(-1)
+
+log.debug("Found class %s", node.range)
+
+method_name = methodid.extension.name
+
+method_q = tree_sitter.Query(JAVA_LANGUAGE,
+    f"""
+    (method_declaration name: 
+      ((identifier) @method-name (#eq? @method-name "{method_name}"))
+    ) @method
+"""
+)
+
+for node in tree_sitter.QueryCursor(method_q).captures(node)["method"]:
+
+    if not (p := node.child_by_field_name("parameters")):
+        log.debug(f"Could not find parameteres of {method_name}")
+        continue
+
+    params = [c for c in p.children if c.type == "formal_parameter"]
+
+    if len(params) != len(methodid.extension.params):
+        continue
+
+    log.debug(methodid.extension.params)
+    log.debug(params)
+
+    for tn, t in zip(methodid.extension.params, params):
+        if (tp := t.child_by_field_name("type")) is None:
+            break
+
+        if tp.text is None:
+            break
+
+        # todo check for type.
+    else:
+        break
+else:
+    log.warning(f"could not find a method of name {method_name} in {simple_classname}")
+    sys.exit(-1)
+
+log.debug("Found method %s %s", method_name, node.range)
+
+body = node.child_by_field_name("body")
+assert body and body.text
+for t in body.text.splitlines():
+    log.debug("line: %s", t.decode())
+
+assert_q = tree_sitter.Query(JAVA_LANGUAGE, f"""(assert_statement) @assert""")
+
+assert_found = False
+assert_false_found = False
+
+for node, t in tree_sitter.QueryCursor(assert_q).captures(body).items():
+    if node == "assert":
+        for assert_node in t:
+            assert_found = True
+            log.debug("Found assertion: %s", assert_node.text.decode() if assert_node.text else "")
+            # Check if this is specifically "assert false"
+            if assert_node.text and b"false" in assert_node.text:
+                assert_false_found = True
+        break
+
+if not assert_found:
+    log.debug("Did not find any assertions")
+    print("assertion error;20%")
+    sys.exit(0)
+
+if assert_false_found:
+    log.debug("Found 'assert false' statement")
+    print("assertion error;90%")
+else:
+    log.debug("Found assertion but not 'assert false'")
+    print("assertion error;80%")
+sys.exit(0)
