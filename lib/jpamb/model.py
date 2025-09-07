@@ -289,7 +289,7 @@ class Suite:
         with open(self.decompiledfile(cn)) as fp:
             return json.load(fp)
 
-    def findmethod(self, methodid: jvm.Absolute[jvm.MethodID]) -> jvm:
+    def findmethod(self, methodid: jvm.Absolute[jvm.MethodID]) -> dict:
         methods = self.findclass(methodid.classname)["methods"]
         for method in methods:
             if (
