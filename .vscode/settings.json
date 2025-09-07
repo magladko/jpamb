@@ -1,5 +1,9 @@
 {
     "python.analysis.extraPaths": [
         "./lib"
-    ]
+    ],
+    "editor.rulers": [79],
+    "[python]": {
+        "editor.rulers": [72,79],
+    }
 }
