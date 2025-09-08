@@ -208,7 +208,13 @@ def test(ctx, program, report, filter, fail_fast, with_python):
     def output_run(*args):
         program_ = program + args
         pp = list(program_)
-        pp[0] = str(Path(pp[0]).relative_to(Path.cwd()))
+        try:
+            pp[0] = str(Path(pp[0]).relative_to(Path.cwd()))
+        except ValueError:
+            if with_python:
+                log.warning(
+                    "Python executable outside of current directory, might be a misconfiguration."
+                )
         with context(f"Run {shlex.join(pp)}"):
             with context("Stderr"):
                 out, time = run(program_, logerr=output)
@@ -296,9 +302,9 @@ def evaluate(ctx, program, report, timeout, iterations, with_python):
         end = perf_counter_ns()
         return end - start
 
-    (out, _) = logger.run_cmd(
+    (out, _) = run(
         program + ("info",),
-        logger=log,
+        logout=log,
         timeout=timeout,
     )
     info = model.AnalysisInfo.parse(out)
