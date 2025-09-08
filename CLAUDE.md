@@ -1,0 +1,1 @@
+- To run tests use the following exactly: `jpamb test -- {path_to_script}`
