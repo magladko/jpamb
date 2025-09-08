@@ -19,7 +19,7 @@ Think of it like a fortune teller for code: given a Java method, can your analys
 ### Step 0: Get familiar with your shell
 
 If you do not already know how your shell works, consider looking at the first couple of 
-lectures of the [MIT Missing Semester]{https://missing.csail.mit.edu/}.
+lectures of the [MIT Missing Semester](https://missing.csail.mit.edu/).
 
 ### Step 1: Install GCC (required for compilation)
 
