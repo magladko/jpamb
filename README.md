@@ -16,6 +16,11 @@ Think of it like a fortune teller for code: given a Java method, can your analys
 
 ## Setup 
 
+### Step 0: Get familiar with your shell
+
+If you do not already know how your shell works, consider looking at the first couple of 
+lectures of the [MIT Missing Semester]{https://missing.csail.mit.edu/}.
+
 ### Step 1: Install GCC (required for compilation)
 
 **Ubuntu/Debian:**
@@ -52,12 +57,17 @@ powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 **Important:** Restart your terminal/command prompt after installing uv!
 
 ### Step 3: Install JPAMB
+
 ```bash
 # Navigate to this directory and run:
-uv tool install -e ./lib
+uv tool install -e .
 ```
 
+The `-e` means that the tool is installed editable, which means 
+that if you download a new version of the repository this will follow.
+
 ### Step 4: Verify everything works
+
 ```bash
 uvx jpamb checkhealth
 ```
@@ -70,6 +80,9 @@ Build a program that analyzes Java methods and predicts what will happen when th
 
 ### Your Program Must Support Two Commands:
 
+Here we use `./your_analyzer` to be name of the program you are going to 
+write.
+
 **1. Info command** - tells us about your analyzer:
 ```bash
 ./your_analyzer info
@@ -79,16 +92,28 @@ This should output 5 lines:
 - Version number  
 - Your team/group name
 - Tags describing your approach (e.g., "static,dataflow")
-- Either your system info (to help us improve) or "no" (for privacy)
+- Either your system info (to help us improve and for science) or "no" (for privacy)
 
 **2. Analysis command** - makes predictions:
 ```bash
 ./your_analyzer "jpamb.cases.Simple.divideByZero:()I"
 ```
+Given the encoded name of a method (see [`cases.txt`](stats/cases.txt) for a full list of examples), this should output 0 or more lines containing predictions, which you can read about in the next section.
+
+**Assumptions**
+
+You can rely on the following assumptions:
+
+1. Your program will always run in the JPAMB folder. This means that you can access files like `src/main/java/jpamb/cases/Simple.java` from your program.
+
+2. All methods presented to the analysis comes from files in the `src/main/java/jpamb/cases/` folder, and can be uniquely identified by their method name.
+
+3. Only the stdout is captured by JPAMB, so you can output debug information in the stderr.
 
 ### What Can Happen to Java Methods?
 
-Your analyzer predicts these possible outcomes:
+Your analyzer need to predict if there exist an input to the method where 
+one of these possible outcomes can happen:
 
 | Outcome | What it means |
 |---------|---------------|
@@ -102,7 +127,7 @@ Your analyzer predicts these possible outcomes:
 ### Making Predictions
 
 For each outcome, you give either:
-- **A percentage**: `75%` means "75% confident this will happen"
+- **A percentage**: `75%` means "75% of all methods that looks like this will have this outcome"
 - **A wager**: `5` means "bet 5 points this will happen", `-10` means "bet 10 points this WON'T happen"
 
 **Example output:**
@@ -110,7 +135,7 @@ For each outcome, you give either:
 ok;80%
 divide by zero;20%
 assertion error;0%
-out of bounds;0%
+out of bounds;5
 null pointer;0%
 *;0%
 ```
@@ -118,15 +143,30 @@ null pointer;0%
 
 ## Your First Analyzer
 
-### Step 1: Look at Example Java Code
-Check out the test cases in `src/main/java/jpamb/cases/Simple.java` - these are the methods your analyzer will predict.
+### Step 1: Look at example Java code
 
-### Step 2: Create Your First Analyzer
-Create a file called `my_analyzer.py`:
+Check out the test cases in `src/main/java/jpamb/cases/Simple.java` - these are
+(some of) the methods your analyzer will predict the behavior of.
+
+For example, `assertBoolean` has two known outcomes. If given `false` it throws 
+an `assertion error`, and if given `true` it finishes normally `ok`.
+
+```java
+@Case("(false) -> assertion error")
+@Case("(true) -> ok")
+public static void assertBoolean(boolean shouldFail) {
+    assert shouldFail;
+}
+```
+
+### Step 2: Create your first analyzer
+
+Create a file called `my_analyzer.py` in the root directory. If you place it somewhere 
+else replace `my_analyzer.py` with the path to your script or executable:
 
 ```python
-#!/usr/bin/env python3
 import sys
+import re
 
 if len(sys.argv) == 2 and sys.argv[1] == "info":
     # Output the 5 required info lines
@@ -134,10 +174,10 @@ if len(sys.argv) == 2 and sys.argv[1] == "info":
     print("1.0")
     print("Student Group Name")
     print("simple,python")
-    print("no")  # Use "yes" to share system info
+    print("no")  # Use any other string to share system info
 else:
     # Get the method we need to analyze
-    method_name = sys.argv[1]
+    classname, methodname, args = re.match(r"(.*)\.(.*):(.*)", sys.argv[1]).groups()
     
     # Make predictions (improve these by looking at the Java code!)
     ok_chance = "90%"
@@ -156,28 +196,104 @@ else:
     print(f"*;{infinite_loop_chance}")
 ```
 
-Make it executable:
-```bash
-# Linux/Mac:
-chmod +x my_analyzer.py
+### Step 3: Run your analyzer
 
-# Windows: No need - Python files run directly
+First, make sure that your script runs outside the JPAMB framework. If you 
+have python installed on your system you can run:
+
+```bash
+python ./my_analyzer.py info
 ```
 
-### Step 3: Test Your Analyzer
+But, you can also run it with the same interpreter as the JPAMB framework, 
+like so:
+
+```bash
+uv run ./my_analyzer.py info
+```
+
+This command should output the data from above. 
+You should also be able to run it with a method name like `jpamb.cases.Simple.divideByZero:()I`.
+
+### Step 4: Test your analyzer
+
+Now you should be able to test the analyser.
+In the begining we recommend adding the `--filter "Simple"`, which 
+focuses you on the methods from the `src/main/java/jpamb/cases/Simple.java` 
+file:
+
 ```bash
 # Test on just the Simple cases to start
 # Linux/Mac/Windows (all the same):
-uvx jpamb test --filter "Simple" python my_analyzer.py
+uvx jpamb test --filter "Simple" <your-intepreter> my_analyzer.py
 ```
 
 You should see output showing scores for each test case. Don't worry about the scores yet - focus on getting it working!
 
-### Step 4: Improve Your Analyzer
+Also if you are using python, you can use the `--with-python` flag, which 
+runs the analyser with the same interpreter as JPAMB.
+
+```bash
+uvx jpamb test --filter "Simple" --with-python my_analyzer.py
+```
+
+### Step 5: Improve your analyzer
+
+*Mini Task:* To improve your analyser you first have to find the class 
+and then the method in that class. In Java, classes are always placed 
+after their classnames, so you can find `jpamb.cases.Simple` in the source file `src/main/java/jpamb/cases/Simple.java`.
+
+*Tip* you might use a regular expression to find the content of a method. 
+[`r"assertFalse.*{([^}]*)}"`](https://regex101.com/r/jDSC6S/1) and pythons 
+[re](https://docs.python.org/3/library/re.html#re.Match) library.
+
 Now look at the Java code and try to make better predictions. For example:
 - If you see `1/0` in the code, predict `divide by zero;100%`
 - If you see `assert false`, predict `assertion error;100%`
 - If you see `while(true)`, predict `*;100%` (infinite loop)
+
+## Using the JPAMB library
+
+When writing more complex analysed you might want to make use of the jpamb
+library, especially, the modules `jpamb/__init__.py`, `jpamb/model.py`, and in `jpamb/jvm/`. To use
+this library, do this you have include `jpamb` in your interpreter. The easiest
+way to do that its just to use the interpreter used by `jpamb`. In the `jpamb`
+directory you can do this by the command `uv run`:
+
+```bash
+uv run ./my_analysis.py info
+```
+
+### Automatic script setup with `getmethodid` 
+
+One useful utility method is the `getmethodid` method, which prints the correct
+stats and parses the method for you:
+
+```python
+import jpamb
+
+methodid = jpamb.getmethodid(
+    "apriori",
+    "1.0",
+    "The Rice Theorem Cookers",
+    ["cheat", "python", "stats"],
+    for_science=True,
+)
+# methodid is of type `jpamb.jvm.AbsMethodID`
+
+# ... rest of the analysis
+```
+
+### Source file lookup with `sourcefile`
+
+You can use the `sourcefile` method to get the source file of 
+the corresponding method or class.
+
+```python
+src = jpamb.sourcefile(methodid)
+
+txt = open(src).read()
+```
 
 ## Scoring (Advanced)
 
@@ -214,7 +330,7 @@ uvx jpamb evaluate python my_analyzer.py > my_results.json
 - Example: `solutions/bytecoder.py` analyzes JVM opcodes
 - Python interface: `lib/jpamb/jvm/opcode.py`
 
-### Statistics-Based
+### Statistics or Cheat-Based
 - Historical data in `stats/distribution.csv`
 - Example: `solutions/apriori.py` uses statistical patterns
 

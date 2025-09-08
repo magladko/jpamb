@@ -195,7 +195,7 @@ class Dup(Opcode):
 
     def real(self) -> str:
         if self.words == 1:
-            return f"dup"
+            return "dup"
         return super().real()
 
     def __str__(self):
@@ -341,7 +341,7 @@ class InvokeVirtual(Opcode):
     bc |- (i, s + args) -> (i+1, s + [result])
     """
 
-    method: jvm.Absolute[jvm.MethodID]
+    method: jvm.AbsMethodID
 
     @classmethod
     def from_json(cls, json: dict) -> "Opcode":
@@ -374,7 +374,7 @@ class InvokeStatic(Opcode):
     bc |- (i, s + args) -> (i+1, s + [result])
     """
 
-    method: jvm.Absolute[jvm.MethodID]
+    method: jvm.AbsMethodID
 
     @classmethod
     def from_json(cls, json: dict) -> "Opcode":
@@ -408,7 +408,7 @@ class InvokeInterface(Opcode):
     bc |- (i, s + args) -> (i+1, s + [result])
     """
 
-    method: jvm.Absolute[jvm.MethodID]
+    method: jvm.AbsMethodID
     stack_size: int
 
     @classmethod
@@ -454,7 +454,7 @@ class InvokeSpecial(Opcode):
     where objectref must be an instance of current class or subclass
     """
 
-    method: jvm.Absolute[jvm.MethodID]
+    method: jvm.AbsMethodID
     is_interface: bool  # Whether the method is from an interface
 
     @classmethod
@@ -502,7 +502,7 @@ class InvokeSpecial(Opcode):
 
         return cls(
             offset=json["offset"],
-            method=jvm.Absolute.decode(method_str, jvm.MethodID.decode),
+            method=jvm.AbsMethodID.decode(method_str),
             is_interface=json["method"]["is_interface"],
         )
 
@@ -742,12 +742,12 @@ class Get(Opcode):
     """
 
     static: bool
-    field: jvm.Absolute[jvm.FieldID]  # We need to add FieldID to base.py
+    field: jvm.AbsFieldID  # We need to add FieldID to base.py
 
     @classmethod
     def from_json(cls, json: dict) -> "Opcode":
         # Construct field object from the json data
-        field = jvm.Absolute(
+        field = jvm.AbsFieldID(
             classname=jvm.ClassName.decode(json["field"]["class"]),
             extension=jvm.FieldID(
                 name=json["field"]["name"],

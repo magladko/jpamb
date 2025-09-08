@@ -51,7 +51,9 @@ stats = [
     { name = "pandas" },
     { name = "plotly" },
 ]
-test = [
+
+[package.dev-dependencies]
+dev = [
     { name = "pytest" },
 ]
 
@@ -62,13 +64,15 @@ requires-dist = [
     { name = "numpy", marker = "extra == 'stats'", specifier = "==2.1.1" },
     { name = "pandas", marker = "extra == 'stats'", specifier = "==2.2.2" },
     { name = "plotly", marker = "extra == 'stats'", specifier = "==5.24.0" },
-    { name = "pytest", marker = "extra == 'test'", specifier = "==8.3.4" },
     { name = "pyyaml", specifier = "==6.0.2" },
     { name = "tree-sitter", specifier = "==0.25.1" },
     { name = "tree-sitter-java", specifier = "==0.23.5" },
     { name = "z3-solver", specifier = "==4.13.3.0" },
 ]
-provides-extras = ["stats", "test"]
+provides-extras = ["stats"]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest", specifier = ">=8.3.4" }]
 
 [[package]]
 name = "loguru"

@@ -15,7 +15,7 @@ from functools import total_ordering
 import re
 from abc import ABC
 from dataclasses import dataclass
-from typing import *  # type: ignore
+from typing import Callable, Protocol, Self, Iterable, Optional, Iterator, NoReturn
 
 
 @dataclass(frozen=True, order=True)
@@ -33,6 +33,11 @@ class ClassName:
     def name(self) -> str:
         """Get the unqualified name"""
         return self.parts[-1]
+
+    @property
+    def classname(self) -> Self:
+        """return yourself"""
+        return self
 
     @property
     def parts(self) -> list[str]:
@@ -409,6 +414,30 @@ class MethodID:
         return f"{self.name}:({self.params.encode()}){rt}"
 
 
+@dataclass(frozen=True, order=True)
+class FieldID:
+    """A field ID consists of a name and a type."""
+
+    name: str
+    type: Type
+
+    def encode(self) -> str:
+        return f"{self.name}:{self.type.encode()}"
+
+    @staticmethod
+    def decode(input: str) -> "FieldID":
+        if ":" not in input:
+            raise ValueError(f"invalid field id format: {input}")
+        name, type_str = input.split(":", 1)
+        type_obj, remaining = Type.decode(type_str)
+        if remaining:
+            raise ValueError(f"extra characters in field type: {remaining}")
+        return FieldID(name=name, type=type_obj)
+
+    def __str__(self) -> str:
+        return self.encode()
+
+
 class Encodable(Protocol):
     def encode(self) -> str: ...
 
@@ -421,18 +450,42 @@ class Absolute[T: Encodable]:
     classname: ClassName
     extension: T
 
-    @staticmethod
-    def decode(input, decode: Callable[[str], T]) -> "Absolute":
+    @classmethod
+    def decode(cls, input, decode: Callable[[str], T]) -> "Self":
         if (match := ABSOLUTE_RE.match(input)) is None:
             raise ValueError("invalid absolute method name: %r", input)
 
-        return Absolute(ClassName.decode(match["class_name"]), decode(match["rest"]))
+        return cls(ClassName.decode(match["class_name"]), decode(match["rest"]))
 
     def encode(self) -> str:
         return f"{self.classname.encode()}.{self.extension.encode()}"
 
     def __str__(self):
         return self.encode()
+
+
+@dataclass(frozen=True, order=True)
+class AbsMethodID(Absolute[MethodID]):
+
+    @classmethod
+    def decode(cls, input) -> "Self":
+        return super().decode(input, MethodID.decode)
+
+    @property
+    def methodid(self):
+        return self.extension
+
+
+@dataclass(frozen=True, order=True)
+class AbsFieldID(Absolute[FieldID]):
+
+    @classmethod
+    def decode(cls, input) -> "Self":
+        return super().decode(input, FieldID.decode)
+
+    @property
+    def fieldid(self):
+        return self.extension
 
 
 @dataclass(frozen=True, order=True)
@@ -471,7 +524,7 @@ class Value:
                         chars = ", ".join(map(lambda a: f"'{a}'", self.value))
                         return f"[C:{chars}]"
                     case _:
-                        raise NotImplemented()
+                        raise NotImplementedError()
 
         return self.value
 
@@ -619,27 +672,3 @@ class ValueParser:
             inputs.append(parser())
 
         return inputs
-
-
-@dataclass(frozen=True, order=True)
-class FieldID:
-    """A field ID consists of a name and a type."""
-
-    name: str
-    type: Type
-
-    def encode(self) -> str:
-        return f"{self.name}:{self.type.encode()}"
-
-    @staticmethod
-    def decode(input: str) -> "FieldID":
-        if ":" not in input:
-            raise ValueError(f"invalid field id format: {input}")
-        name, type_str = input.split(":", 1)
-        type_obj, remaining = Type.decode(type_str)
-        if remaining:
-            raise ValueError(f"extra characters in field type: {remaining}")
-        return FieldID(name=name, type=type_obj)
-
-    def __str__(self) -> str:
-        return self.encode()

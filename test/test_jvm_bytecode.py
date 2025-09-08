@@ -4,9 +4,9 @@ from pathlib import Path
 
 
 def test_bytecode():
-    suite = model.Suite(Path("../").absolute())
+    suite = model.Suite()
     for c in suite.cases:
-        methods = suite.decompile(c.methodid.classname)["methods"]
+        methods = suite.findclass(c.methodid.classname)["methods"]
         for method in methods:
             if method["name"] == c.methodid.extension.name:
                 break
@@ -23,4 +23,3 @@ def test_bytecode():
 
         assert opcode_count > 0, "No opcodes were processed"
         break
-
