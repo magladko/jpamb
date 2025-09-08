@@ -8,13 +8,14 @@ target/test-classes/
 .settings
 __pycache__
 
-test_output
-
-timer/sieve
-timer/sieve.exe
-
 result.json
 .venv
-jpamb_utils.egg-info/
 
 report/
+
+jpamb.egg-info/
+dist/
+*.pyd
+*.so
+
+build/

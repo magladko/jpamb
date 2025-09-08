@@ -1,4 +1,4 @@
-# /usr/bin/env python
+#!/usr/bin/env python3
 """This solution cheats by loading the `stats/cases.txt` file."""
 
 import jpamb

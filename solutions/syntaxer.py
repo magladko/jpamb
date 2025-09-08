@@ -24,7 +24,7 @@ log = logging
 log.basicConfig(level=logging.DEBUG)
 
 
-srcfile = jpamb.Suite().sourcefile(methodid.classname)
+srcfile = jpamb.sourcefile(methodid)
 
 with open(srcfile, "rb") as f:
     log.debug("parse sourcefile %s", srcfile)
