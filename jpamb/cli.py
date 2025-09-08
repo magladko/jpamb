@@ -319,8 +319,8 @@ def evaluate(ctx, program, report, timeout, iterations, with_python):
         for i in range(iterations):
             log.info(f"Running on {methodid}, iter {i}")
             r1 = calibrate()
-            out, time = logger.run_cmd(
-                program + (methodid.encode(),), logger=log, timeout=timeout
+            out, time = run(
+                program + (methodid.encode(),), logerr=log.debug, timeout=timeout
             )
             r2 = calibrate()
             response = model.Response.parse(out)
