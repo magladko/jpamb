@@ -12,15 +12,44 @@ from click.testing import CliRunner
 from jpamb import cli
 
 
-@pytest.mark.parametrize("solution", glob("solutions/*.py"))
+solutions = [
+    Path("solutions") / "apriori.py",
+    Path("solutions") / "bytecoder.py",
+    Path("solutions") / "cheater.py",
+    Path("solutions") / "syntaxer.py",
+    Path("solutions") / "my_analyzer.py",
+]
+
+
+@pytest.mark.parametrize("solution", solutions)
 def test_solutions(solution):
     runner = CliRunner()
-    sol = Path(solution)
-    solreport = Path("test/expected") / (sol.stem + ".txt")
+    solreport = Path("test") / "expected" / (solution.stem + ".txt")
     result = runner.invoke(
         cli.cli,
         [
             "test",
+            "-f",
+            "Simple",
+            "-r",
+            str(solreport),
+            "--with-python",
+            str(solution),
+        ],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+
+
+def test_interpret_i():
+    runner = CliRunner()
+    sol = Path("solutions") / "interpreter.py"
+    solreport = Path("test") / "expected" / (sol.stem + ".txt")
+    result = runner.invoke(
+        cli.cli,
+        [
+            "interpret",
             "-f",
             "Simple",
             "-r",
