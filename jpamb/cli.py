@@ -124,9 +124,11 @@ class Reporter:
         old = self.prefix
         print(f"{self.prefix[:-1]}┌ {title}", file=self.report)
         self.prefix = f"{self.prefix[:-1]}│ "
-        yield
-        self.prefix = old
-        print(f"{self.prefix[:-1]}└ {title}", file=self.report)
+        try:
+            yield
+        finally:
+            self.prefix = old
+            print(f"{self.prefix[:-1]}└ {title}", file=self.report)
 
     def output(self, msgs):
         if not isinstance(msgs, str):
@@ -135,13 +137,39 @@ class Reporter:
         for msg in msgs.splitlines():
             print(f"{self.prefix}{msg}", file=self.report)
 
-    def run(self, args):
+    def run(self, args, **kwargs):
         with self.context(f"Run {shlex.join(args)}"):
             with self.context("Stderr"):
-                out, time = run(args, logerr=self.output)
+                out, time = run(args, logerr=self.output, **kwargs)
             with self.context("Stdout"):
                 self.output(out)
             return out
+
+
+def resolve_cmd(program, with_python=None):
+
+    if with_python is None:
+        if str(program[0]).lower().endswith(".py"):
+            log.warning(
+                "Automatically prepending the current python interpreter to the command. To disable this warning add the '--with-python' flag or prepend intented python interpreter to the command."
+            )
+            with_python = True
+        else:
+            with_python = False
+
+    if with_python:
+        try:
+            executable = str(Path(sys.executable).relative_to(Path.cwd()))
+        except ValueError:
+            log.warning(
+                "Python executable outside of current directory, might be a misconfiguration. "
+                "Run the tool with `uv run jpamb ...`."
+            )
+            executable = sys.executable
+
+        program = (executable,) + program
+
+    return program
 
 
 @click.group()
@@ -190,6 +218,12 @@ def checkhealth(ctx):
     help="if we should stop after the first error.",
 )
 @click.option(
+    "--timeout",
+    show_default=True,
+    default=2.0,
+    help="timeout in seconds.",
+)
+@click.option(
     "--filter",
     "-f",
     help="A regular expression which filter the methods to run on.",
@@ -203,29 +237,10 @@ def checkhealth(ctx):
     help="A file to write the report to. (Good for golden testing)",
 )
 @click.argument("PROGRAM", nargs=-1)
-def test(ctx, program, report, filter, fail_fast, with_python):
+def test(ctx, program, report, filter, fail_fast, with_python, timeout):
     """Test run a PROGRAM."""
 
-    if with_python is None:
-        if str(program[0]).lower().endswith(".py"):
-            log.warning(
-                "Automatically prepending the current python interpreter to the command. To disable this warning add the '--with-python' flag or prepend intented python interpreter to the command."
-            )
-            with_python = True
-        else:
-            with_python = False
-
-    if with_python:
-        try:
-            executable = str(Path(sys.executable).relative_to(Path.cwd()))
-        except ValueError:
-            log.warning(
-                "Python executable outside of current directory, might be a misconfiguration. "
-                "Run the tool with `uv run jpamb ...`."
-            )
-            executable = sys.executable
-
-        program = (executable,) + program
+    program = resolve_cmd(program, with_python)
 
     r = Reporter(report)
 
@@ -244,7 +259,7 @@ def test(ctx, program, report, filter, fail_fast, with_python):
             continue
 
         with r.context(f"Case {methodid}"):
-            out = r.run(program + (str(methodid),))
+            out = r.run(program + (str(methodid),), timeout=timeout)
             response = model.Response.parse(out)
             with r.context("Results"):
                 for k, v in sorted(response.predictions.items()):
@@ -254,6 +269,66 @@ def test(ctx, program, report, filter, fail_fast, with_python):
             total += score
 
     r.output(f"Total {total:0.2f}")
+
+
+@cli.command()
+@click.pass_context
+@click.option(
+    "--with-python/--no-with-python",
+    "-W/-noW",
+    help="the analysis is a python script, which should run in the same interpreter as jpamb.",
+    default=None,
+)
+@click.option(
+    "--fail-fast/--no-fail-fast",
+    help="if we should stop after the first error.",
+)
+@click.option(
+    "--timeout",
+    show_default=True,
+    default=2.0,
+    help="timeout in seconds.",
+)
+@click.option(
+    "--filter",
+    "-f",
+    help="A regular expression which filter the methods to run on.",
+    callback=re_parser,
+)
+@click.option(
+    "--report",
+    "-r",
+    default="-",
+    type=click.File(mode="w"),
+    help="A file to write the report to. (Good for golden testing)",
+)
+@click.argument("PROGRAM", nargs=-1)
+def interpret(ctx, program, report, filter, fail_fast, with_python, timeout):
+    """Use PROGRAM as an interpreter."""
+
+    r = Reporter(report)
+    program = resolve_cmd(program, with_python)
+
+    total = 0
+    count = 0
+    for case in ctx.obj.cases:
+        if filter and not filter.search(str(case)):
+            continue
+
+        with r.context(f"Case {case}"):
+            try:
+                out = r.run(
+                    program + (case.methodid.encode(), case.input.encode()),
+                    timeout=timeout,
+                )
+                ret = out.strip()
+            except subprocess.TimeoutExpired:
+                ret = "*"
+            r.output(f"Expected {case.result!r} and got {ret!r}")
+            total += 1 if case.result == ret else 0
+            count += 1
+
+    r.output(f"Total {total}/{count}")
 
 
 @cli.command()
@@ -288,17 +363,7 @@ def test(ctx, program, report, filter, fail_fast, with_python):
 def evaluate(ctx, program, report, timeout, iterations, with_python):
     """Evaluate the PROGRAM."""
 
-    if with_python is None:
-        if str(program[0]).lower().endswith(".py"):
-            log.warning(
-                "Automatically prepending the current python interpreter to the command. To disable this warning add the '--with-python' flag or prepend intented python interpreter to the command."
-            )
-            with_python = True
-        else:
-            with_python = False
-
-    if with_python:
-        program = (sys.executable,) + program
+    program = resolve_cmd(program, with_python)
 
     def calibrate(count=100_000):
         from time import perf_counter_ns
