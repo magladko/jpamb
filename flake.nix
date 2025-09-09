@@ -2,9 +2,10 @@
   description = "JPAMB: Java Program Analysis Micro Benchmarks";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/23.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/ca77296380960cd497a765102eeb1356eb80fed0";
     flake-utils.url = "github:numtide/flake-utils";
     jvm2json.url = "github:kalhauge/jvm2json";
+    jvm2json.inputs.nixpkgs.follows = "nixpkgs";
   };
   outputs =
     {
@@ -22,24 +23,12 @@
         devShells = {
           default = pkgs.mkShell {
             name = "jpamb";
-            TREE_SITTER_JAVA = "${pkgs.tree-sitter-grammars.tree-sitter-java}/parser";
             packages = with pkgs; [
               jdt-language-server
               jdk
               maven
               jvm2json.packages.${system}.default
-              (python3.withPackages (
-                p: with p; [
-                  click
-                  loguru
-                  pyyaml
-                  pandas
-                  plotly
-                  numpy
-                  matplotlib
-                  tree-sitter
-                ]
-              ))
+              uv
             ];
           };
         };

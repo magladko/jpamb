@@ -3,6 +3,7 @@ from pathlib import Path
 import shlex
 import math
 import sys
+import json
 
 from jpamb import model, logger
 from jpamb.logger import log
@@ -363,7 +364,6 @@ def evaluate(ctx, program, report, timeout, iterations, with_python):
         total_relative += _relative / iterations
 
         total_methods += 1
-    import json
 
     json.dump(
         {
@@ -376,6 +376,76 @@ def evaluate(ctx, program, report, timeout, iterations, with_python):
         report,
         indent=2,
     )
+
+
+@cli.command()
+@click.option(
+    "--decompile / --no-decompile",
+    help="decompile the classfiles using jvm2json.",
+)
+@click.option(
+    "--test / --no-test",
+    help="test that all cases are correct.",
+)
+@click.pass_context
+def build(ctx, decompile, test):
+    """Rebuild all benchmarks."""
+
+    run(
+        ["mvn", "compile"],
+        logerr=log.warning,
+        logout=log.info,
+        timeout=600,
+    )
+
+    if decompile:
+        log.info("Decompiling")
+        for cl in ctx.obj.classes():
+            log.info(f"Decompiling {cl}")
+            res, t = run(
+                [
+                    "jvm2json",
+                    "-s",
+                    ctx.obj.classfile(cl),
+                ],
+                logerr=log.warning,
+            )
+            with open(ctx.obj.decompiledfile(cl), "w") as f:
+                json.dump(json.loads(res), f, indent=2, sort_keys=True)
+        log.success("Done decompiling")
+
+    if test:
+        log.info("Testing")
+
+        for case in ctx.obj.cases:
+            log.info("Testing {case}")
+
+            folder = ctx.obj.classfiles_folder
+
+            try:
+                res, x = run(
+                    [
+                        "java",
+                        "-cp",
+                        folder,
+                        "-ea",
+                        "jpamb.Runtime",
+                        case.methodid.encode(),
+                        case.input.encode(),
+                    ],
+                    logout=log.info,
+                    logerr=log.debug,
+                    timeout=2,
+                )
+            except subprocess.TimeoutExpired:
+                res = "*"
+
+            if case.result == res.strip():
+                log.success(f"Correct {case}")
+            else:
+                log.error(f"Incorrect (got {res.strip()}) expected {case}")
+
+        log.success("Done testing")
 
 
 if __name__ == "__main__":
