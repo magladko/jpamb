@@ -213,7 +213,8 @@ def test(ctx, program, report, filter, fail_fast, with_python):
         except ValueError:
             if with_python:
                 log.warning(
-                    "Python executable outside of current directory, might be a misconfiguration."
+                    "Python executable outside of current directory, might be a misconfiguration. "
+                    "Run the tool with `uv run jpamb ...`."
                 )
         with context(f"Run {shlex.join(pp)}"):
             with context("Stderr"):
