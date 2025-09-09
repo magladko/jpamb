@@ -11,39 +11,7 @@ from jpamb.logger import log
 import subprocess
 import dataclasses
 from contextlib import contextmanager
-
-
-@click.group()
-@click.option(
-    "-v",
-    "--verbose",
-    count=True,
-    help="sets the verbosity of the program, more means more information",
-)
-@click.option(
-    "--workdir",
-    type=click.Path(
-        exists=True,
-        file_okay=False,
-        path_type=Path,
-        resolve_path=True,
-    ),
-    default=".",
-    help="the base of the jpamb folder.",
-)
-@click.pass_context
-def cli(ctx, workdir: Path, verbose):
-    """This is the jpamb main entry point."""
-    logger.initialize(verbose)
-    log.debug(f"Setup suite in {workdir}")
-    ctx.obj = model.Suite(workdir)
-
-
-@cli.command()
-@click.pass_context
-def checkhealth(ctx):
-    """Check that the repostiory is setup correctly"""
-    ctx.obj.checkhealth()
+from typing import IO
 
 
 def re_parser(ctx_, parms_, expr):
@@ -146,6 +114,69 @@ def run(cmd: list[str], /, timeout=2.0, logout=None, logerr=None, **kwargs):
         raise
 
 
+@dataclasses.dataclass
+class Reporter:
+    report: IO
+    prefix: str = ""
+
+    @contextmanager
+    def context(self, title):
+        old = self.prefix
+        print(f"{self.prefix[:-1]}┌ {title}", file=self.report)
+        self.prefix = f"{self.prefix[:-1]}│ "
+        yield
+        self.prefix = old
+        print(f"{self.prefix[:-1]}└ {title}", file=self.report)
+
+    def output(self, msgs):
+        if not isinstance(msgs, str):
+            msgs = str(msgs)
+
+        for msg in msgs.splitlines():
+            print(f"{self.prefix}{msg}", file=self.report)
+
+    def run(self, args):
+        with self.context(f"Run {shlex.join(args)}"):
+            with self.context("Stderr"):
+                out, time = run(args, logerr=self.output)
+            with self.context("Stdout"):
+                self.output(out)
+            return out
+
+
+@click.group()
+@click.option(
+    "-v",
+    "--verbose",
+    count=True,
+    help="sets the verbosity of the program, more means more information",
+)
+@click.option(
+    "--workdir",
+    type=click.Path(
+        exists=True,
+        file_okay=False,
+        path_type=Path,
+        resolve_path=True,
+    ),
+    default=".",
+    help="the base of the jpamb folder.",
+)
+@click.pass_context
+def cli(ctx, workdir: Path, verbose):
+    """This is the jpamb main entry point."""
+    logger.initialize(verbose)
+    log.debug(f"Setup suite in {workdir}")
+    ctx.obj = model.Suite(workdir)
+
+
+@cli.command()
+@click.pass_context
+def checkhealth(ctx):
+    """Check that the repostiory is setup correctly"""
+    ctx.obj.checkhealth()
+
+
 @cli.command()
 @click.pass_context
 @click.option(
@@ -175,8 +206,6 @@ def run(cmd: list[str], /, timeout=2.0, logout=None, logerr=None, **kwargs):
 def test(ctx, program, report, filter, fail_fast, with_python):
     """Test run a PROGRAM."""
 
-    prefix = ""
-
     if with_python is None:
         if str(program[0]).lower().endswith(".py"):
             log.warning(
@@ -187,68 +216,44 @@ def test(ctx, program, report, filter, fail_fast, with_python):
             with_python = False
 
     if with_python:
-        program = (sys.executable,) + program
-
-    @contextmanager
-    def context(title):
-        nonlocal prefix
-        old = prefix
-        print(f"{prefix[:-1]}┌ {title}", file=report)
-        prefix = f"{prefix[:-1]}│ "
-        yield
-        prefix = old
-        print(f"{prefix[:-1]}└ {title}", file=report)
-
-    def output(msgs):
-        if not isinstance(msgs, str):
-            msgs = str(msgs)
-
-        for msg in msgs.splitlines():
-            print(f"{prefix}{msg}", file=report)
-
-    def output_run(*args):
-        program_ = program + args
-        pp = list(program_)
         try:
-            pp[0] = str(Path(pp[0]).relative_to(Path.cwd()))
+            executable = str(Path(sys.executable).relative_to(Path.cwd()))
         except ValueError:
-            if with_python:
-                log.warning(
-                    "Python executable outside of current directory, might be a misconfiguration. "
-                    "Run the tool with `uv run jpamb ...`."
-                )
-        with context(f"Run {shlex.join(pp)}"):
-            with context("Stderr"):
-                out, time = run(program_, logerr=output)
-            with context("Stdout"):
-                output(out)
-            return out
+            log.warning(
+                "Python executable outside of current directory, might be a misconfiguration. "
+                "Run the tool with `uv run jpamb ...`."
+            )
+            executable = sys.executable
+
+        program = (executable,) + program
+
+    r = Reporter(report)
 
     if not filter:
-        with context("Info"):
-            out = output_run("info")
+        with r.context("Info"):
+            out = r.run(program + ("info",))
             info = model.AnalysisInfo.parse(out)
 
-            with context("Results"):
+            with r.context("Results"):
                 for k, v in sorted(dataclasses.asdict(info).items()):
-                    output(f"- {k}: {v}")
+                    r.output(f"- {k}: {v}")
 
     total = 0
     for methodid, correct in ctx.obj.case_methods():
         if filter and not filter.search(str(methodid)):
             continue
 
-        with context(f"Case {methodid}"):
-            out = output_run(str(methodid))
+        with r.context(f"Case {methodid}"):
+            out = r.run(program + (str(methodid),))
             response = model.Response.parse(out)
-            with context("Results"):
+            with r.context("Results"):
                 for k, v in sorted(response.predictions.items()):
-                    output(f"- {k}: {v} {v.wager:0.2f}")
+                    r.output(f"- {k}: {v} {v.wager:0.2f}")
             score = response.score(correct)
-            output(f"Score {score:0.2f}")
+            r.output(f"Score {score:0.2f}")
             total += score
 
-    output(f"Total {total:0.2f}")
+    r.output(f"Total {total:0.2f}")
 
 
 @cli.command()

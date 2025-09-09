@@ -17,14 +17,18 @@ def test_solutions(solution):
     runner = CliRunner()
     sol = Path(solution)
     solreport = Path("test/expected") / (sol.stem + ".txt")
-    runner.invoke(
+    result = runner.invoke(
         cli.cli,
         [
             "test",
             "-f",
             "Simple",
             "-r",
-            solreport,
-            sol,
+            str(solreport),
+            "--with-python",
+            str(sol),
         ],
+        catch_exceptions=False,
     )
+
+    assert result.exit_code == 0
