@@ -56,22 +56,15 @@ powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 
 **Important:** Restart your terminal/command prompt after installing uv!
 
-### Step 3: Install JPAMB
+### Step 3: Verify everything works
+
+*Note: It is **no longer recommended** that you install the tool with `uv tool install`.*
 
 ```bash
-# Navigate to this directory and run:
-uv tool install -e .
-```
-
-The `-e` means that the tool is installed editable, which means 
-that if you download a new version of the repository this will follow.
-
-### Step 4: Verify everything works
-
-```bash
-uvx jpamb checkhealth
+uv run jpamb checkhealth
 ```
 You should see several green "ok" messages. If you see any red errors, check troubleshooting below!
+
 
 ## How It Works
 
