@@ -374,12 +374,18 @@ def evaluate(ctx, program, report, timeout, iterations, with_python):
         end = perf_counter_ns()
         return end - start
 
-    (out, _) = run(
-        program + ("info",),
-        logout=log,
-        timeout=timeout,
-    )
-    info = model.AnalysisInfo.parse(out)
+    try:
+        (out, _) = run(
+            program + ("info",),
+            logout=log.info,
+            logerr=log.debug,
+            timeout=timeout,
+        )
+        info = model.AnalysisInfo.parse(out)
+    except ValueError:
+        log.error("Expected info, but got:")
+        for o in out.splitlines():
+            log.error(o)
 
     total_score = 0
     total_time = 0
