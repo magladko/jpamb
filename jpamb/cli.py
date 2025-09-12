@@ -1,11 +1,12 @@
 import click
 from pathlib import Path
 import shlex
+import enum
 import math
 import sys
 import json
 
-from jpamb import model, logger
+from jpamb import model, logger, jvm
 from jpamb.logger import log
 
 import subprocess
@@ -199,14 +200,13 @@ def cli(ctx, workdir: Path, verbose):
 
 
 @cli.command()
-@click.pass_context
-def checkhealth(ctx):
+@click.pass_obj
+def checkhealth(suite):
     """Check that the repostiory is setup correctly"""
-    ctx.obj.checkhealth()
+    suite.checkhealth()
 
 
 @cli.command()
-@click.pass_context
 @click.option(
     "--with-python/--no-with-python",
     "-W/-noW",
@@ -237,7 +237,8 @@ def checkhealth(ctx):
     help="A file to write the report to. (Good for golden testing)",
 )
 @click.argument("PROGRAM", nargs=-1)
-def test(ctx, program, report, filter, fail_fast, with_python, timeout):
+@click.pass_obj
+def test(suite, program, report, filter, fail_fast, with_python, timeout):
     """Test run a PROGRAM."""
 
     program = resolve_cmd(program, with_python)
@@ -254,7 +255,7 @@ def test(ctx, program, report, filter, fail_fast, with_python, timeout):
                     r.output(f"- {k}: {v}")
 
     total = 0
-    for methodid, correct in ctx.obj.case_methods():
+    for methodid, correct in suite.case_methods():
         if filter and not filter.search(str(methodid)):
             continue
 
@@ -272,7 +273,6 @@ def test(ctx, program, report, filter, fail_fast, with_python, timeout):
 
 
 @cli.command()
-@click.pass_context
 @click.option(
     "--with-python/--no-with-python",
     "-W/-noW",
@@ -303,7 +303,8 @@ def test(ctx, program, report, filter, fail_fast, with_python, timeout):
     help="A file to write the report to. (Good for golden testing)",
 )
 @click.argument("PROGRAM", nargs=-1)
-def interpret(ctx, program, report, filter, fail_fast, with_python, timeout):
+@click.pass_obj
+def interpret(suite, program, report, filter, fail_fast, with_python, timeout):
     """Use PROGRAM as an interpreter."""
 
     r = Reporter(report)
@@ -311,7 +312,7 @@ def interpret(ctx, program, report, filter, fail_fast, with_python, timeout):
 
     total = 0
     count = 0
-    for case in ctx.obj.cases:
+    for case in suite.cases:
         if filter and not filter.search(str(case)):
             continue
 
@@ -463,8 +464,8 @@ def evaluate(ctx, program, report, timeout, iterations, with_python):
     "--test / --no-test",
     help="test that all cases are correct.",
 )
-@click.pass_context
-def build(ctx, decompile, test):
+@click.pass_obj
+def build(suite, decompile, test):
     """Rebuild all benchmarks."""
 
     run(
@@ -476,27 +477,27 @@ def build(ctx, decompile, test):
 
     if decompile:
         log.info("Decompiling")
-        for cl in ctx.obj.classes():
+        for cl in suite.classes():
             log.info(f"Decompiling {cl}")
             res, t = run(
                 [
                     "jvm2json",
                     "-s",
-                    ctx.obj.classfile(cl),
+                    suite.classfile(cl),
                 ],
                 logerr=log.warning,
             )
-            with open(ctx.obj.decompiledfile(cl), "w") as f:
+            with open(suite.decompiledfile(cl), "w") as f:
                 json.dump(json.loads(res), f, indent=2, sort_keys=True)
         log.success("Done decompiling")
 
     if test:
         log.info("Testing")
 
-        for case in ctx.obj.cases:
+        for case in suite.cases:
             log.info("Testing {case}")
 
-            folder = ctx.obj.classfiles_folder
+            folder = suite.classfiles_folder
 
             try:
                 res, x = run(
@@ -522,6 +523,31 @@ def build(ctx, decompile, test):
                 log.error(f"Incorrect (got {res.strip()}) expected {case}")
 
         log.success("Done testing")
+
+
+@cli.command()
+@click.option(
+    "--format",
+    type=click.Choice(["pretty", "real", "repr", "json"], case_sensitive=True),
+    default="pretty",
+    help="The format to print the instruction in.",
+)
+@click.argument("METHOD")
+@click.pass_obj
+def inspect(suite, method, format):
+    method = jvm.AbsMethodID.decode(method)
+    for i, res in enumerate(suite.findmethod(method)["code"]["bytecode"]):
+        op = jvm.Opcode.from_json(res)
+        match format:
+            case "pretty":
+                res = str(op)
+            case "real":
+                res = op.real()
+            case "repr":
+                res = repr(op)
+            case "json":
+                res = json.dumps(res)
+        print(f"{i:03d} | {res}")
 
 
 if __name__ == "__main__":
