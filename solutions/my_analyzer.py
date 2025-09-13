@@ -83,6 +83,19 @@ class Result:
             "null pointer": f"{self.null_pointer.get()}%",
             "*": f"{self.infinite_loop.get()}%"
         }
+    
+    def __iter__(self):
+        yield from [
+            self.ok,
+            self.assertion_error,
+            self.divide_by_zero,
+            self.out_of_bounds,
+            self.null_pointer,
+            self.infinite_loop
+        ]
+        # for outcome in self.as_dict().items():
+        #     yield outcome
+
 
 class JavaAnalyzer:
     """A Java program analysis tool that predicts method outcomes."""
@@ -99,7 +112,7 @@ class JavaAnalyzer:
             "My First Analyzer",
             "1.0",
             "Garbage Spillers",
-            ["syntatic", "python"],
+            ["syntactic", "python"],
             for_science=True,
         )
         
@@ -229,13 +242,13 @@ class JavaAnalyzer:
 
         # assert body
         # Append all called methods' bodies to the current body
-        all_bodies = [body] + self._get_called_method_bodies(body)
+        # all_bodies = [body] + self._get_called_method_bodies(body)
         
         # Debug: print method body lines
-        for body in all_bodies:
-            if body and body.text:
-                for line in body.text.splitlines():
-                    self.log.debug("line: %s", line.decode())
+        # for body in all_bodies:
+        #     if body and body.text:
+        for line in body.text.splitlines():
+            self.log.debug("line: %s", line.decode())
         
         # Check for assertions
         self._analyze_assertions(body)
@@ -252,14 +265,16 @@ class JavaAnalyzer:
         # Check for infinite loops
         self._analyze_infinite_loops(body)
 
-        self.predictions.ok.set(100 - max([
-            self.predictions.assertion_error.get(),
-            self.predictions.divide_by_zero.get(),
-            self.predictions.out_of_bounds.get(),
-            self.predictions.null_pointer.get(),
-            self.predictions.infinite_loop.get()
-        ]))
-        
+        self.predictions.ok.set(100 - max(
+            [p.get() for p in self.predictions if p.title != "ok"]
+        ))
+
+        # Adjust not to get -inf points for method calls
+        # TODO: improve
+        for p in self.predictions:
+            if p.get() == 0:
+                p.set(5)
+
         # Fill in any missing predictions with defaults
         return self.predictions.as_dict()
     
@@ -415,11 +430,11 @@ class JavaAnalyzer:
 
 
 def main():
-        # Analyze the specified method
-        analyzer = JavaAnalyzer(False)
-        predictions = analyzer.analyze_method()
-        formatted_output = analyzer.format_predictions(predictions)
-        print(formatted_output)
+    # Analyze the specified method
+    analyzer = JavaAnalyzer(False)
+    predictions = analyzer.analyze_method()
+    formatted_output = analyzer.format_predictions(predictions)
+    print(formatted_output)
 
 
 if __name__ == "__main__":
