@@ -1,15 +1,93 @@
 #!/usr/bin/env python3
-import sys
 import logging
+import re
+import sys
+
 import tree_sitter
 import tree_sitter_java
 
 import jpamb
 
+
+class Prediction:
+
+    def __init__(self, title: str, probability: int):
+        self.title = title
+        self.probability = probability
+    
+    def __str__(self) -> str:
+        return f"{self.title};{self.probability}%"
+    
+    def __repr__(self) -> str:
+        return f"Prediction({self.title}, {self.probability}%)"
+    
+    def set(self, probability: int):
+        self.probability = probability
+    
+    def adjust(self, delta: int, relative=True):
+        if relative:
+            self.probability = max(
+                0,
+                min(100, int(self.probability * (1 + delta / 100)))
+            )
+        else:
+            self.probability = max(0, min(100, self.probability + delta))
+    
+    def get(self) -> int:
+        return self.probability
+    
+    def as_tuple(self) -> tuple:
+        return (self.title, f"{self.probability}%")
+
+    def as_dict(self) -> dict:
+        return dict(self.as_tuple())
+
+
+class Result:
+    ok              = Prediction("ok",              60)
+    assertion_error = Prediction("assertion error", 0)
+    divide_by_zero  = Prediction("divide by zero",  0)
+    out_of_bounds   = Prediction("out of bounds",   0)
+    null_pointer    = Prediction("null pointer",    0)
+    infinite_loop   = Prediction("*",               0)
+
+    def __init__(self):
+        self.set_defaults()
+
+    @staticmethod
+    def get_defaults() -> dict:
+        return {
+            "ok": "60%",
+            "assertion error": "0%",
+            "divide by zero": "0%",
+            "out of bounds": "0%",
+            "null pointer": "0%",
+            "*": "0%"
+        }
+
+    def set_defaults(self) -> None:
+        defaults = self.get_defaults()
+        self.ok.set(int(defaults["ok"][:-1]))
+        self.assertion_error.set(int(defaults["assertion error"][:-1]))
+        self.divide_by_zero.set(int(defaults["divide by zero"][:-1]))
+        self.out_of_bounds.set(int(defaults["out of bounds"][:-1]))
+        self.null_pointer.set(int(defaults["null pointer"][:-1]))
+        self.infinite_loop.set(int(defaults["*"][:-1]))
+
+    def as_dict(self) -> dict:
+        return {
+            "ok": f"{self.ok.get()}%",
+            "assertion error": f"{self.assertion_error.get()}%",
+            "divide by zero": f"{self.divide_by_zero.get()}%",
+            "out of bounds": f"{self.out_of_bounds.get()}%",
+            "null pointer": f"{self.null_pointer.get()}%",
+            "*": f"{self.infinite_loop.get()}%"
+        }
+
 class JavaAnalyzer:
     """A Java program analysis tool that predicts method outcomes."""
     
-    def __init__(self):
+    def __init__(self, debug=False):
         self.java_language = tree_sitter.Language(tree_sitter_java.language())
         self.parser = tree_sitter.Parser(self.java_language)
         self.log = logging
@@ -26,7 +104,9 @@ class JavaAnalyzer:
         )
         
         # Optional debugging setup
-        # self._setup_debugger()
+        if debug:
+            self.log.basicConfig(level=logging.DEBUG)
+            self._setup_debugger()
     
     def _setup_debugger(self):
         """Setup debugger if available."""
@@ -114,84 +194,110 @@ class JavaAnalyzer:
         
         return True
     
+    def _get_called_method_bodies(self, body_node):
+        called_bodies = []
+        # Find all method invocations in the body
+        call_query = tree_sitter.Query(self.java_language,
+            """(method_invocation name: (identifier) @called_name) @call""")
+        captures = tree_sitter.QueryCursor(call_query).captures(body_node)
+        call_nodes = captures.get("call", [])
+        for call_node in call_nodes:
+            called_name_node = call_node.child_by_field_name("name")
+            called_name = called_name_node.text.decode() if called_name_node and called_name_node.text else ""
+            # Find method node in the same class
+            method_query = tree_sitter.Query(self.java_language,
+                f"""(method_declaration name: ((identifier) @method-name (#eq? @method-name "{called_name}"))) @method""")
+            class_node = body_node.parent
+            method_captures = tree_sitter.QueryCursor(method_query).captures(class_node)
+            method_nodes = method_captures.get("method", [])
+            for method_node in method_nodes:
+                called_body = method_node.child_by_field_name("body")
+                if called_body and called_body.text:
+                    called_bodies.append(called_body)
+                    # Recursively get bodies of methods called within this method
+                    called_bodies.extend(self._get_called_method_bodies(called_body))
+        return called_bodies
+
     def analyze_method_body(self, method_node: tree_sitter.Node) -> dict:
         """Analyze the method body and return prediction results for all outcomes."""
         body = method_node.child_by_field_name("body")
+
+        self.predictions = Result()
         if not body or not body.text:
             self.log.warning("Could not find method body")
-            return self._get_default_predictions()
+            return self.predictions.as_dict()
+
+        # assert body
+        # Append all called methods' bodies to the current body
+        all_bodies = [body] + self._get_called_method_bodies(body)
         
         # Debug: print method body lines
-        for line in body.text.splitlines():
-            self.log.debug("line: %s", line.decode())
-        
-        # Analyze different types of potential issues
-        predictions = {}
+        for body in all_bodies:
+            if body and body.text:
+                for line in body.text.splitlines():
+                    self.log.debug("line: %s", line.decode())
         
         # Check for assertions
-        assertion_result = self._analyze_assertions(body)
-        predictions.update(assertion_result)
+        self._analyze_assertions(body)
         
         # Check for divide by zero
-        divide_by_zero_result = self._analyze_divide_by_zero(body)
-        predictions.update(divide_by_zero_result)
+        self._analyze_divide_by_zero(body)
         
         # Check for array access (out of bounds)
-        array_bounds_result = self._analyze_array_bounds(body)
-        predictions.update(array_bounds_result)
+        self._analyze_array_bounds(body)
         
         # Check for null pointer access
-        null_pointer_result = self._analyze_null_pointer(body)
-        predictions.update(null_pointer_result)
+        self._analyze_null_pointer(body)
         
         # Check for infinite loops
-        infinite_loop_result = self._analyze_infinite_loops(body)
-        predictions.update(infinite_loop_result)
+        self._analyze_infinite_loops(body)
+
+        self.predictions.ok.set(100 - max([
+            self.predictions.assertion_error.get(),
+            self.predictions.divide_by_zero.get(),
+            self.predictions.out_of_bounds.get(),
+            self.predictions.null_pointer.get(),
+            self.predictions.infinite_loop.get()
+        ]))
         
         # Fill in any missing predictions with defaults
-        return self._complete_predictions(predictions)
+        return self.predictions.as_dict()
     
-    def _get_default_predictions(self) -> dict:
-        """Return default predictions when analysis fails."""
-        return {
-            "ok": "50%",
-            "divide by zero": "50%",
-            "assertion error": "50%",
-            "out of bounds": "50%",
-            "null pointer": "50%",
-            "*": "0%"
-        }
-    
-    def _complete_predictions(self, predictions: dict) -> dict:
+    def _complete_predictions(self):
         """Fill in missing predictions with defaults and ensure they sum appropriately."""
-        defaults = self._get_default_predictions()
+        # defaults = Result.get_defaults()
         
-        # Fill in missing outcomes
-        for outcome in defaults:
-            if outcome not in predictions:
-                predictions[outcome] = "0%"
+        # # Fill in missing outcomes
+        # for outcome in defaults:
+        #     if outcome not in predictions:
+        #         predictions[outcome] = "0%"
         
         # If we have high confidence in a specific outcome, reduce others
-        high_confidence_outcomes = [k for k, v in predictions.items() 
-                                   if v.endswith('%') and int(v[:-1]) >= 80]
+        # high_confidence_outcomes = [k for k, v in predictions.items() 
+        #                            if v.endswith('%') and int(v[:-1]) >= 80]
         
-        if high_confidence_outcomes:
-            # Reduce other outcomes when we have high confidence
-            for outcome in predictions:
-                if outcome not in high_confidence_outcomes:
-                    predictions[outcome] = "5%"
+        # if high_confidence_outcomes:
+        #     # Reduce other outcomes when we have high confidence
+        #     for outcome in predictions:
+        #         if outcome not in high_confidence_outcomes:
+        #             predictions[outcome] = "5%"
         
-        return predictions
+        # return predictions
+        pass
     
-    def _analyze_assertions(self, body_node: tree_sitter.Node) -> dict:
+    def _analyze_assertions(self, body_node: tree_sitter.Node) -> None:
         """Analyze assertions in the method body."""
-        assert_query = tree_sitter.Query(self.java_language, """(assert_statement) @assert""")
+        assert_query = tree_sitter.Query(
+            self.java_language, 
+            """(assert_statement) @assert"""
+        )
         captures = tree_sitter.QueryCursor(assert_query).captures(body_node)
         assert_nodes = captures.get("assert", [])
         
         if not assert_nodes:
             self.log.debug("Did not find any assertions")
-            return {}
+            self.predictions.assertion_error.set(0)
+            return 
         
         # Check if any assertion is "assert false"
         for assert_node in assert_nodes:
@@ -200,12 +306,13 @@ class JavaAnalyzer:
             
             if "false" in assertion_text:
                 self.log.debug("Found 'assert false' statement")
-                return {"assertion error": "90%"}
+                self.predictions.assertion_error.set(90)
+                return
         
         self.log.debug("Found assertion but not 'assert false'")
-        return {"assertion error": "80%"}
+        self.predictions.assertion_error.set(60)
     
-    def _analyze_divide_by_zero(self, body_node: tree_sitter.Node) -> dict:
+    def _analyze_divide_by_zero(self, body_node: tree_sitter.Node) -> None:
         """Analyze potential divide by zero operations."""
         # Look for division operations
         div_query = tree_sitter.Query(self.java_language, 
@@ -215,19 +322,22 @@ class JavaAnalyzer:
         div_nodes = captures.get("div", [])
         
         if not div_nodes:
-            return {}
+            self.predictions.divide_by_zero.set(0)
+            return
         
         # Simple check: look for literal "0" or "(expression - same_expression)"
         body_text = body_node.text.decode() if body_node.text else ""
         
-        # if "/ 0" in body_text or "1/0" in body_text:
-        #     self.log.debug("Found explicit divide by zero")
-        #     return {"divide by zero": "95%"}
+        # Regex to match division by zero (e.g., "/ 0", "/0", "1/0", "x / 0")
+        if re.search(r'/\s*0\b', body_text):
+            self.log.debug("Found explicit divide by zero")
+            self.predictions.divide_by_zero.set(95)
+            return
         
         self.log.debug("Found division operations - potential divide by zero")
-        return {"divide by zero": "50%"}
+        self.predictions.divide_by_zero.set(60)
     
-    def _analyze_array_bounds(self, body_node: tree_sitter.Node) -> dict:
+    def _analyze_array_bounds(self, body_node: tree_sitter.Node) -> None:
         """Analyze potential array out of bounds access."""
         # Look for array access expressions
         array_query = tree_sitter.Query(self.java_language,
@@ -237,41 +347,51 @@ class JavaAnalyzer:
         array_nodes = captures.get("array_access", [])
         
         if not array_nodes:
-            return {}
+            return self.predictions.out_of_bounds.set(0)
         
         # TODO: Add more sophisticated analysis for bounds checking
         self.log.debug("Found array access operations")
-        return {"out of bounds": "20%"}
+        self.predictions.out_of_bounds.set(30)
     
-    def _analyze_null_pointer(self, body_node: tree_sitter.Node) -> dict:
+    def _analyze_null_pointer(self, body_node: tree_sitter.Node) -> None:
         """Analyze potential null pointer dereferences."""
-        body_text = body_node.text.decode() if body_node.text else ""
+        # Look for explicit 'null' usage in the AST
+        null_query = tree_sitter.Query(self.java_language,
+            """(null_literal) @null""")
+        captures = tree_sitter.QueryCursor(null_query).captures(body_node)
+        null_nodes = captures.get("null", [])
+
+        if null_nodes:
+            self.log.debug("Found 'null' literal - potential null pointer dereference")
+            self.predictions.null_pointer.set(40)
+            return
         
-        # Simple check for null assignments followed by usage
-        if "= null" in body_text:
-            self.log.debug("Found null assignment - potential null pointer")
-            return {"null pointer": "40%"}
-        
-        return {}
+        self.predictions.null_pointer.set(20)
     
-    def _analyze_infinite_loops(self, body_node: tree_sitter.Node) -> dict:
+    def _analyze_infinite_loops(self, body_node: tree_sitter.Node) -> None:
         """Analyze potential infinite loops."""
         # Look for while loops
         while_query = tree_sitter.Query(self.java_language,
             """(while_statement condition: (_) @condition)""")
         
         captures = tree_sitter.QueryCursor(while_query).captures(body_node)
+
+        if not captures:
+            self.predictions.infinite_loop.set(0)
+            return
+
         condition_nodes = captures.get("condition", [])
-        
+
         for condition in condition_nodes:
             condition_text = condition.text.decode() if condition.text else ""
             self.log.debug("Found while loop condition: %s", condition_text)
             
             if "true" in condition_text.lower():
                 self.log.debug("Found while(true) - potential infinite loop")
-                return {"*": "80%"}
-        
-        return {}
+                self.predictions.infinite_loop.set(70)
+                return
+
+        self.predictions.infinite_loop.set(10)
     
     def analyze_method(self) -> dict:
         """Main method to analyze a Java method and return all predictions."""
@@ -296,7 +416,7 @@ class JavaAnalyzer:
 
 def main():
         # Analyze the specified method
-        analyzer = JavaAnalyzer()
+        analyzer = JavaAnalyzer(False)
         predictions = analyzer.analyze_method()
         formatted_output = analyzer.format_predictions(predictions)
         print(formatted_output)
