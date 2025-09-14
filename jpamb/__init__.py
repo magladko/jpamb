@@ -1,5 +1,5 @@
 from jpamb import jvm
-from jpamb.model import Suite
+from jpamb.model import Suite, Input
 
 from typing import NoReturn, Any
 
@@ -13,6 +13,8 @@ def getmethodid(
     tags: list[str],
     for_science: bool,
 ) -> jvm.AbsMethodID:
+    """Get the method id from the program arguments, or output the info."""
+
     import sys
 
     mid = sys.argv[1]
@@ -20,6 +22,16 @@ def getmethodid(
         printinfo(name, version, group, tags, for_science)
 
     return parse_methodid(mid)
+
+
+def getcase() -> tuple[jvm.AbsMethodID, Input]:
+    """Get the case from the program arguments."""
+    import sys
+
+    mid = sys.argv[1]
+    i = sys.argv[2]
+
+    return parse_methodid(mid), parse_input(i)
 
 
 def printinfo(
@@ -53,3 +65,7 @@ def classfile(lookup: jvm.Absolute[Any] | jvm.ClassName) -> Path:
 
 def parse_methodid(mid) -> jvm.AbsMethodID:
     return jvm.AbsMethodID.decode(mid)
+
+
+def parse_input(i) -> Input:
+    return Input.decode(i)

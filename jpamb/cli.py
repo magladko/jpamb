@@ -1,48 +1,18 @@
 import click
 from pathlib import Path
 import shlex
+import enum
 import math
 import sys
+import json
 
-from jpamb import model, logger
+from jpamb import model, logger, jvm
 from jpamb.logger import log
 
 import subprocess
 import dataclasses
 from contextlib import contextmanager
-
-
-@click.group()
-@click.option(
-    "-v",
-    "--verbose",
-    count=True,
-    help="sets the verbosity of the program, more means more information",
-)
-@click.option(
-    "--workdir",
-    type=click.Path(
-        exists=True,
-        file_okay=False,
-        path_type=Path,
-        resolve_path=True,
-    ),
-    default=".",
-    help="the base of the jpamb folder.",
-)
-@click.pass_context
-def cli(ctx, workdir: Path, verbose):
-    """This is the jpamb main entry point."""
-    logger.initialize(verbose)
-    log.debug(f"Setup suite in {workdir}")
-    ctx.obj = model.Suite(workdir)
-
-
-@cli.command()
-@click.pass_context
-def checkhealth(ctx):
-    """Check that the repostiory is setup correctly"""
-    ctx.obj.checkhealth()
+from typing import IO
 
 
 def re_parser(ctx_, parms_, expr):
@@ -145,8 +115,98 @@ def run(cmd: list[str], /, timeout=2.0, logout=None, logerr=None, **kwargs):
         raise
 
 
-@cli.command()
+@dataclasses.dataclass
+class Reporter:
+    report: IO
+    prefix: str = ""
+
+    @contextmanager
+    def context(self, title):
+        old = self.prefix
+        print(f"{self.prefix[:-1]}┌ {title}", file=self.report)
+        self.prefix = f"{self.prefix[:-1]}│ "
+        try:
+            yield
+        finally:
+            self.prefix = old
+            print(f"{self.prefix[:-1]}└ {title}", file=self.report)
+
+    def output(self, msgs):
+        if not isinstance(msgs, str):
+            msgs = str(msgs)
+
+        for msg in msgs.splitlines():
+            print(f"{self.prefix}{msg}", file=self.report)
+
+    def run(self, args, **kwargs):
+        with self.context(f"Run {shlex.join(args)}"):
+            with self.context("Stderr"):
+                out, time = run(args, logerr=self.output, **kwargs)
+            with self.context("Stdout"):
+                self.output(out)
+            return out
+
+
+def resolve_cmd(program, with_python=None):
+
+    if with_python is None:
+        if str(program[0]).lower().endswith(".py"):
+            log.warning(
+                "Automatically prepending the current python interpreter to the command. To disable this warning add the '--with-python' flag or prepend intented python interpreter to the command."
+            )
+            with_python = True
+        else:
+            with_python = False
+
+    if with_python:
+        try:
+            executable = str(Path(sys.executable).relative_to(Path.cwd()))
+        except ValueError:
+            log.warning(
+                "Python executable outside of current directory, might be a misconfiguration. "
+                "Run the tool with `uv run jpamb ...`."
+            )
+            executable = sys.executable
+
+        program = (executable,) + program
+
+    return program
+
+
+@click.group()
+@click.option(
+    "-v",
+    "--verbose",
+    count=True,
+    help="sets the verbosity of the program, more means more information",
+)
+@click.option(
+    "--workdir",
+    type=click.Path(
+        exists=True,
+        file_okay=False,
+        path_type=Path,
+        resolve_path=True,
+    ),
+    default=".",
+    help="the base of the jpamb folder.",
+)
 @click.pass_context
+def cli(ctx, workdir: Path, verbose):
+    """This is the jpamb main entry point."""
+    logger.initialize(verbose)
+    log.debug(f"Setup suite in {workdir}")
+    ctx.obj = model.Suite(workdir)
+
+
+@cli.command()
+@click.pass_obj
+def checkhealth(suite):
+    """Check that the repostiory is setup correctly"""
+    suite.checkhealth()
+
+
+@cli.command()
 @click.option(
     "--with-python/--no-with-python",
     "-W/-noW",
@@ -156,6 +216,12 @@ def run(cmd: list[str], /, timeout=2.0, logout=None, logerr=None, **kwargs):
 @click.option(
     "--fail-fast/--no-fail-fast",
     help="if we should stop after the first error.",
+)
+@click.option(
+    "--timeout",
+    show_default=True,
+    default=2.0,
+    help="timeout in seconds.",
 )
 @click.option(
     "--filter",
@@ -171,82 +237,99 @@ def run(cmd: list[str], /, timeout=2.0, logout=None, logerr=None, **kwargs):
     help="A file to write the report to. (Good for golden testing)",
 )
 @click.argument("PROGRAM", nargs=-1)
-def test(ctx, program, report, filter, fail_fast, with_python):
+@click.pass_obj
+def test(suite, program, report, filter, fail_fast, with_python, timeout):
     """Test run a PROGRAM."""
 
-    prefix = ""
+    program = resolve_cmd(program, with_python)
 
-    if with_python is None:
-        if str(program[0]).lower().endswith(".py"):
-            log.warning(
-                "Automatically prepending the current python interpreter to the command. To disable this warning add the '--with-python' flag or prepend intented python interpreter to the command."
-            )
-            with_python = True
-        else:
-            with_python = False
-
-    if with_python:
-        program = (sys.executable,) + program
-
-    @contextmanager
-    def context(title):
-        nonlocal prefix
-        old = prefix
-        print(f"{prefix[:-1]}┌ {title}", file=report)
-        prefix = f"{prefix[:-1]}│ "
-        yield
-        prefix = old
-        print(f"{prefix[:-1]}└ {title}", file=report)
-
-    def output(msgs):
-        if not isinstance(msgs, str):
-            msgs = str(msgs)
-
-        for msg in msgs.splitlines():
-            print(f"{prefix}{msg}", file=report)
-
-    def output_run(*args):
-        program_ = program + args
-        pp = list(program_)
-        try:
-            pp[0] = str(Path(pp[0]).relative_to(Path.cwd()))
-        except ValueError:
-            if with_python:
-                log.warning(
-                    "Python executable outside of current directory, might be a misconfiguration."
-                )
-        with context(f"Run {shlex.join(pp)}"):
-            with context("Stderr"):
-                out, time = run(program_, logerr=output)
-            with context("Stdout"):
-                output(out)
-            return out
+    r = Reporter(report)
 
     if not filter:
-        with context("Info"):
-            out = output_run("info")
+        with r.context("Info"):
+            out = r.run(program + ("info",))
             info = model.AnalysisInfo.parse(out)
 
-            with context("Results"):
+            with r.context("Results"):
                 for k, v in sorted(dataclasses.asdict(info).items()):
-                    output(f"- {k}: {v}")
+                    r.output(f"- {k}: {v}")
 
     total = 0
-    for methodid, correct in ctx.obj.case_methods():
+    for methodid, correct in suite.case_methods():
         if filter and not filter.search(str(methodid)):
             continue
 
-        with context(f"Case {methodid}"):
-            out = output_run(str(methodid))
+        with r.context(f"Case {methodid}"):
+            out = r.run(program + (str(methodid),), timeout=timeout)
             response = model.Response.parse(out)
-            with context("Results"):
+            with r.context("Results"):
                 for k, v in sorted(response.predictions.items()):
-                    output(f"- {k}: {v} {v.wager:0.2f}")
+                    r.output(f"- {k}: {v} {v.wager:0.2f}")
             score = response.score(correct)
-            output(f"Score {score:0.2f}")
+            r.output(f"Score {score:0.2f}")
             total += score
 
-    output(f"Total {total:0.2f}")
+    r.output(f"Total {total:0.2f}")
+
+
+@cli.command()
+@click.option(
+    "--with-python/--no-with-python",
+    "-W/-noW",
+    help="the analysis is a python script, which should run in the same interpreter as jpamb.",
+    default=None,
+)
+@click.option(
+    "--fail-fast/--no-fail-fast",
+    help="if we should stop after the first error.",
+)
+@click.option(
+    "--timeout",
+    show_default=True,
+    default=2.0,
+    help="timeout in seconds.",
+)
+@click.option(
+    "--filter",
+    "-f",
+    help="A regular expression which filter the methods to run on.",
+    callback=re_parser,
+)
+@click.option(
+    "--report",
+    "-r",
+    default="-",
+    type=click.File(mode="w"),
+    help="A file to write the report to. (Good for golden testing)",
+)
+@click.argument("PROGRAM", nargs=-1)
+@click.pass_obj
+def interpret(suite, program, report, filter, fail_fast, with_python, timeout):
+    """Use PROGRAM as an interpreter."""
+
+    r = Reporter(report)
+    program = resolve_cmd(program, with_python)
+
+    total = 0
+    count = 0
+    for case in suite.cases:
+        if filter and not filter.search(str(case)):
+            continue
+
+        with r.context(f"Case {case}"):
+            try:
+                out = r.run(
+                    program + (case.methodid.encode(), case.input.encode()),
+                    timeout=timeout,
+                )
+                ret = out.strip()
+            except subprocess.TimeoutExpired:
+                ret = "*"
+            r.output(f"Expected {case.result!r} and got {ret!r}")
+            total += 1 if case.result == ret else 0
+            count += 1
+
+    r.output(f"Total {total}/{count}")
 
 
 @cli.command()
@@ -281,17 +364,7 @@ def test(ctx, program, report, filter, fail_fast, with_python):
 def evaluate(ctx, program, report, timeout, iterations, with_python):
     """Evaluate the PROGRAM."""
 
-    if with_python is None:
-        if str(program[0]).lower().endswith(".py"):
-            log.warning(
-                "Automatically prepending the current python interpreter to the command. To disable this warning add the '--with-python' flag or prepend intented python interpreter to the command."
-            )
-            with_python = True
-        else:
-            with_python = False
-
-    if with_python:
-        program = (sys.executable,) + program
+    program = resolve_cmd(program, with_python)
 
     def calibrate(count=100_000):
         from time import perf_counter_ns
@@ -302,12 +375,18 @@ def evaluate(ctx, program, report, timeout, iterations, with_python):
         end = perf_counter_ns()
         return end - start
 
-    (out, _) = run(
-        program + ("info",),
-        logout=log,
-        timeout=timeout,
-    )
-    info = model.AnalysisInfo.parse(out)
+    try:
+        (out, _) = run(
+            program + ("info",),
+            logout=log.info,
+            logerr=log.debug,
+            timeout=timeout,
+        )
+        info = model.AnalysisInfo.parse(out)
+    except ValueError:
+        log.error("Expected info, but got:")
+        for o in out.splitlines():
+            log.error(o)
 
     total_score = 0
     total_time = 0
@@ -362,7 +441,6 @@ def evaluate(ctx, program, report, timeout, iterations, with_python):
         total_relative += _relative / iterations
 
         total_methods += 1
-    import json
 
     json.dump(
         {
@@ -375,6 +453,101 @@ def evaluate(ctx, program, report, timeout, iterations, with_python):
         report,
         indent=2,
     )
+
+
+@cli.command()
+@click.option(
+    "--decompile / --no-decompile",
+    help="decompile the classfiles using jvm2json.",
+)
+@click.option(
+    "--test / --no-test",
+    help="test that all cases are correct.",
+)
+@click.pass_obj
+def build(suite, decompile, test):
+    """Rebuild all benchmarks."""
+
+    run(
+        ["mvn", "compile"],
+        logerr=log.warning,
+        logout=log.info,
+        timeout=600,
+    )
+
+    if decompile:
+        log.info("Decompiling")
+        for cl in suite.classes():
+            log.info(f"Decompiling {cl}")
+            res, t = run(
+                [
+                    "jvm2json",
+                    "-s",
+                    suite.classfile(cl),
+                ],
+                logerr=log.warning,
+            )
+            with open(suite.decompiledfile(cl), "w") as f:
+                json.dump(json.loads(res), f, indent=2, sort_keys=True)
+        log.success("Done decompiling")
+
+    if test:
+        log.info("Testing")
+
+        for case in suite.cases:
+            log.info("Testing {case}")
+
+            folder = suite.classfiles_folder
+
+            try:
+                res, x = run(
+                    [
+                        "java",
+                        "-cp",
+                        folder,
+                        "-ea",
+                        "jpamb.Runtime",
+                        case.methodid.encode(),
+                        case.input.encode(),
+                    ],
+                    logout=log.info,
+                    logerr=log.debug,
+                    timeout=2,
+                )
+            except subprocess.TimeoutExpired:
+                res = "*"
+
+            if case.result == res.strip():
+                log.success(f"Correct {case}")
+            else:
+                log.error(f"Incorrect (got {res.strip()}) expected {case}")
+
+        log.success("Done testing")
+
+
+@cli.command()
+@click.option(
+    "--format",
+    type=click.Choice(["pretty", "real", "repr", "json"], case_sensitive=True),
+    default="pretty",
+    help="The format to print the instruction in.",
+)
+@click.argument("METHOD")
+@click.pass_obj
+def inspect(suite, method, format):
+    method = jvm.AbsMethodID.decode(method)
+    for i, res in enumerate(suite.findmethod(method)["code"]["bytecode"]):
+        op = jvm.Opcode.from_json(res)
+        match format:
+            case "pretty":
+                res = str(op)
+            case "real":
+                res = op.real()
+            case "repr":
+                res = repr(op)
+            case "json":
+                res = json.dumps(res)
+        print(f"{i:03d} | {res}")
 
 
 if __name__ == "__main__":

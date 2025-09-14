@@ -111,21 +111,21 @@
     {
       "access": [
         "public",
-        "static"
-      ],
-      "class": "jpamb/utils/InputParser$ParseError",
-      "name": "ParseError",
-      "outer": "jpamb/utils/InputParser"
-    },
-    {
-      "access": [
-        "public",
         "static",
         "final"
       ],
       "class": "java/lang/invoke/MethodHandles$Lookup",
       "name": "Lookup",
       "outer": "java/lang/invoke/MethodHandles"
+    },
+    {
+      "access": [
+        "public",
+        "static"
+      ],
+      "class": "jpamb/utils/InputParser$ParseError",
+      "name": "ParseError",
+      "outer": "jpamb/utils/InputParser"
     }
   ],
   "interfaces": [],
@@ -540,6 +540,18 @@
           {
             "line": 28,
             "offset": 4
+          },
+          {
+            "line": 29,
+            "offset": 7
+          },
+          {
+            "line": 28,
+            "offset": 9
+          },
+          {
+            "line": 30,
+            "offset": 11
           },
           {
             "line": 31,
@@ -2223,29 +2235,29 @@
             "opr": "invoke"
           },
           {
-            "index": 0,
             "offset": 84,
+            "opr": "goto",
+            "target": 63
+          },
+          {
+            "index": 0,
+            "offset": 87,
             "opr": "load",
             "type": "ref"
           },
           {
-            "field": {
-              "class": "jpamb/utils/InputParser",
-              "name": "currentToken",
-              "type": {
+            "access": "virtual",
+            "method": {
+              "args": [],
+              "name": "nextToken",
+              "ref": {
                 "kind": "class",
-                "name": "java/lang/String"
-              }
+                "name": "jpamb/utils/InputParser"
+              },
+              "returns": null
             },
-            "offset": 85,
-            "opr": "get",
-            "static": false
-          },
-          {
-            "condition": "is",
             "offset": 88,
-            "opr": "ifz",
-            "target": 71
+            "opr": "invoke"
           },
           {
             "index": 0,
@@ -2267,86 +2279,14 @@
             "static": false
           },
           {
-            "offset": 95,
-            "opr": "push",
-            "value": {
-              "type": "string",
-              "value": ","
-            }
-          },
-          {
-            "access": "virtual",
-            "method": {
-              "args": [
-                {
-                  "kind": "class",
-                  "name": "java/lang/Object"
-                }
-              ],
-              "name": "equals",
-              "ref": {
-                "kind": "class",
-                "name": "java/lang/String"
-              },
-              "returns": "boolean"
-            },
-            "offset": 97,
-            "opr": "invoke"
-          },
-          {
-            "condition": "eq",
-            "offset": 100,
-            "opr": "ifz",
-            "target": 71
-          },
-          {
-            "index": 0,
-            "offset": 103,
-            "opr": "load",
-            "type": "ref"
-          },
-          {
-            "access": "virtual",
-            "method": {
-              "args": [],
-              "name": "nextToken",
-              "ref": {
-                "kind": "class",
-                "name": "jpamb/utils/InputParser"
-              },
-              "returns": null
-            },
-            "offset": 104,
-            "opr": "invoke"
-          },
-          {
-            "index": 0,
-            "offset": 107,
-            "opr": "load",
-            "type": "ref"
-          },
-          {
-            "field": {
-              "class": "jpamb/utils/InputParser",
-              "name": "currentToken",
-              "type": {
-                "kind": "class",
-                "name": "java/lang/String"
-              }
-            },
-            "offset": 108,
-            "opr": "get",
-            "static": false
-          },
-          {
             "condition": "is",
-            "offset": 111,
+            "offset": 95,
             "opr": "ifz",
-            "target": 58
+            "target": 51
           },
           {
             "index": 0,
-            "offset": 114,
+            "offset": 98,
             "opr": "load",
             "type": "ref"
           },
@@ -2359,12 +2299,12 @@
                 "name": "java/lang/String"
               }
             },
-            "offset": 115,
+            "offset": 99,
             "opr": "get",
             "static": false
           },
           {
-            "offset": 118,
+            "offset": 102,
             "opr": "push",
             "value": {
               "type": "string",
@@ -2387,23 +2327,23 @@
               },
               "returns": "boolean"
             },
-            "offset": 120,
+            "offset": 104,
             "opr": "invoke"
           },
           {
             "condition": "ne",
-            "offset": 123,
+            "offset": 107,
             "opr": "ifz",
-            "target": 61
+            "target": 54
           },
           {
             "index": 0,
-            "offset": 126,
+            "offset": 110,
             "opr": "load",
             "type": "ref"
           },
           {
-            "offset": 127,
+            "offset": 111,
             "opr": "push",
             "value": {
               "type": "string",
@@ -2426,18 +2366,18 @@
               },
               "returns": null
             },
-            "offset": 129,
+            "offset": 113,
             "opr": "invoke"
           },
           {
             "index": 1,
-            "offset": 132,
+            "offset": 116,
             "opr": "load",
             "type": "ref"
           },
           {
             "index": 0,
-            "offset": 133,
+            "offset": 117,
             "opr": "load",
             "type": "ref"
           },
@@ -2450,7 +2390,7 @@
                 "name": "java/lang/String"
               }
             },
-            "offset": 134,
+            "offset": 118,
             "opr": "get",
             "static": false
           },
@@ -2471,7 +2411,7 @@
               },
               "returns": "int"
             },
-            "offset": 137,
+            "offset": 121,
             "opr": "invoke"
           },
           {
@@ -2491,7 +2431,7 @@
                 "name": "java/lang/Integer"
               }
             },
-            "offset": 140,
+            "offset": 124,
             "opr": "invoke"
           },
           {
@@ -2510,17 +2450,17 @@
               },
               "returns": "boolean"
             },
-            "offset": 143,
+            "offset": 127,
             "opr": "invoke"
           },
           {
-            "offset": 146,
+            "offset": 130,
             "opr": "pop",
             "words": 1
           },
           {
             "index": 0,
-            "offset": 147,
+            "offset": 131,
             "opr": "load",
             "type": "ref"
           },
@@ -2535,13 +2475,85 @@
               },
               "returns": null
             },
+            "offset": 132,
+            "opr": "invoke"
+          },
+          {
+            "index": 0,
+            "offset": 135,
+            "opr": "load",
+            "type": "ref"
+          },
+          {
+            "field": {
+              "class": "jpamb/utils/InputParser",
+              "name": "currentToken",
+              "type": {
+                "kind": "class",
+                "name": "java/lang/String"
+              }
+            },
+            "offset": 136,
+            "opr": "get",
+            "static": false
+          },
+          {
+            "condition": "is",
+            "offset": 139,
+            "opr": "ifz",
+            "target": 71
+          },
+          {
+            "index": 0,
+            "offset": 142,
+            "opr": "load",
+            "type": "ref"
+          },
+          {
+            "field": {
+              "class": "jpamb/utils/InputParser",
+              "name": "currentToken",
+              "type": {
+                "kind": "class",
+                "name": "java/lang/String"
+              }
+            },
+            "offset": 143,
+            "opr": "get",
+            "static": false
+          },
+          {
+            "offset": 146,
+            "opr": "push",
+            "value": {
+              "type": "string",
+              "value": ","
+            }
+          },
+          {
+            "access": "virtual",
+            "method": {
+              "args": [
+                {
+                  "kind": "class",
+                  "name": "java/lang/Object"
+                }
+              ],
+              "name": "equals",
+              "ref": {
+                "kind": "class",
+                "name": "java/lang/String"
+              },
+              "returns": "boolean"
+            },
             "offset": 148,
             "opr": "invoke"
           },
           {
+            "condition": "ne",
             "offset": 151,
-            "opr": "goto",
-            "target": 40
+            "opr": "ifz",
+            "target": 41
           },
           {
             "index": 0,
@@ -2623,58 +2635,31 @@
             "type": "int"
           },
           {
-            "index": 3,
             "offset": 169,
-            "opr": "load",
-            "type": "int"
-          },
-          {
-            "index": 1,
-            "offset": 170,
-            "opr": "load",
-            "type": "ref"
-          },
-          {
-            "access": "virtual",
-            "method": {
-              "args": [],
-              "name": "size",
-              "ref": {
-                "kind": "class",
-                "name": "java/util/ArrayList"
-              },
-              "returns": "int"
-            },
-            "offset": 171,
-            "opr": "invoke"
-          },
-          {
-            "condition": "ge",
-            "offset": 174,
-            "opr": "if",
-            "target": 94
+            "opr": "goto",
+            "target": 90
           },
           {
             "index": 2,
-            "offset": 177,
+            "offset": 172,
             "opr": "load",
             "type": "ref"
           },
           {
             "index": 3,
-            "offset": 178,
+            "offset": 173,
             "opr": "load",
             "type": "int"
           },
           {
             "index": 1,
-            "offset": 179,
+            "offset": 174,
             "opr": "load",
             "type": "ref"
           },
           {
             "index": 3,
-            "offset": 180,
+            "offset": 175,
             "opr": "load",
             "type": "int"
           },
@@ -2694,11 +2679,11 @@
                 "name": "java/lang/Object"
               }
             },
-            "offset": 181,
+            "offset": 176,
             "opr": "invoke"
           },
           {
-            "offset": 184,
+            "offset": 179,
             "opr": "checkcast",
             "type": {
               "kind": "class",
@@ -2716,24 +2701,51 @@
               },
               "returns": "int"
             },
-            "offset": 187,
+            "offset": 182,
             "opr": "invoke"
           },
           {
-            "offset": 190,
+            "offset": 185,
             "opr": "array_store",
             "type": "int"
           },
           {
             "amount": 1,
             "index": 3,
-            "offset": 191,
+            "offset": 186,
             "opr": "incr"
           },
           {
+            "index": 3,
+            "offset": 189,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "index": 1,
+            "offset": 190,
+            "opr": "load",
+            "type": "ref"
+          },
+          {
+            "access": "virtual",
+            "method": {
+              "args": [],
+              "name": "size",
+              "ref": {
+                "kind": "class",
+                "name": "java/util/ArrayList"
+              },
+              "returns": "int"
+            },
+            "offset": 191,
+            "opr": "invoke"
+          },
+          {
+            "condition": "lt",
             "offset": 194,
-            "opr": "goto",
-            "target": 80
+            "opr": "if",
+            "target": 81
           },
           {
             "index": 2,
@@ -2799,23 +2811,27 @@
           },
           {
             "line": 93,
-            "offset": 48
+            "offset": 41
           },
           {
             "line": 94,
-            "offset": 50
+            "offset": 43
           },
           {
             "line": 95,
-            "offset": 58
+            "offset": 51
           },
           {
             "line": 96,
-            "offset": 61
+            "offset": 54
           },
           {
             "line": 97,
-            "offset": 68
+            "offset": 61
+          },
+          {
+            "line": 92,
+            "offset": 63
           },
           {
             "line": 100,
@@ -2831,11 +2847,11 @@
           },
           {
             "line": 104,
-            "offset": 84
+            "offset": 81
           },
           {
             "line": 103,
-            "offset": 92
+            "offset": 89
           },
           {
             "line": 106,
@@ -2867,15 +2883,19 @@
             "type": "same"
           },
           {
-            "index": 40,
+            "index": 41,
             "type": "same"
           },
           {
-            "index": 58,
+            "index": 51,
             "type": "same"
           },
           {
-            "index": 61,
+            "index": 54,
+            "type": "same"
+          },
+          {
+            "index": 63,
             "type": "same"
           },
           {
@@ -2883,7 +2903,7 @@
             "type": "same"
           },
           {
-            "index": 80,
+            "index": 81,
             "info": [
               {
                 "ref": {
@@ -2899,9 +2919,8 @@
             "type": "append_frame"
           },
           {
-            "index": 94,
-            "info": 1,
-            "type": "chop_frame"
+            "index": 90,
+            "type": "same"
           }
         ]
       },
@@ -3340,29 +3359,29 @@
             "opr": "invoke"
           },
           {
-            "index": 0,
             "offset": 85,
+            "opr": "goto",
+            "target": 65
+          },
+          {
+            "index": 0,
+            "offset": 88,
             "opr": "load",
             "type": "ref"
           },
           {
-            "field": {
-              "class": "jpamb/utils/InputParser",
-              "name": "currentToken",
-              "type": {
+            "access": "virtual",
+            "method": {
+              "args": [],
+              "name": "nextToken",
+              "ref": {
                 "kind": "class",
-                "name": "java/lang/String"
-              }
+                "name": "jpamb/utils/InputParser"
+              },
+              "returns": null
             },
-            "offset": 86,
-            "opr": "get",
-            "static": false
-          },
-          {
-            "condition": "is",
             "offset": 89,
-            "opr": "ifz",
-            "target": 73
+            "opr": "invoke"
           },
           {
             "index": 0,
@@ -3384,86 +3403,14 @@
             "static": false
           },
           {
-            "offset": 96,
-            "opr": "push",
-            "value": {
-              "type": "string",
-              "value": ","
-            }
-          },
-          {
-            "access": "virtual",
-            "method": {
-              "args": [
-                {
-                  "kind": "class",
-                  "name": "java/lang/Object"
-                }
-              ],
-              "name": "equals",
-              "ref": {
-                "kind": "class",
-                "name": "java/lang/String"
-              },
-              "returns": "boolean"
-            },
-            "offset": 98,
-            "opr": "invoke"
-          },
-          {
-            "condition": "eq",
-            "offset": 101,
-            "opr": "ifz",
-            "target": 73
-          },
-          {
-            "index": 0,
-            "offset": 104,
-            "opr": "load",
-            "type": "ref"
-          },
-          {
-            "access": "virtual",
-            "method": {
-              "args": [],
-              "name": "nextToken",
-              "ref": {
-                "kind": "class",
-                "name": "jpamb/utils/InputParser"
-              },
-              "returns": null
-            },
-            "offset": 105,
-            "opr": "invoke"
-          },
-          {
-            "index": 0,
-            "offset": 108,
-            "opr": "load",
-            "type": "ref"
-          },
-          {
-            "field": {
-              "class": "jpamb/utils/InputParser",
-              "name": "currentToken",
-              "type": {
-                "kind": "class",
-                "name": "java/lang/String"
-              }
-            },
-            "offset": 109,
-            "opr": "get",
-            "static": false
-          },
-          {
             "condition": "is",
-            "offset": 112,
+            "offset": 96,
             "opr": "ifz",
-            "target": 59
+            "target": 52
           },
           {
             "index": 0,
-            "offset": 115,
+            "offset": 99,
             "opr": "load",
             "type": "ref"
           },
@@ -3476,12 +3423,12 @@
                 "name": "java/lang/String"
               }
             },
-            "offset": 116,
+            "offset": 100,
             "opr": "get",
             "static": false
           },
           {
-            "offset": 119,
+            "offset": 103,
             "opr": "push",
             "value": {
               "type": "string",
@@ -3504,23 +3451,23 @@
               },
               "returns": "boolean"
             },
-            "offset": 121,
+            "offset": 105,
             "opr": "invoke"
           },
           {
             "condition": "ne",
-            "offset": 124,
+            "offset": 108,
             "opr": "ifz",
-            "target": 62
+            "target": 55
           },
           {
             "index": 0,
-            "offset": 127,
+            "offset": 111,
             "opr": "load",
             "type": "ref"
           },
           {
-            "offset": 128,
+            "offset": 112,
             "opr": "push",
             "value": {
               "type": "string",
@@ -3543,18 +3490,18 @@
               },
               "returns": null
             },
-            "offset": 130,
+            "offset": 114,
             "opr": "invoke"
           },
           {
             "index": 1,
-            "offset": 133,
+            "offset": 117,
             "opr": "load",
             "type": "ref"
           },
           {
             "index": 0,
-            "offset": 134,
+            "offset": 118,
             "opr": "load",
             "type": "ref"
           },
@@ -3567,12 +3514,12 @@
                 "name": "java/lang/String"
               }
             },
-            "offset": 135,
+            "offset": 119,
             "opr": "get",
             "static": false
           },
           {
-            "offset": 138,
+            "offset": 122,
             "opr": "push",
             "value": {
               "type": "integer",
@@ -3592,7 +3539,7 @@
               },
               "returns": "char"
             },
-            "offset": 139,
+            "offset": 123,
             "opr": "invoke"
           },
           {
@@ -3612,7 +3559,7 @@
                 "name": "java/lang/Character"
               }
             },
-            "offset": 142,
+            "offset": 126,
             "opr": "invoke"
           },
           {
@@ -3631,17 +3578,17 @@
               },
               "returns": "boolean"
             },
-            "offset": 145,
+            "offset": 129,
             "opr": "invoke"
           },
           {
-            "offset": 148,
+            "offset": 132,
             "opr": "pop",
             "words": 1
           },
           {
             "index": 0,
-            "offset": 149,
+            "offset": 133,
             "opr": "load",
             "type": "ref"
           },
@@ -3656,13 +3603,85 @@
               },
               "returns": null
             },
+            "offset": 134,
+            "opr": "invoke"
+          },
+          {
+            "index": 0,
+            "offset": 137,
+            "opr": "load",
+            "type": "ref"
+          },
+          {
+            "field": {
+              "class": "jpamb/utils/InputParser",
+              "name": "currentToken",
+              "type": {
+                "kind": "class",
+                "name": "java/lang/String"
+              }
+            },
+            "offset": 138,
+            "opr": "get",
+            "static": false
+          },
+          {
+            "condition": "is",
+            "offset": 141,
+            "opr": "ifz",
+            "target": 73
+          },
+          {
+            "index": 0,
+            "offset": 144,
+            "opr": "load",
+            "type": "ref"
+          },
+          {
+            "field": {
+              "class": "jpamb/utils/InputParser",
+              "name": "currentToken",
+              "type": {
+                "kind": "class",
+                "name": "java/lang/String"
+              }
+            },
+            "offset": 145,
+            "opr": "get",
+            "static": false
+          },
+          {
+            "offset": 148,
+            "opr": "push",
+            "value": {
+              "type": "string",
+              "value": ","
+            }
+          },
+          {
+            "access": "virtual",
+            "method": {
+              "args": [
+                {
+                  "kind": "class",
+                  "name": "java/lang/Object"
+                }
+              ],
+              "name": "equals",
+              "ref": {
+                "kind": "class",
+                "name": "java/lang/String"
+              },
+              "returns": "boolean"
+            },
             "offset": 150,
             "opr": "invoke"
           },
           {
+            "condition": "ne",
             "offset": 153,
-            "opr": "goto",
-            "target": 41
+            "opr": "ifz",
+            "target": 42
           },
           {
             "index": 0,
@@ -3744,58 +3763,31 @@
             "type": "int"
           },
           {
-            "index": 3,
             "offset": 171,
-            "opr": "load",
-            "type": "int"
-          },
-          {
-            "index": 1,
-            "offset": 172,
-            "opr": "load",
-            "type": "ref"
-          },
-          {
-            "access": "virtual",
-            "method": {
-              "args": [],
-              "name": "size",
-              "ref": {
-                "kind": "class",
-                "name": "java/util/ArrayList"
-              },
-              "returns": "int"
-            },
-            "offset": 173,
-            "opr": "invoke"
-          },
-          {
-            "condition": "ge",
-            "offset": 176,
-            "opr": "if",
-            "target": 96
+            "opr": "goto",
+            "target": 92
           },
           {
             "index": 2,
-            "offset": 179,
+            "offset": 174,
             "opr": "load",
             "type": "ref"
           },
           {
             "index": 3,
-            "offset": 180,
+            "offset": 175,
             "opr": "load",
             "type": "int"
           },
           {
             "index": 1,
-            "offset": 181,
+            "offset": 176,
             "opr": "load",
             "type": "ref"
           },
           {
             "index": 3,
-            "offset": 182,
+            "offset": 177,
             "opr": "load",
             "type": "int"
           },
@@ -3815,11 +3807,11 @@
                 "name": "java/lang/Object"
               }
             },
-            "offset": 183,
+            "offset": 178,
             "opr": "invoke"
           },
           {
-            "offset": 186,
+            "offset": 181,
             "opr": "checkcast",
             "type": {
               "kind": "class",
@@ -3837,24 +3829,51 @@
               },
               "returns": "char"
             },
-            "offset": 189,
+            "offset": 184,
             "opr": "invoke"
           },
           {
-            "offset": 192,
+            "offset": 187,
             "opr": "array_store",
             "type": "char"
           },
           {
             "amount": 1,
             "index": 3,
-            "offset": 193,
+            "offset": 188,
             "opr": "incr"
           },
           {
+            "index": 3,
+            "offset": 191,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "index": 1,
+            "offset": 192,
+            "opr": "load",
+            "type": "ref"
+          },
+          {
+            "access": "virtual",
+            "method": {
+              "args": [],
+              "name": "size",
+              "ref": {
+                "kind": "class",
+                "name": "java/util/ArrayList"
+              },
+              "returns": "int"
+            },
+            "offset": 193,
+            "opr": "invoke"
+          },
+          {
+            "condition": "lt",
             "offset": 196,
-            "opr": "goto",
-            "target": 82
+            "opr": "if",
+            "target": 83
           },
           {
             "index": 2,
@@ -3920,23 +3939,27 @@
           },
           {
             "line": 128,
-            "offset": 49
+            "offset": 42
           },
           {
             "line": 129,
-            "offset": 51
+            "offset": 44
           },
           {
             "line": 130,
-            "offset": 59
+            "offset": 52
           },
           {
             "line": 131,
-            "offset": 62
+            "offset": 55
           },
           {
             "line": 132,
-            "offset": 70
+            "offset": 63
+          },
+          {
+            "line": 127,
+            "offset": 65
           },
           {
             "line": 135,
@@ -3952,11 +3975,11 @@
           },
           {
             "line": 139,
-            "offset": 86
+            "offset": 83
           },
           {
             "line": 138,
-            "offset": 94
+            "offset": 91
           },
           {
             "line": 141,
@@ -3988,15 +4011,19 @@
             "type": "same"
           },
           {
-            "index": 41,
+            "index": 42,
             "type": "same"
           },
           {
-            "index": 59,
+            "index": 52,
             "type": "same"
           },
           {
-            "index": 62,
+            "index": 55,
+            "type": "same"
+          },
+          {
+            "index": 65,
             "type": "same"
           },
           {
@@ -4004,7 +4031,7 @@
             "type": "same"
           },
           {
-            "index": 82,
+            "index": 83,
             "info": [
               {
                 "ref": {
@@ -4020,9 +4047,8 @@
             "type": "append_frame"
           },
           {
-            "index": 96,
-            "info": 1,
-            "type": "chop_frame"
+            "index": 92,
+            "type": "same"
           }
         ]
       },
@@ -4319,37 +4345,90 @@
             "words": 1
           },
           {
-            "index": 0,
             "offset": 57,
+            "opr": "goto",
+            "target": 36
+          },
+          {
+            "index": 0,
+            "offset": 60,
             "opr": "load",
             "type": "ref"
           },
           {
-            "field": {
-              "class": "jpamb/utils/InputParser",
-              "name": "currentToken",
-              "type": {
+            "access": "virtual",
+            "method": {
+              "args": [],
+              "name": "nextToken",
+              "ref": {
                 "kind": "class",
-                "name": "java/lang/String"
-              }
+                "name": "jpamb/utils/InputParser"
+              },
+              "returns": null
             },
-            "offset": 58,
-            "opr": "get",
-            "static": false
-          },
-          {
-            "condition": "is",
             "offset": 61,
-            "opr": "ifz",
-            "target": 44
+            "opr": "invoke"
           },
           {
-            "index": 0,
+            "index": 1,
             "offset": 64,
             "opr": "load",
             "type": "ref"
           },
           {
+            "index": 0,
+            "offset": 65,
+            "opr": "load",
+            "type": "ref"
+          },
+          {
+            "access": "virtual",
+            "method": {
+              "args": [],
+              "name": "parseInput",
+              "ref": {
+                "kind": "class",
+                "name": "jpamb/utils/InputParser"
+              },
+              "returns": {
+                "kind": "class",
+                "name": "java/lang/Object"
+              }
+            },
+            "offset": 66,
+            "opr": "invoke"
+          },
+          {
+            "access": "virtual",
+            "method": {
+              "args": [
+                {
+                  "kind": "class",
+                  "name": "java/lang/Object"
+                }
+              ],
+              "name": "add",
+              "ref": {
+                "kind": "class",
+                "name": "java/util/ArrayList"
+              },
+              "returns": "boolean"
+            },
+            "offset": 69,
+            "opr": "invoke"
+          },
+          {
+            "offset": 72,
+            "opr": "pop",
+            "words": 1
+          },
+          {
+            "index": 0,
+            "offset": 73,
+            "opr": "load",
+            "type": "ref"
+          },
+          {
             "field": {
               "class": "jpamb/utils/InputParser",
               "name": "currentToken",
@@ -4358,12 +4437,37 @@
                 "name": "java/lang/String"
               }
             },
-            "offset": 65,
+            "offset": 74,
             "opr": "get",
             "static": false
           },
           {
-            "offset": 68,
+            "condition": "is",
+            "offset": 77,
+            "opr": "ifz",
+            "target": 44
+          },
+          {
+            "index": 0,
+            "offset": 80,
+            "opr": "load",
+            "type": "ref"
+          },
+          {
+            "field": {
+              "class": "jpamb/utils/InputParser",
+              "name": "currentToken",
+              "type": {
+                "kind": "class",
+                "name": "java/lang/String"
+              }
+            },
+            "offset": 81,
+            "opr": "get",
+            "static": false
+          },
+          {
+            "offset": 84,
             "opr": "push",
             "value": {
               "type": "string",
@@ -4386,92 +4490,14 @@
               },
               "returns": "boolean"
             },
-            "offset": 70,
+            "offset": 86,
             "opr": "invoke"
           },
           {
-            "condition": "eq",
-            "offset": 73,
-            "opr": "ifz",
-            "target": 44
-          },
-          {
-            "index": 0,
-            "offset": 76,
-            "opr": "load",
-            "type": "ref"
-          },
-          {
-            "access": "virtual",
-            "method": {
-              "args": [],
-              "name": "nextToken",
-              "ref": {
-                "kind": "class",
-                "name": "jpamb/utils/InputParser"
-              },
-              "returns": null
-            },
-            "offset": 77,
-            "opr": "invoke"
-          },
-          {
-            "index": 1,
-            "offset": 80,
-            "opr": "load",
-            "type": "ref"
-          },
-          {
-            "index": 0,
-            "offset": 81,
-            "opr": "load",
-            "type": "ref"
-          },
-          {
-            "access": "virtual",
-            "method": {
-              "args": [],
-              "name": "parseInput",
-              "ref": {
-                "kind": "class",
-                "name": "jpamb/utils/InputParser"
-              },
-              "returns": {
-                "kind": "class",
-                "name": "java/lang/Object"
-              }
-            },
-            "offset": 82,
-            "opr": "invoke"
-          },
-          {
-            "access": "virtual",
-            "method": {
-              "args": [
-                {
-                  "kind": "class",
-                  "name": "java/lang/Object"
-                }
-              ],
-              "name": "add",
-              "ref": {
-                "kind": "class",
-                "name": "java/util/ArrayList"
-              },
-              "returns": "boolean"
-            },
-            "offset": 85,
-            "opr": "invoke"
-          },
-          {
-            "offset": 88,
-            "opr": "pop",
-            "words": 1
-          },
-          {
+            "condition": "ne",
             "offset": 89,
-            "opr": "goto",
-            "target": 28
+            "opr": "ifz",
+            "target": 29
           },
           {
             "index": 0,
@@ -4578,11 +4604,15 @@
           },
           {
             "line": 160,
-            "offset": 36
+            "offset": 29
           },
           {
             "line": 161,
-            "offset": 38
+            "offset": 31
+          },
+          {
+            "line": 159,
+            "offset": 36
           },
           {
             "line": 164,
@@ -4614,7 +4644,11 @@
             "type": "same"
           },
           {
-            "index": 28,
+            "index": 29,
+            "type": "same"
+          },
+          {
+            "index": 36,
             "type": "same"
           },
           {
