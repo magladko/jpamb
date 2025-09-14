@@ -91,6 +91,16 @@ public class Simple {
     return 0;
   }
 
+  @Case("(1, 2) -> ok")
+  public static int justAdd(int a, int b) {
+    return a + b;
+  }
+
+  @Case("(1, 2) -> ok")
+  public static int justMulitply(int a, int b) {
+    return a * b;
+  }
+
   @Case("() -> ok")
   public static void justReturnNothing() {
     return;

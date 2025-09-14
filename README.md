@@ -348,3 +348,18 @@ uvx jpamb evaluate python my_analyzer.py > my_results.json
 - Consider using [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) for easier setup
 
 **Still stuck?** Check the example solutions in `solutions/` directory or ask for help!
+
+## Expert: Extending the Benchmark
+
+To extend the benchmark suite you have to install nix. One way to do that is to use 
+use the [determinate system](https://docs.determinate.systems/) installer.
+
+After any changes to the source files you should run:
+
+```shell
+$ nix develop --command uv run build --test --decompile
+```
+
+
+
+

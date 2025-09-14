@@ -136,7 +136,7 @@ class Push(Opcode):
         raise NotImplementedError(f"Unhandled {self!r}")
 
     def __str__(self):
-        return f"push {self.value}"
+        return f"push:{self.value.type} {self.value.value}"
 
 
 @dataclass(frozen=True)
@@ -290,7 +290,7 @@ class ArrayLoad(Opcode):
         return super().real()
 
     def __str__(self):
-        return f"array_load {self.type}"
+        return f"array_load:{self.type}"
 
 
 @dataclass(frozen=True)
@@ -544,7 +544,7 @@ class Store(Opcode):
         return super().real()
 
     def __str__(self):
-        return f"store {self.type} {self.index}"
+        return f"store:{self.type} {self.index}"
 
 
 class BinaryOpr(enum.Enum):
@@ -593,7 +593,7 @@ class Binary(Opcode):
         )
 
     def __str__(self):
-        return f"{self.operant} {self.type}"
+        return f"binary:{self.type} {self.operant}"
 
     def real(self) -> str:
         match (self.type, self.operant):
@@ -640,7 +640,7 @@ class Load(Opcode):
         return super().real()
 
     def __str__(self):
-        return f"load {self.type} {self.index}"
+        return f"load:{self.type} {self.index}"
 
 
 @dataclass(frozen=True)
@@ -1045,4 +1045,5 @@ class Return(Opcode):
                 raise ValueError(f"Unknown return type: {self.type}")
 
     def __str__(self):
-        return f"return{f' {self.type}' if self.type is not None else ''}"
+        type = str(self.type) if self.type is not None else "V"
+        return f"return:{type}"
