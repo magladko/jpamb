@@ -1,9 +1,10 @@
-import jpamb
-from jpamb import jvm
+import sys
 from dataclasses import dataclass
 
-import sys
+from jpamb import jvm
 from loguru import logger
+
+import jpamb
 
 logger.remove()
 logger.add(sys.stderr, format="[{level}] {message}")
@@ -70,7 +71,7 @@ class Stack[T]:
 
 
 suite = jpamb.Suite()
-bc = Bytecode(suite, dict())
+bc = Bytecode(suite, {})
 
 
 @dataclass
@@ -83,7 +84,8 @@ class Frame:
         locals = ", ".join(f"{k}:{v}" for k, v in sorted(self.locals.items()))
         return f"<{{{locals}}}, {self.stack}, {self.pc}>"
 
-    def from_method(method: jvm.AbsMethodID) -> "Frame":
+    @classmethod
+    def from_method(cls, method: jvm.AbsMethodID) -> "Frame":
         return Frame({}, Stack.empty(), PC(method, 0))
 
 
@@ -117,6 +119,8 @@ def step(state: State) -> State | str:
             if v2.value == 0:
                 return "divide by zero"
 
+            assert isinstance(v1.value, int)
+            assert isinstance(v2.value, int)
             frame.stack.push(jvm.Value.int(v1.value // v2.value))
             frame.pc += 1
             return state
@@ -140,7 +144,7 @@ for i, v in enumerate(input.values):
 
 state = State({}, Stack.empty().push(frame))
 
-for x in range(1000):
+for _ in range(1000):
     state = step(state)
     if isinstance(state, str):
         print(state)
