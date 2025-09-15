@@ -218,7 +218,7 @@ file:
 ```bash
 # Test on just the Simple cases to start
 # Linux/Mac/Windows (all the same):
-uvx jpamb test --filter "Simple" <your-intepreter> my_analyzer.py
+uv run jpamb test --filter "Simple" <your-intepreter> my_analyzer.py
 ```
 
 You should see output showing scores for each test case. Don't worry about the scores yet - focus on getting it working!
@@ -227,7 +227,7 @@ Also if you are using python, you can use the `--with-python` flag, which
 runs the analyser with the same interpreter as JPAMB.
 
 ```bash
-uvx jpamb test --filter "Simple" --with-python my_analyzer.py
+uv run jpamb test --filter "Simple" --with-python my_analyzer.py
 ```
 
 ### Step 5: Improve your analyzer
@@ -301,15 +301,19 @@ The scoring formula: `points = 1 - 1/(wager + 1)` if you win, `-wager` if you lo
 
 ## Testing Your Analyzer
 
+You can test your analyser using the different command line tools. 
+Here `-W` is used to tell `jpamb` that the executable is a python file 
+and should be run with the same interpreter as `jpamb`.
+
 ```bash
 # Test on simple cases first
-uvx jpamb test --filter "Simple" python my_analyzer.py
+uv run jpamb test --filter "Simple" -W my_analyzer.py
 
 # Test on all cases  
-uvx jpamb test python my_analyzer.py
+uv run jpamb test -W my_analyzer.py
 
 # Generate final evaluation report
-uvx jpamb evaluate python my_analyzer.py > my_results.json
+uv run jpamb evaluate -W my_analyzer.py > my_results.json
 ```
 
 ## Advanced: Analyzing Approaches
@@ -331,7 +335,7 @@ uvx jpamb evaluate python my_analyzer.py > my_results.json
 
 **"Command not found" errors:**
 - Make sure you restart your terminal after installing uv
-- Try `which uvx` to see if it's installed correctly
+- Try `which uv` to see if it's installed correctly
 
 **"Health check fails":**
 - Make sure you're in the jpamb directory
