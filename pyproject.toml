@@ -47,4 +47,48 @@ jpamb = "jpamb.cli:cli"
 [dependency-groups]
 dev = [
     "pytest>=8.3.4",
+    "ruff>=0.1.0",  # Added Ruff to dev dependencies
 ]
+
+# Ruff configuration starts here
+[tool.ruff]
+target-version = "py313"  # Matching your requires-python
+line-length = 88
+
+# Enable rule sets
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings  
+    "F",   # Pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "N",   # pep8-naming
+]
+
+# Ignore specific rules if needed
+ignore = [
+    "E501",  # line too long (handled by formatter)
+]
+
+# Exclude files/directories
+exclude = [
+  ".git",
+  ".mypy_cache",
+  ".ruff_cache",
+  ".venv",
+  "__pycache__",
+  "build",
+  "dist",
+  "venv",
+  "jpamb",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ruff.lint.isort]
+known-first-party = ["jpamb"]  # Your package name
+force-single-line = false
