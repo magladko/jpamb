@@ -13,7 +13,7 @@ include = ["jpamb", "jpamb.jvm"]
 
 [project]
 name = "jpamb"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
   "PyYAML==6.0.2",
   "click==8.1.7",

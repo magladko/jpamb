@@ -165,6 +165,9 @@ class Boolean(Type):
     def encode(self):
         return "Z"
 
+    def math(self):
+        return "bool"
+
 
 @dataclass(frozen=True)
 class Int(Type):
@@ -181,6 +184,9 @@ class Int(Type):
 
     def encode(self):
         return "I"
+
+    def math(self):
+        return "int"
 
 
 @dataclass(frozen=True)
@@ -199,6 +205,9 @@ class Byte(Type):
     def encode(self):
         return "B"
 
+    def math(self):
+        return "byte"
+
 
 @dataclass(frozen=True)
 class Char(Type):
@@ -215,6 +224,9 @@ class Char(Type):
 
     def encode(self):
         return "C"
+
+    def math(self):
+        return "char"
 
 
 @dataclass(frozen=True)
@@ -248,16 +260,19 @@ class Reference(Type):
     def encode(self):
         return "A"
 
+    def math(self):
+        return "ref"
+
 
 @dataclass(frozen=True, order=True)
 class Object(Type):
     """
-    A list of types
+    A reference to an object of an known class.
     """
 
     _instance = dict()
 
-    def __new__(cls, subtype) -> "Array":
+    def __new__(cls, subtype) -> "Object":
         if subtype not in cls._instance:
             cls._instance[subtype] = super().__new__(cls)
         return cls._instance[subtype]
@@ -270,11 +285,14 @@ class Object(Type):
     def encode(self):
         return "L" + self.name.slashed() + ";"  # ]
 
+    def math(self):
+        return f"object {self.name}"
+
 
 @dataclass(frozen=True, order=True)
 class Array(Type):
     """
-    A list of types
+    A reference to an array of known type
     """
 
     _instance = dict()
@@ -291,6 +309,9 @@ class Array(Type):
 
     def encode(self):
         return "[" + self.contains.encode()  # ]
+
+    def math(self):
+        return f"array {self.type.math()}"
 
 
 @dataclass(frozen=True)
@@ -309,6 +330,9 @@ class Long(Type):
     def encode(self):
         return "J"  # J is used for long in JVM
 
+    def math(self):
+        return "long"
+
 
 @dataclass(frozen=True)
 class Float(Type):
@@ -325,6 +349,9 @@ class Float(Type):
 
     def encode(self):
         return "F"
+
+    def math(self):
+        return "float"
 
 
 @dataclass(frozen=True)
@@ -376,6 +403,9 @@ class ParameterType:
             params.append(tt)
 
         return ParameterType(tuple(params))
+
+    def math(self):
+        return "double"
 
 
 METHOD_ID_RE_RAW = r"(?P<method_name>.*)\:\((?P<params>.*)\)(?P<return>.*)"
@@ -553,7 +583,7 @@ class Value:
         return cls(type, json["value"])
 
     def __str__(self) -> str:
-        return f"{self.value}:{self.type}"
+        return f"({self.type.math()} {self.value})"
 
 
 @dataclass

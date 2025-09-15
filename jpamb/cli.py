@@ -280,8 +280,8 @@ def test(suite, program, report, filter, fail_fast, with_python, timeout):
     default=None,
 )
 @click.option(
-    "--fail-fast/--no-fail-fast",
-    help="if we should stop after the first error.",
+    "--stepwise / --no-stepwise",
+    help="continue from last failure",
 )
 @click.option(
     "--timeout",
@@ -304,15 +304,30 @@ def test(suite, program, report, filter, fail_fast, with_python, timeout):
 )
 @click.argument("PROGRAM", nargs=-1)
 @click.pass_obj
-def interpret(suite, program, report, filter, fail_fast, with_python, timeout):
+def interpret(suite, program, report, filter, with_python, timeout, stepwise):
     """Use PROGRAM as an interpreter."""
 
     r = Reporter(report)
     program = resolve_cmd(program, with_python)
 
+    last_case = None
+    if stepwise:
+        try:
+            with open(".jpamb-stepwise") as f:
+                last_case = model.Case.decode(f.read())
+        except ValueError as e:
+            log.warning(e)
+            last_case = None
+        except IOError:
+            last_case = None
+
     total = 0
     count = 0
     for case in suite.cases:
+        if last_case and last_case != case:
+            continue
+        last_case = None
+
         if filter and not filter.search(str(case)):
             continue
 
@@ -322,12 +337,22 @@ def interpret(suite, program, report, filter, fail_fast, with_python, timeout):
                     program + (case.methodid.encode(), case.input.encode()),
                     timeout=timeout,
                 )
-                ret = out.strip()
+                ret = out.splitlines()[-1].strip()
             except subprocess.TimeoutExpired:
                 ret = "*"
+            except subprocess.CalledProcessError as e:
+                log.error(e)
+                ret = "failure"
             r.output(f"Expected {case.result!r} and got {ret!r}")
-            total += 1 if case.result == ret else 0
+            if case.result == ret:
+                total += 1
+            elif stepwise:
+                with open(".jpamb-stepwise", "w") as f:
+                    f.write(case.encode())
+                sys.exit(-1)
             count += 1
+
+    Path(".jpamb-stepwise").unlink(True)
 
     r.output(f"Total {total}/{count}")
 
@@ -495,7 +520,7 @@ def build(suite, decompile, test):
         log.info("Testing")
 
         for case in suite.cases:
-            log.info("Testing {case}")
+            log.info(f"Testing {case}")
 
             folder = suite.classfiles_folder
 

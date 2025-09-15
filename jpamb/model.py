@@ -69,6 +69,9 @@ class Case:
     def __str__(self) -> str:
         return f"{self.methodid.classname}.{self.methodid.extension.name}:{self.input.encode()} -> {self.result}"
 
+    def encode(self) -> str:
+        return f"{self.methodid.classname}.{self.methodid.extension.encode()} {self.input.encode()} -> {self.result}"
+
     @staticmethod
     def by_methodid(
         iterable: Iterable["Case"],
