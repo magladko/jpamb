@@ -337,7 +337,7 @@ def interpret(suite, program, report, filter, with_python, timeout, stepwise):
                     program + (case.methodid.encode(), case.input.encode()),
                     timeout=timeout,
                 )
-                ret = out.strip()
+                ret = out.splitlines()[-1].strip()
             except subprocess.TimeoutExpired:
                 ret = "*"
             except subprocess.CalledProcessError as e:

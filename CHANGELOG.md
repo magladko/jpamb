@@ -2,6 +2,15 @@
 
 ## Version X.X.X
 
+## Version 0.3.0
+
+- Move python packages out of lib
+- Add two new cases in Simple
+- Add more cli tools including `interpret`, `test`, and `inspect`.
+- Many fixes
+
+## Version 0.2.0
+
 - Move python packages to lib
 - Fix unlisted case in Collatz
 - Fix unlisted case in Calls.callsAssertFib
