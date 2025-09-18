@@ -245,6 +245,9 @@ class Short(Type):
     def encode(self):
         return "S"
 
+    def math(self):
+        return "short"
+
 
 @dataclass(frozen=True, order=True)
 class Reference(Type):
@@ -311,7 +314,7 @@ class Array(Type):
         return "[" + self.contains.encode()  # ]
 
     def math(self):
-        return f"array {self.type.math()}"
+        return f"array {self.contains.math()}"
 
 
 @dataclass(frozen=True)
@@ -369,6 +372,9 @@ class Double(Type):
 
     def encode(self):
         return "D"
+
+    def math(self):
+        return "double"
 
 
 @dataclass(frozen=True, order=True)
@@ -568,7 +574,7 @@ class Value:
 
     @classmethod
     def char(cls, char: str) -> Self:
-        assert len(char) == 1
+        assert len(char) == 1, f"string should be exactly one char, was {char!r}"
         return cls(Char(), char)
 
     @classmethod
@@ -583,6 +589,9 @@ class Value:
         return cls(type, json["value"])
 
     def __str__(self) -> str:
+        return self.math()
+
+    def math(self) -> str:
         return f"({self.type.math()} {self.value})"
 
 

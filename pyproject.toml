@@ -17,6 +17,7 @@ version = "0.3.0"
 dependencies = [
   "PyYAML==6.0.2",
   "click==8.1.7",
+  "hypothesis>=6.139.2",
   "loguru==0.7.2",
   "tree-sitter-java==0.23.5",
   "tree-sitter==0.25.1",
@@ -47,3 +48,9 @@ jpamb = "jpamb.cli:cli"
 dev = [
     "pytest>=8.3.4",
 ]
+
+[tool.pytest.ini_options]
+markers = [
+  "slow: mark test as slow"
+]
+

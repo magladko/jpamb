@@ -22,4 +22,5 @@ def test_bytecode():
             opcode_count += 1
 
         assert opcode_count > 0, "No opcodes were processed"
+
         break
