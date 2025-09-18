@@ -51,7 +51,7 @@ else:
 
     sys.exit(-1)
 
-log.debug("Found class %s", node.range)
+# log.debug("Found class %s", node.range)
 
 method_name = methodid.extension.name
 
@@ -74,8 +74,8 @@ for node in tree_sitter.QueryCursor(method_q).captures(node)["method"]:
     if len(params) != len(methodid.extension.params):
         continue
 
-    log.debug(methodid.extension.params)
-    log.debug(params)
+    # log.debug(methodid.extension.params)
+    # log.debug(params)
 
     for tn, t in zip(methodid.extension.params, params):
         if (tp := t.child_by_field_name("type")) is None:
@@ -91,7 +91,7 @@ else:
     log.warning(f"could not find a method of name {method_name} in {simple_classname}")
     sys.exit(-1)
 
-log.debug("Found method %s %s", method_name, node.range)
+# log.debug("Found method %s %s", method_name, node.range)
 
 body = node.child_by_field_name("body")
 assert body and body.text
