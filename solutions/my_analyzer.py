@@ -311,7 +311,7 @@ class JavaAnalyzer:
 
         if not assert_nodes:
             self.log.debug("Did not find any assertions")
-            self.predictions.assertion_error.set(0)
+            self.predictions.assertion_error.set(5)
             return
 
         # Check if any assertion is "assert false"
@@ -362,7 +362,7 @@ class JavaAnalyzer:
         array_nodes = captures.get("array_access", [])
 
         if not array_nodes:
-            return self.predictions.out_of_bounds.set(0)
+            return self.predictions.out_of_bounds.set(5)
 
         # TODO: Add more sophisticated analysis for bounds checking
         self.log.debug("Found array access operations")
