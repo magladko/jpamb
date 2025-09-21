@@ -159,17 +159,7 @@ def step(state: State) -> State | str:
             return state
         case jvm.Ifz(condition=condition, target=target):
             v = frame.stack.pop()
-            match v.type:
-                case jvm.Boolean():
-                    assert isinstance(v.value, bool)
-                    val = int(v.value)
-                case jvm.Int():
-                    assert isinstance(v.value, int)
-                    val = int(v.value)
-                case _:
-                    raise NotImplementedError(
-                        f"Ifz type conversion not implemented for {v!r}")
-            if compare(val, condition, 0):
+            if compare(v.value, condition, 0):
                 frame.pc.offset = target
             else: 
                 frame.pc += 1
