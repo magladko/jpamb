@@ -112,31 +112,92 @@ def step(state: State) -> State | str:
             frame.stack.push(frame.locals[i])
             frame.pc += 1
             return state
-        case jvm.Binary(type=jvm.Int(), operant=jvm.BinaryOpr.Div):
+        case jvm.Binary(type=jvm.Int(), operant=operant): #jvm.BinaryOpr.Div):
             v2, v1 = frame.stack.pop(), frame.stack.pop()
             assert v1.type is jvm.Int(), f"expected int, but got {v1}"
             assert v2.type is jvm.Int(), f"expected int, but got {v2}"
-            if v2.value == 0:
-                return "divide by zero"
-
             assert isinstance(v1.value, int)
             assert isinstance(v2.value, int)
-            frame.stack.push(jvm.Value.int(v1.value // v2.value))
+
+            v = None
+            match operant:
+                case jvm.BinaryOpr.Div:
+                    if v2.value == 0:
+                        return "divide by zero"
+                    v = jvm.Value.int(v1.value // v2.value)
+                case jvm.BinaryOpr.Rem:
+                    if v2.value == 0:
+                        return "divide by zero"
+                    v = jvm.Value.int(v1.value % v2.value)
+                case jvm.BinaryOpr.Sub:
+                    v = jvm.Value.int(v1.value - v2.value)
+                case jvm.BinaryOpr.Mul:
+                    v = jvm.Value.int(v1.value * v2.value)
+            frame.stack.push(v)
             frame.pc += 1
             return state
-        case jvm.Return(type=jvm.Int()):
-            v1 = frame.stack.pop()
+        case jvm.Return(type=type):
             state.frames.pop()
             if state.frames:
                 frame = state.frames.peek()
-                frame.stack.push(v1)
+                if type is not None:
+                    v1 = frame.stack.pop()
+                    frame.stack.push(v1)
                 frame.pc += 1
                 return state
             else:
                 return "ok"
+        case jvm.Get(
+            static=True, 
+            field=jvm.AbsFieldID(
+                classname=classname,
+                extension=jvm.FieldID(
+                    name='$assertionsDisabled', 
+                    type=jvm.Boolean()))):
+            frame.stack.push(jvm.Value.boolean(False))
+            frame.pc += 1
+            return state
+        case jvm.Ifz(condition=condition, target=target):
+            v = frame.stack.pop()
+            match v.type:
+                case jvm.Boolean():
+                    assert isinstance(v.value, bool)
+                    val = int(v.value)
+                case jvm.Int():
+                    assert isinstance(v.value, int)
+                    val = int(v.value)
+                case _:
+                    raise NotImplementedError(
+                        f"Ifz type conversion not implemented for {v!r}")
+            if compare(val, condition, 0):
+                frame.pc.offset = target
+            else: 
+                frame.pc += 1
+            return state
+        case jvm.If(condition=condition, target=target):
+            v2, v1 = frame.stack.pop(), frame.stack.pop()
+            if compare(v1.value, condition, v2.value):
+                frame.pc.offset = target
+            else:
+                frame.pc += 1
+            return state
+        case jvm.New(
+            classname=jvm.ClassName(_as_string='java/lang/AssertionError')):
+            return 'assertion error'
         case a:
             raise NotImplementedError(f"Don't know how to handle: {a!r}")
 
+def compare(v1, op, v2) -> bool:
+    match op:
+        case 'eq': return (v1 == v2)
+        case 'ge': return (v1 >= v2)
+        case 'gt': return (v1 >  v2)
+        case 'le': return (v1 <= v2)
+        case 'lt': return (v1 <  v2)
+        case 'ne': return (v1 != v2)
+        case c: 
+            raise NotImplementedError(
+                f"Comparison not implemented for condition {c}")
 
 frame = Frame.from_method(methodid)
 for i, v in enumerate(input.values):
