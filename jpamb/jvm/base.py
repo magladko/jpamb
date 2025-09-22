@@ -311,7 +311,7 @@ class Array(Type):
         return "[" + self.contains.encode()  # ]
 
     def math(self):
-        return f"array {self.type.math()}"
+        return f"array {self.contains.math()}"
 
 
 @dataclass(frozen=True)
