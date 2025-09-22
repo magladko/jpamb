@@ -109,7 +109,7 @@ def step(state: State) -> State | str:
         case jvm.Push(value=v):
             if isinstance(v.type, jvm.Array):
                 state.heap[state.heap_ptr] = v
-                v = jvm.Value(jvm.Reference(), jvm.Value.int(state.heap_ptr))
+                v = jvm.Value(jvm.Reference(), state.heap_ptr)
                 state.heap_ptr += 1
             frame.stack.push(v)
             frame.pc += 1
@@ -140,6 +140,10 @@ def step(state: State) -> State | str:
                     v = jvm.Value.int(v1.value - v2.value)
                 case jvm.BinaryOpr.Mul:
                     v = jvm.Value.int(v1.value * v2.value)
+                case jvm.BinaryOpr.Add:
+                    v = jvm.Value.int(v1.value + v2.value)
+                case _:
+                    raise NotImplementedError(f"Operand '{operant!r}' not implemented.")
             frame.stack.push(v)
             frame.pc += 1
             return state
@@ -150,7 +154,7 @@ def step(state: State) -> State | str:
                 if type is not None:
                     v1 = frame.stack.pop()
                     frame.stack.push(v1)
-                frame.pc += 1
+                frame.pc += 1 # TODO: fix this
                 return state
             else:
                 return "ok"
@@ -203,7 +207,7 @@ def step(state: State) -> State | str:
             if ref.type is jvm.Reference():
                 if ref.value is None:
                     return 'null pointer'
-                assert isinstance(ref.value, int)
+                assert isinstance(ref.value, int), f"Expected int, but got {ref.value!r}"
                 arr = state.heap[ref.value].value
             elif isinstance(ref.type, jvm.Array):
                 arr = ref.value
@@ -236,7 +240,7 @@ def step(state: State) -> State | str:
                 return 'out of bounds'
 
             state.heap[ref.value] = jvm.Value.array(
-                type, arr[:idx.value] + (val,) + arr[idx.value+1:])
+                type, arr[:idx.value] + (val.value,) + arr[idx.value+1:])
             
             frame.pc += 1
             return state
@@ -261,35 +265,32 @@ def step(state: State) -> State | str:
             frame.pc += 1
             return state
         case jvm.Dup(words=1):
-            assert len(frame.stack.items) > 0; "Unexpected empty stack"
+            assert len(frame.stack.items) > 0, "Unexpected empty stack"
             frame.stack.push(frame.stack.peek())
             frame.pc += 1
             return state
         case jvm.Store(type=type, index=index):
             v = frame.stack.pop()
             if v:
-                assert v.type is type; f"Expected type {type!r}, but got {v.type!r}"
+                assert v.type is type, f"Expected type {type!r}, but got {v.type!r}"
             frame.locals[index] = v
             frame.pc += 1
             return state
         case jvm.Goto(target=target):
             frame.pc.offset = target
             return state
+        case jvm.Incr(index=i, amount=amount):
+            local_var = frame.locals[i].value
+            assert isinstance(local_var, int)
+            frame.locals[i] = jvm.Value.int(local_var + amount)
+            frame.pc += 1
+            return state
         case a:
             raise NotImplementedError(f"Don't know how to handle: {a!r}")
 
-def convert_char(v: jvm.Value) -> jvm.Value:
-    assert isinstance(v.value, str)
-    return jvm.Value.int(ord(v.value))
-
 def compare(v1: jvm.Value, op: str, v2: jvm.Value) -> bool:
-    if v1.type is jvm.Char():
-        v1 = convert_char(v1)
-    if v2.type is jvm.Char():
-        v2 = convert_char(v2)
-
-    assert isinstance(v1.value, (bool, int, float))
-    assert isinstance(v2.value, (bool, int, float))
+    assert isinstance(v1.value, (int, float)), f"Unexpected value {v1.value!r}"
+    assert isinstance(v2.value, (int, float)), f"Unexpected value {v2.value!r}"
 
     match op:
         case 'eq': return (v1.value == v2.value)
@@ -303,10 +304,27 @@ def compare(v1: jvm.Value, op: str, v2: jvm.Value) -> bool:
                 f"Comparison not implemented for condition {c}")
 
 frame = Frame.from_method(methodid)
-for i, v in enumerate(input.values):
-    frame.locals[i] = v
-
 state = State({}, Stack.empty().push(frame))
+
+for i, v in enumerate(input.values):
+    match v.type:
+        case jvm.Int() | jvm.Float() | jvm.Reference():
+            pass
+        case jvm.Boolean():
+            assert isinstance(v.value, bool)
+            v = jvm.Value(jvm.Boolean(), jvm.Value.int(1 if v.value else 0))
+        case jvm.Char():
+            assert isinstance(v.value, str)
+            v = jvm.Value(jvm.Char(), jvm.Value.int(ord(v.value)))
+        case jvm.Array():
+            ref = jvm.Value(jvm.Reference(), state.heap_ptr)
+            state.heap[state.heap_ptr] = v
+            state.heap_ptr += 1
+            v = ref
+        case _:
+            raise NotImplementedError(
+                f"Stack conversion not implemented for {v.type!r}")        
+    frame.locals[i] = v
 
 for _ in range(1000):
     state = step(state)
