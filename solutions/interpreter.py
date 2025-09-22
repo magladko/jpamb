@@ -94,6 +94,8 @@ class State:
     heap: dict[int, jvm.Value]
     frames: Stack[Frame]
 
+    heap_ptr: int = 0
+
     def __str__(self):
         return f"{self.heap} {self.frames}"
 
@@ -105,10 +107,15 @@ def step(state: State) -> State | str:
     logger.debug(f"STEP {opr}\n{state}")
     match opr:
         case jvm.Push(value=v):
+            if isinstance(v.type, jvm.Array):
+                state.heap[state.heap_ptr] = v
+                v = jvm.Value(jvm.Reference(), jvm.Value.int(state.heap_ptr))
+                state.heap_ptr += 1
             frame.stack.push(v)
             frame.pc += 1
             return state
-        case jvm.Load(type=jvm.Int(), index=i):
+        case jvm.Load(type=type, index=i):
+            v = frame.locals[i]
             frame.stack.push(frame.locals[i])
             frame.pc += 1
             return state
@@ -159,14 +166,15 @@ def step(state: State) -> State | str:
             return state
         case jvm.Ifz(condition=condition, target=target):
             v = frame.stack.pop()
-            if compare(v.value, condition, 0):
+            if compare(v, condition, jvm.Value.int(0)):
                 frame.pc.offset = target
             else: 
                 frame.pc += 1
             return state
         case jvm.If(condition=condition, target=target):
             v2, v1 = frame.stack.pop(), frame.stack.pop()
-            if compare(v1.value, condition, v2.value):
+
+            if compare(v1, condition, v2):
                 frame.pc.offset = target
             else:
                 frame.pc += 1
@@ -174,17 +182,122 @@ def step(state: State) -> State | str:
         case jvm.New(
             classname=jvm.ClassName(_as_string='java/lang/AssertionError')):
             return 'assertion error'
+        case jvm.NewArray(type=type, dim=dim):
+            count = frame.stack.pop()
+            assert count.type is jvm.Int()
+            assert isinstance(count.value, int)
+            if count.value < 0:
+                return "NegativeArraySizeException"
+            default = 0
+            if type is jvm.Boolean():
+                default = False
+            arr = [default] * count.value
+            state.heap[state.heap_ptr] = jvm.Value.array(type, arr)
+            frame.stack.push(jvm.Value(type=jvm.Reference(), value=state.heap_ptr))
+            state.heap_ptr += 1
+            frame.pc += 1
+            return state
+        case jvm.ArrayLength():
+            ref = frame.stack.pop()
+            arr = None
+            if ref.type is jvm.Reference():
+                if ref.value is None:
+                    return 'null pointer'
+                assert isinstance(ref.value, int)
+                arr = state.heap[ref.value].value
+            elif isinstance(ref.type, jvm.Array):
+                arr = ref.value
+            else:
+                raise ValueError(f"Unexpected ref type got: {ref.type!r}")
+
+            assert isinstance(arr, tuple)
+
+            frame.stack.push(jvm.Value.int(len(arr)))
+            frame.pc += 1
+            return state
+        case jvm.ArrayStore(type=type):
+            val, idx, ref = frame.stack.pop(), frame.stack.pop(), frame.stack.pop()
+            # TODO: if ref is null -> throw null_ptr exception
+            assert ref.type is jvm.Reference()
+            assert val.type is jvm.Int()
+            assert idx.type is jvm.Int()
+
+            if ref.value is None:
+                return 'null pointer'
+
+            assert isinstance(ref.value, int)
+            assert isinstance(val.value, int)
+            assert isinstance(idx.value, int)
+
+            arr = state.heap[ref.value].value
+            assert isinstance(arr, tuple)
+
+            if idx.value < 0 or idx.value >= len(arr):
+                return 'out of bounds'
+
+            state.heap[ref.value] = jvm.Value.array(
+                type, arr[:idx.value] + (val,) + arr[idx.value+1:])
+            
+            frame.pc += 1
+            return state
+        case jvm.ArrayLoad(type=type):
+            idx, arr = frame.stack.pop(), frame.stack.pop()
+            assert idx.type is jvm.Int()
+            assert isinstance(idx.value, int)
+
+            if isinstance(arr.type, jvm.Array):
+                arr = arr.value
+            elif isinstance(arr.type, jvm.Reference):
+                assert isinstance(arr.value, int)
+                arr = state.heap[arr.value].value
+            else:
+                raise ValueError(f"Unexpected ref type got: {arr.type!r}")
+            
+            assert isinstance(arr, tuple)
+            if idx.value < 0 or idx.value >= len(arr):
+                return 'out of bounds'
+            
+            frame.stack.push(jvm.Value(type=type, value=arr[idx.value]))
+            frame.pc += 1
+            return state
+        case jvm.Dup(words=1):
+            assert len(frame.stack.items) > 0; "Unexpected empty stack"
+            frame.stack.push(frame.stack.peek())
+            frame.pc += 1
+            return state
+        case jvm.Store(type=type, index=index):
+            v = frame.stack.pop()
+            if v:
+                assert v.type is type; f"Expected type {type!r}, but got {v.type!r}"
+            frame.locals[index] = v
+            frame.pc += 1
+            return state
+        case jvm.Goto(target=target):
+            frame.pc.offset = target
+            return state
         case a:
             raise NotImplementedError(f"Don't know how to handle: {a!r}")
 
-def compare(v1, op, v2) -> bool:
+def convert_char(v: jvm.Value) -> jvm.Value:
+    assert isinstance(v.value, str)
+    return jvm.Value.int(ord(v.value))
+
+def compare(v1: jvm.Value, op: str, v2: jvm.Value) -> bool:
+    if v1.type is jvm.Char():
+        v1 = convert_char(v1)
+    if v2.type is jvm.Char():
+        v2 = convert_char(v2)
+
+    assert isinstance(v1.value, (bool, int, float))
+    assert isinstance(v2.value, (bool, int, float))
+
     match op:
-        case 'eq': return (v1 == v2)
-        case 'ge': return (v1 >= v2)
-        case 'gt': return (v1 >  v2)
-        case 'le': return (v1 <= v2)
-        case 'lt': return (v1 <  v2)
-        case 'ne': return (v1 != v2)
+        case 'eq': return (v1.value == v2.value)
+        case 'ge': return (v1.value >= v2.value)
+        case 'gt': return (v1.value >  v2.value)
+        case 'le': return (v1.value <= v2.value)
+        case 'lt': return (v1.value <  v2.value)
+        case 'ne': return (v1.value != v2.value)
         case c: 
             raise NotImplementedError(
                 f"Comparison not implemented for condition {c}")
