@@ -17,7 +17,7 @@ version = "0.3.0"
 dependencies = [
   "PyYAML==6.0.2",
   "click==8.1.7",
-  "debugpy>=1.8.16",
+  "hypothesis>=6.139.2",
   "loguru==0.7.2",
   "tree-sitter-java==0.23.5",
   "tree-sitter==0.25.1",
@@ -93,3 +93,9 @@ indent-style = "space"
 [tool.ruff.lint.isort]
 known-first-party = ["jpamb"]  # Your package name
 force-single-line = false
+
+[tool.pytest.ini_options]
+markers = [
+  "slow: mark test as slow"
+]
+

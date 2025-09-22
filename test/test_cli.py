@@ -21,6 +21,7 @@ solutions = [
 ]
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("solution", solutions)
 def test_solutions(solution):
     runner = CliRunner()
@@ -42,6 +43,7 @@ def test_solutions(solution):
     assert result.exit_code == 0
 
 
+@pytest.mark.slow
 def test_interpret_i():
     runner = CliRunner()
     sol = Path("solutions") / "interpreter.py"
@@ -63,6 +65,7 @@ def test_interpret_i():
     assert result.exit_code == 0
 
 
+@pytest.mark.slow
 def test_interpret():
     runner = CliRunner()
     cp = Path("target") / "classes"
