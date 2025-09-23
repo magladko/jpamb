@@ -14,6 +14,14 @@ logger.add(sys.stderr, format="[{level}] {message}", level="INFO")
 # logger.debug("Waiting for debugger attach")
 # debugpy.wait_for_client()
 
+methodid = jpamb.getmethodid(
+    "Interpreter",
+    "1.0",
+    "Garbage Spillers",
+    ["dynamic", "python"],
+    for_science=True,
+)
+
 methodid, input = jpamb.getcase()
 
 
