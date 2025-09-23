@@ -22,8 +22,11 @@ methodid = jpamb.getmethodid(
     for_science=True,
 )
 
-methodid, input = jpamb.getcase()
+# methodid, input = jpamb.getcase()
 
+if len(methodid.extension.params) > 0:
+    # print("ok;0%")
+    quit()
 
 @dataclass
 class PC:
@@ -172,11 +175,11 @@ def step(state: State) -> State | str:
             else:
                 return "ok"
         case jvm.Get(
-            static=True, 
+            static=True,
             field=jvm.AbsFieldID(
                 classname=classname,
                 extension=jvm.FieldID(
-                    name='$assertionsDisabled', 
+                    name='$assertionsDisabled',
                     type=jvm.Boolean()))):
             frame.stack.push(
                 type_heap_to_stack(jvm.Value.boolean(False)))
@@ -186,7 +189,7 @@ def step(state: State) -> State | str:
             v = frame.stack.pop()
             if compare(v, condition, jvm.Value.int(0)):
                 frame.pc.offset = target
-            else: 
+            else:
                 frame.pc += 1
             return state
         case jvm.If(condition=condition, target=target):
@@ -254,10 +257,10 @@ def step(state: State) -> State | str:
                 return 'out of bounds'
 
             state.heap[ref.value] = jvm.Value.array(
-                type, arr[:idx.value] + 
+                type, arr[:idx.value] +
                 (type_stack_to_heap(jvm.Value(type, val.value)).value,) +
                 arr[idx.value+1:])
-            
+
             frame.pc += 1
             return state
         case jvm.ArrayLoad(type=type):
@@ -272,11 +275,11 @@ def step(state: State) -> State | str:
                 arr = state.heap[arr.value].value
             else:
                 raise ValueError(f"Unexpected ref type got: {arr.type!r}")
-            
+
             assert isinstance(arr, tuple)
             if idx.value < 0 or idx.value >= len(arr):
                 return 'out of bounds'
-            
+
             frame.stack.push(
                 type_heap_to_stack(jvm.Value(type=type, value=arr[idx.value])))
                 # jvm.Value(type=type, value=arr[idx.value]))
@@ -334,7 +337,7 @@ def compare(v1: jvm.Value, op: str, v2: jvm.Value) -> bool:
         case 'le': return (v1.value <= v2.value)
         case 'lt': return (v1.value <  v2.value)
         case 'ne': return (v1.value != v2.value)
-        case c: 
+        case c:
             raise NotImplementedError(
                 f"Comparison not implemented for condition {c}")
 
@@ -375,21 +378,33 @@ def type_heap_to_stack(val: jvm.Value):
 frame = Frame.from_method(methodid)
 state = State({}, Stack.empty().push(frame))
 
-for i, v in enumerate(input.values):
-    match v.type:
-        case jvm.Array():
-            ref = jvm.Value(jvm.Reference(), state.heap_ptr)
-            state.heap[state.heap_ptr] = v
-            state.heap_ptr += 1
-            v = ref
-        case _:
-            v = type_heap_to_stack(v)
-    frame.locals[i] = v
+# for i, v in enumerate(input.values):
+#     match v.type:
+#         case jvm.Array():
+#             ref = jvm.Value(jvm.Reference(), state.heap_ptr)
+#             state.heap[state.heap_ptr] = v
+#             state.heap_ptr += 1
+#             v = ref
+#         case _:
+#             v = type_heap_to_stack(v)
+#     frame.locals[i] = v
+
+results = [
+    "ok",
+    "assertion error",
+    "divide by zero",
+    "out of bounds",
+    "null pointer",
+    "*",
+]
 
 for _ in range(1000000):
     state = step(state)
     if isinstance(state, str):
-        print(state)
         break
 else:
-    print("*")
+    state = "*"
+    print("ok;0%")
+
+[print(f"{r};0%") for r in results if r != state]
+print(f"{state};100%")
