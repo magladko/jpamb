@@ -573,6 +573,7 @@ class Value:
             case Char():
                 return f"'{self.value}'"
             case Array(content):
+                assert isinstance(self.value, Iterable)
                 match content:
                     case Int():
                         ints = ", ".join(map(str, self.value))
