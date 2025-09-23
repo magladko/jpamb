@@ -9,6 +9,11 @@ import jpamb
 logger.remove()
 logger.add(sys.stderr, format="[{level}] {message}")
 
+# import debugpy
+# debugpy.listen(5678)
+# logger.debug("Waiting for debugger attach")
+# debugpy.wait_for_client()
+
 methodid, input = jpamb.getcase()
 
 
@@ -285,6 +290,14 @@ def step(state: State) -> State | str:
             frame.locals[i] = jvm.Value.int(local_var + amount)
             frame.pc += 1
             return state
+        case jvm.InvokeStatic(method=m):
+            # type(1) 
+            # logger.debug(jvm.AbsMethodID.)
+            # logger.debug(f"{m.name!r}")
+            # assert isinstance(m, jvm.AbsMethodID), f"Expected jvm.AbsMethodID, but got {(m)}"
+            # logger.debug(f"{m.encode()}")
+            logger.debug(f"{m}")
+            raise Exception()
         case a:
             raise NotImplementedError(f"Don't know how to handle: {a!r}")
 
@@ -302,6 +315,12 @@ def compare(v1: jvm.Value, op: str, v2: jvm.Value) -> bool:
         case c: 
             raise NotImplementedError(
                 f"Comparison not implemented for condition {c}")
+
+def stack_to_heap():
+    pass
+
+def heap_to_stack():
+    pass
 
 frame = Frame.from_method(methodid)
 state = State({}, Stack.empty().push(frame))
