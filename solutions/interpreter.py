@@ -245,7 +245,9 @@ def step(state: State) -> State | str:
                 return 'out of bounds'
 
             state.heap[ref.value] = jvm.Value.array(
-                type, arr[:idx.value] + (val.value,) + arr[idx.value+1:])
+                type, arr[:idx.value] + 
+                (type_stack_to_heap(jvm.Value(type, val.value)).value,) +
+                arr[idx.value+1:])
             
             frame.pc += 1
             return state
@@ -266,7 +268,9 @@ def step(state: State) -> State | str:
             if idx.value < 0 or idx.value >= len(arr):
                 return 'out of bounds'
             
-            frame.stack.push(jvm.Value(type=type, value=arr[idx.value]))
+            frame.stack.push(
+                type_heap_to_stack(jvm.Value(type=type, value=arr[idx.value])))
+                # jvm.Value(type=type, value=arr[idx.value]))
             frame.pc += 1
             return state
         case jvm.Dup(words=1):
@@ -316,33 +320,52 @@ def compare(v1: jvm.Value, op: str, v2: jvm.Value) -> bool:
             raise NotImplementedError(
                 f"Comparison not implemented for condition {c}")
 
-def stack_to_heap():
-    pass
+def type_stack_to_heap(val: jvm.Value):
+    match val.type:
+        case jvm.Int() | jvm.Float() | jvm.Reference():
+            return val
+        case jvm.Boolean():
+            assert isinstance(val.value, int)
+            return jvm.Value(jvm.Boolean(), bool(val.value != 0))
+        case jvm.Char():
+            assert isinstance(val.value, int)
+            return jvm.Value(jvm.Char(), chr(val.value))
+        case jvm.Array():
+            raise NotImplementedError(
+                "Stack to heap conversion not implemented for arrays")
+        case _:
+            raise NotImplementedError(
+                f"Stack to heap conversion not implemented for {val.type!r}")
 
-def heap_to_stack():
-    pass
+def type_heap_to_stack(val: jvm.Value):
+    match val.type:
+        case jvm.Int() | jvm.Float() | jvm.Reference():
+            return val
+        case jvm.Boolean():
+            assert isinstance(val.value, bool)
+            return jvm.Value(jvm.Boolean(), (1 if val.value else 0))
+        case jvm.Char():
+            assert isinstance(val.value, str)
+            return jvm.Value(jvm.Char(), ord(val.value))
+        case jvm.Array():
+            raise NotImplementedError(
+                "Heap to stack conversion not implemented for arrays")
+        case _:
+            raise NotImplementedError(
+                f"Heap to stack conversion not implemented for {val.type!r}")
 
 frame = Frame.from_method(methodid)
 state = State({}, Stack.empty().push(frame))
 
 for i, v in enumerate(input.values):
     match v.type:
-        case jvm.Int() | jvm.Float() | jvm.Reference():
-            pass
-        case jvm.Boolean():
-            assert isinstance(v.value, bool)
-            v = jvm.Value(jvm.Boolean(), jvm.Value.int(1 if v.value else 0))
-        case jvm.Char():
-            assert isinstance(v.value, str)
-            v = jvm.Value(jvm.Char(), jvm.Value.int(ord(v.value)))
         case jvm.Array():
             ref = jvm.Value(jvm.Reference(), state.heap_ptr)
             state.heap[state.heap_ptr] = v
             state.heap_ptr += 1
             v = ref
         case _:
-            raise NotImplementedError(
-                f"Stack conversion not implemented for {v.type!r}")        
+            v = type_heap_to_stack(v)
     frame.locals[i] = v
 
 for _ in range(1000):
