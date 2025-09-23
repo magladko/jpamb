@@ -407,8 +407,8 @@ class ParameterType:
         return ParameterType(tuple(params))
 
     @staticmethod
-    def from_json(inputs: list[dict]) -> "ParameterType":
-        params = []
+    def from_json(inputs: list[dict | str]) -> "ParameterType":
+        params: list[Type] = []
         for t in inputs:
             if isinstance(t, dict):
                 tt = Type.from_json_type(t["type"])
