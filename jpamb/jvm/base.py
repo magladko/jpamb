@@ -583,8 +583,8 @@ class Value:
                         return f"[C:{chars}]"
                     case _:
                         raise NotImplementedError()
-
-        return self.value
+            case _:
+                raise NotImplementedError(f"Cannot encode {self.type}")
 
     @classmethod
     def int(cls, n: int) -> Self:
