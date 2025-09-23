@@ -316,7 +316,7 @@ class Array(Type):
         assert self.contains is not None
 
     def encode(self):
-        return "[" + self.contains.encode()  # ]
+        return "[" + self.contains.encode()  + "]"
 
     def math(self):
         return f"array {self.contains.math()}"
