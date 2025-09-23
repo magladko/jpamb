@@ -139,6 +139,7 @@ class Type(ABC):
 
     @staticmethod
     def from_json_type(json: dict) -> "Type":
+        if json is None: return None
         if "base" in json:
             return Type.from_json(json["base"])
         if "kind" in json:
