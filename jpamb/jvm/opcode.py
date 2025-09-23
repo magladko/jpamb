@@ -555,7 +555,7 @@ class BinaryOpr(enum.Enum):
     Rem = enum.auto()
 
     @staticmethod
-    def from_json(json: str) -> Self:
+    def from_json(json: str) -> "BinaryOpr":
         match json:
             case "add":
                 return BinaryOpr.Add
