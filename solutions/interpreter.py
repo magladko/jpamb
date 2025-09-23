@@ -7,7 +7,7 @@ from loguru import logger
 import jpamb
 
 logger.remove()
-logger.add(sys.stderr, format="[{level}] {message}")
+logger.add(sys.stderr, format="[{level}] {message}", level="INFO")
 
 # import debugpy
 # debugpy.listen(5678)
@@ -155,10 +155,10 @@ def step(state: State) -> State | str:
         case jvm.Return(type=type):
             state.frames.pop()
             if state.frames:
-                frame = state.frames.peek()
+                caller_frame = state.frames.peek()
                 if type is not None:
                     v1 = frame.stack.pop()
-                    frame.stack.push(v1)
+                    caller_frame.stack.push(v1)
                 frame.pc += 1 # TODO: fix this
                 return state
             else:
@@ -170,7 +170,8 @@ def step(state: State) -> State | str:
                 extension=jvm.FieldID(
                     name='$assertionsDisabled', 
                     type=jvm.Boolean()))):
-            frame.stack.push(jvm.Value.boolean(False))
+            frame.stack.push(
+                type_heap_to_stack(jvm.Value.boolean(False)))
             frame.pc += 1
             return state
         case jvm.Ifz(condition=condition, target=target):
@@ -280,8 +281,8 @@ def step(state: State) -> State | str:
             return state
         case jvm.Store(type=type, index=index):
             v = frame.stack.pop()
-            if v:
-                assert v.type is type, f"Expected type {type!r}, but got {v.type!r}"
+            if v and v.value is not None:
+                assert isinstance(v.value, int), f"Expected type {int}, but got {v.value!r}"
             frame.locals[index] = v
             frame.pc += 1
             return state
@@ -295,13 +296,22 @@ def step(state: State) -> State | str:
             frame.pc += 1
             return state
         case jvm.InvokeStatic(method=m):
-            # type(1) 
-            # logger.debug(jvm.AbsMethodID.)
-            # logger.debug(f"{m.name!r}")
-            # assert isinstance(m, jvm.AbsMethodID), f"Expected jvm.AbsMethodID, but got {(m)}"
-            # logger.debug(f"{m.encode()}")
-            logger.debug(f"{m}")
-            raise Exception()
+            nargs = len(m.extension.params)
+            args = [frame.stack.pop() for _ in range(nargs)][::-1]
+            new_frame = Frame.from_method(m)
+            for i, v in enumerate(args):
+                new_frame.locals[i] = v
+            state.frames.push(new_frame)
+            frame.pc += 1
+            return state
+        case jvm.Cast(from_=from_, to_=to_):
+            # TODO make lossful casts
+            v = frame.stack.pop()
+            assert v.type is from_, f"Expected type {from_!r}, but got {v.type!r}"
+            v = jvm.Value(to_, v.value)
+            frame.stack.push(v)
+            frame.pc += 1
+            return state
         case a:
             raise NotImplementedError(f"Don't know how to handle: {a!r}")
 
@@ -368,7 +378,7 @@ for i, v in enumerate(input.values):
             v = type_heap_to_stack(v)
     frame.locals[i] = v
 
-for _ in range(1000):
+for _ in range(1000000):
     state = step(state)
     if isinstance(state, str):
         print(state)
