@@ -139,9 +139,12 @@ class Type(ABC):
     def from_json_type(json: dict) -> "Type":
         if "base" in json:
             return Type.from_json(json["base"])
-        match json["kind"]:
-            case "array":
-                return Array(Type.from_json_type(json["type"]))
+        if "kind" in json:
+            match json["kind"]:
+                case "array":
+                    return Array(Type.from_json_type(json["type"]))
+        elif isinstance(json, str):
+            return Type.from_json(json)
 
         raise NotImplementedError(f"Not yet implemented {json}")
 
@@ -405,7 +408,12 @@ class ParameterType:
     def from_json(inputs: list[dict]) -> "ParameterType":
         params = []
         for t in inputs:
-            tt = Type.from_json_type(t["type"])
+            if isinstance(t, dict):
+                tt = Type.from_json_type(t["type"])
+            elif isinstance(t, str):
+                tt = Type.from_json(t)
+            else:
+                raise ValueError(f"Cannot decode parameter type from {t} of type {type(t)}")
             params.append(tt)
 
         return ParameterType(tuple(params))
@@ -510,6 +518,17 @@ class AbsMethodID(Absolute[MethodID]):
     @property
     def methodid(self):
         return self.extension
+    
+    @classmethod
+    def from_json(cls, json: dict) -> "Self":
+        return cls(
+            classname=ClassName.decode(json["ref"]["name"]),
+            extension=MethodID(
+                name=json["name"],
+                params=ParameterType.from_json(json["args"]),
+                return_type=Type.from_json_type(json["returns"])
+            )
+        )
 
 
 @dataclass(frozen=True, order=True)

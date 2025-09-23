@@ -381,7 +381,7 @@ class InvokeStatic(Opcode):
         assert json["opr"] == "invoke" and json["access"] == "static"
         return cls(
             offset=json["offset"],
-            method=json["method"],
+            method=jvm.AbsMethodID.from_json(json["method"]),
         )
 
     def real(self) -> str:
