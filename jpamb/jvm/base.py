@@ -71,6 +71,8 @@ class Type(ABC):
 
     def encode(self) -> str: ...
 
+    def math(self) -> str: ...
+
     @staticmethod
     def decode(input) -> tuple["Type", str]:
         r, stack = None, []
