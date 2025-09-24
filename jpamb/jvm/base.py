@@ -138,16 +138,16 @@ class Type(ABC):
                 raise NotImplementedError(f"Not yet implemented {typestr}")
 
     @staticmethod
-    def from_json_type(json: dict) -> "Type":
-        if json is None: return None
+    def from_json_type(json: dict | str) -> "Type":
+        assert json is not None, "Type.from_json_type() shall not be called with None"
+        if isinstance(json, str):
+            return Type.from_json(json)
         if "base" in json:
             return Type.from_json(json["base"])
         if "kind" in json:
             match json["kind"]:
                 case "array":
                     return Array(Type.from_json_type(json["type"]))
-        elif isinstance(json, str):
-            return Type.from_json(json)
 
         raise NotImplementedError(f"Not yet implemented {json}")
 
@@ -521,7 +521,7 @@ class AbsMethodID(Absolute[MethodID]):
     @property
     def methodid(self):
         return self.extension
-    
+
     @classmethod
     def from_json(cls, json: dict) -> "Self":
         return cls(
@@ -529,7 +529,8 @@ class AbsMethodID(Absolute[MethodID]):
             extension=MethodID(
                 name=json["name"],
                 params=ParameterType.from_json(json["args"]),
-                return_type=Type.from_json_type(json["returns"])
+                return_type=Type.from_json_type(json["returns"]) \
+                            if json["returns"] is not None else None,
             )
         )
 
