@@ -9,7 +9,6 @@ each instruction.
 
 from dataclasses import dataclass
 from abc import ABC
-from typing import Self
 
 import enum
 
@@ -381,7 +380,7 @@ class InvokeStatic(Opcode):
         assert json["opr"] == "invoke" and json["access"] == "static"
         return cls(
             offset=json["offset"],
-            method=json["method"],
+            method=jvm.AbsMethodID.from_json(json["method"]),
         )
 
     def real(self) -> str:
@@ -555,7 +554,7 @@ class BinaryOpr(enum.Enum):
     Rem = enum.auto()
 
     @staticmethod
-    def from_json(json: str) -> Self:
+    def from_json(json: str) -> "BinaryOpr":
         match json:
             case "add":
                 return BinaryOpr.Add
@@ -1031,7 +1030,7 @@ class Return(Opcode):
 
         # Map type to appropriate return instruction
         match self.type:
-            case jvm.Int():
+            case jvm.Int() | jvm.Boolean() | jvm.Byte() | jvm.Short() | jvm.Char():
                 return "ireturn"
             case jvm.Long():
                 return "lreturn"
@@ -1039,7 +1038,7 @@ class Return(Opcode):
                 return "freturn"
             case jvm.Double():
                 return "dreturn"
-            case jvm.Reference() | jvm.Object(_):
+            case jvm.Reference() | jvm.Object(_) | jvm.Array(_):
                 return "areturn"
             case _:
                 raise ValueError(f"Unknown return type: {self.type}")

@@ -71,6 +71,8 @@ class Type(ABC):
 
     def encode(self) -> str: ...
 
+    def math(self) -> str: ...
+
     @staticmethod
     def decode(input) -> tuple["Type", str]:
         r, stack = None, []
@@ -136,12 +138,16 @@ class Type(ABC):
                 raise NotImplementedError(f"Not yet implemented {typestr}")
 
     @staticmethod
-    def from_json_type(json: dict) -> "Type":
+    def from_json_type(json: dict | str) -> "Type":
+        assert json is not None, "Type.from_json_type() shall not be called with None"
+        if isinstance(json, str):
+            return Type.from_json(json)
         if "base" in json:
             return Type.from_json(json["base"])
-        match json["kind"]:
-            case "array":
-                return Array(Type.from_json_type(json["type"]))
+        if "kind" in json:
+            match json["kind"]:
+                case "array":
+                    return Array(Type.from_json_type(json["type"]))
 
         raise NotImplementedError(f"Not yet implemented {json}")
 
@@ -402,10 +408,15 @@ class ParameterType:
         return ParameterType(tuple(params))
 
     @staticmethod
-    def from_json(inputs: list[dict]) -> "ParameterType":
-        params = []
+    def from_json(inputs: list[dict | str]) -> "ParameterType":
+        params: list[Type] = []
         for t in inputs:
-            tt = Type.from_json_type(t["type"])
+            if isinstance(t, dict):
+                tt = Type.from_json_type(t["type"])
+            elif isinstance(t, str):
+                tt = Type.from_json(t)
+            else:
+                raise ValueError(f"Cannot decode parameter type from {t} of type {type(t)}")
             params.append(tt)
 
         return ParameterType(tuple(params))
@@ -511,6 +522,18 @@ class AbsMethodID(Absolute[MethodID]):
     def methodid(self):
         return self.extension
 
+    @classmethod
+    def from_json(cls, json: dict) -> "Self":
+        return cls(
+            classname=ClassName.decode(json["ref"]["name"]),
+            extension=MethodID(
+                name=json["name"],
+                params=ParameterType.from_json(json["args"]),
+                return_type=Type.from_json_type(json["returns"]) \
+                            if json["returns"] is not None else None,
+            )
+        )
+
 
 @dataclass(frozen=True, order=True)
 class AbsFieldID(Absolute[FieldID]):
@@ -552,6 +575,7 @@ class Value:
             case Char():
                 return f"'{self.value}'"
             case Array(content):
+                assert isinstance(self.value, Iterable)
                 match content:
                     case Int():
                         ints = ", ".join(map(str, self.value))
@@ -561,8 +585,8 @@ class Value:
                         return f"[C:{chars}]"
                     case _:
                         raise NotImplementedError()
-
-        return self.value
+            case _:
+                raise NotImplementedError(f"Cannot encode {self.type}")
 
     @classmethod
     def int(cls, n: int) -> Self:
