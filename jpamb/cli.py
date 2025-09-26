@@ -247,7 +247,7 @@ def test(suite, program, report, filter, fail_fast, with_python, timeout):
 
     if not filter:
         with r.context("Info"):
-            out = r.run(program + ("info",))
+            out = r.run(program + ("info",), timeout=timeout)
             info = model.AnalysisInfo.parse(out)
 
             with r.context("Results"):
