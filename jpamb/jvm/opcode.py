@@ -7,7 +7,7 @@ each instruction.
 
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from abc import ABC
 
 import enum
@@ -20,6 +20,13 @@ class Opcode(ABC):
     """An opcode, as parsed from the jvm2json output."""
 
     offset: int
+
+    def __post_init__(self):
+        for f in fields(self):
+            v = getattr(self, f.name)
+            assert isinstance(
+                v, f.type
+            ), f"Expected {f.name!r} to be type {f.type}, but was {v!r}, in {self!r}"
 
     @classmethod
     def from_json(cls, json: dict) -> "Opcode":
@@ -78,14 +85,17 @@ class Opcode(ABC):
                 raise NotImplementedError(
                     f"Unhandled opcode {opr!r} (implement yourself)"
                 )
-        return opr.from_json(json)
+        try:
+            return opr.from_json(json)
+        except NotImplementedError as e:
+            raise NotImplementedError(f"Unhandled opcode {json!r}") from e
 
     def real(self) -> str:
         """return the real opcode, as documented in the jvm spec."""
         raise NotImplementedError(f"Unhandled real {self!r}")
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class Push(Opcode):
     """The push opcode"""
 
@@ -138,7 +148,7 @@ class Push(Opcode):
         return f"push:{self.value.type} {self.value.value}"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class NewArray(Opcode):
     """The new array opcode"""
 
@@ -168,7 +178,7 @@ class NewArray(Opcode):
         return f"newarray[{self.dim}D] {self.type}"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class Dup(Opcode):
     """The dublicate the stack opcode"""
 
@@ -201,7 +211,7 @@ class Dup(Opcode):
         return f"dup {self.words}"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class ArrayStore(Opcode):
     """The Array Store command that stores a value in the array."""
 
@@ -232,7 +242,7 @@ class ArrayStore(Opcode):
         return f"array_store {self.type}"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class Cast(Opcode):
     """Cast one type to another"""
 
@@ -260,7 +270,7 @@ class Cast(Opcode):
         return f"cast {self.from_} {self.to_}"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class ArrayLoad(Opcode):
     """The Array Load command that load a value from the array."""
 
@@ -292,7 +302,7 @@ class ArrayLoad(Opcode):
         return f"array_load:{self.type}"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class ArrayLength(Opcode):
     """
     arraylength:
@@ -324,7 +334,7 @@ class ArrayLength(Opcode):
         return "arraylength"
 
 
-@dataclass(frozen=True)  # make it work for
+@dataclass(frozen=True, order=True)  # make it work for
 class InvokeVirtual(Opcode):
     """The invoke virtual opcode for calling instance methods"""
 
@@ -347,17 +357,17 @@ class InvokeVirtual(Opcode):
         assert json["opr"] == "invoke" and json["access"] == "virtual"
         return cls(
             offset=json["offset"],
-            method=json["method"],
+            method=jvm.AbsMethodID.from_json(json["method"]),
         )
 
     def real(self) -> str:
-        return f"invokevirtual {self.method}"
+        return f"invokevirtual {self.method.dashed()}"
 
     def __str__(self):
         return f"invoke virtual {self.method}"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class InvokeStatic(Opcode):
     """The invoke static opcode for calling static methods"""
 
@@ -390,7 +400,7 @@ class InvokeStatic(Opcode):
         return f"invoke static {self.method}"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class InvokeInterface(Opcode):
     """The invoke interface opcode for calling interface methods"""
 
@@ -415,7 +425,7 @@ class InvokeInterface(Opcode):
         assert json["opr"] == "invoke" and json["access"] == "interface"
         return cls(
             offset=json["offset"],
-            method=json["method"],
+            method=jvm.AbsMethodID.from_json(json["method"]),
             stack_size=json["stack_size"],
         )
 
@@ -426,7 +436,7 @@ class InvokeInterface(Opcode):
         return f"invoke interface {self.method} (stack_size={self.stack_size})"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class InvokeSpecial(Opcode):
     """The invoke special opcode for calling constructors, private methods,
     and superclass methods.
@@ -460,48 +470,9 @@ class InvokeSpecial(Opcode):
     def from_json(cls, json: dict) -> "Opcode":
         assert json["opr"] == "invoke" and json["access"] == "special"
 
-        # Extract class name from SimpleReferenceType
-        ref = json["method"]["ref"]
-        assert ref["kind"] == "class"
-        class_name = ref["name"]
-
-        # Get method details
-        method_name = json["method"]["name"]
-
-        # Convert args array to proper JVM type encoding
-        args = ""
-        if "args" in json["method"]:
-            args_types = []
-            for arg in json["method"]["args"]:
-                if isinstance(arg, str):  # Basic type
-                    args_types.append(arg)
-                else:  # Complex type (like class or array)
-                    if arg["kind"] == "class":
-                        args_types.append(f"L{arg['name']};")
-                    elif arg["kind"] == "array":
-                        # Recursively handle array types if needed
-                        args_types.append("[" + arg["type"])
-            args = "".join(args_types)
-
-        # Handle return type - use 'V' for void when returns is None/not present
-        returns = json["method"].get("returns")
-        if returns is None:
-            return_type = "V"
-        else:
-            if isinstance(returns, str):  # Basic type
-                return_type = returns
-            else:  # Complex type
-                if returns["kind"] == "class":
-                    return_type = f"L{returns['name']};"
-                elif returns["kind"] == "array":
-                    return_type = "[" + returns["type"]
-
-        # Construct method string in format: className.methodName:(args)returnType
-        method_str = f"{class_name}.{method_name}:({args}){return_type}"
-
         return cls(
             offset=json["offset"],
-            method=jvm.AbsMethodID.decode(method_str),
+            method=jvm.AbsMethodID.from_json(json["method"]),
             is_interface=json["method"]["is_interface"],
         )
 
@@ -513,7 +484,7 @@ class InvokeSpecial(Opcode):
         return f"invoke special{interface_str} {self.method}"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class Store(Opcode):
     """The store opcode that stores values to local variables"""
 
@@ -573,7 +544,7 @@ class BinaryOpr(enum.Enum):
         return self.name.lower()
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class Binary(Opcode):
 
     type: jvm.Type
@@ -609,7 +580,7 @@ class Binary(Opcode):
         raise NotImplementedError(f"Unhandled real {self!r}")
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class Load(Opcode):
     """The load opcode that loads values from local variables"""
 
@@ -642,7 +613,7 @@ class Load(Opcode):
         return f"load:{self.type} {self.index}"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class If(Opcode):
     """The if opcode that performs conditional jumps based on comparison of two values.
 
@@ -706,7 +677,7 @@ class If(Opcode):
         return f"if {self.condition} {self.target}"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class Get(Opcode):
     """The get opcode that retrieves field values (static or instance).
 
@@ -765,7 +736,7 @@ class Get(Opcode):
         return f"get {kind} {self.field}"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class Ifz(Opcode):
     """The ifz opcode that performs conditional jumps based on comparison with zero/null.
 
@@ -832,7 +803,7 @@ class Ifz(Opcode):
         return f"ifz {self.condition} {self.target}"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class New(Opcode):
     """The new opcode that creates a new instance of a class.
 
@@ -869,7 +840,7 @@ class New(Opcode):
         return f"new {self.classname}"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class Throw(Opcode):
     """The throw opcode that throws an exception object.
 
@@ -904,7 +875,7 @@ class Throw(Opcode):
         return "throw"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class Incr(Opcode):
     """The increment opcode that adds a constant value to a local variable.
 
@@ -944,7 +915,7 @@ class Incr(Opcode):
         return f"incr {self.index} by {self.amount}"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class Goto(Opcode):
     """The goto opcode that performs an unconditional jump.
 
@@ -983,7 +954,7 @@ class Goto(Opcode):
         return f"goto {self.target}"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class Return(Opcode):
     """The return opcode that returns (with optional value) from a method.
 
@@ -1014,6 +985,11 @@ class Return(Opcode):
 
     type: jvm.Type | None  # Return type (None for void return)
 
+    def __post_init__(self):
+        assert (
+            self.type is None or self.type.is_stacktype()
+        ), "return only handles stack types {self.type()}"
+
     @classmethod
     def from_json(cls, json: dict) -> "Opcode":
         type_info = json.get("type")
@@ -1038,7 +1014,7 @@ class Return(Opcode):
                 return "freturn"
             case jvm.Double():
                 return "dreturn"
-            case jvm.Reference() | jvm.Object(_) | jvm.Array(_):
+            case jvm.Reference():
                 return "areturn"
             case _:
                 raise ValueError(f"Unknown return type: {self.type}")
