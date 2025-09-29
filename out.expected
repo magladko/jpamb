@@ -1,0 +1,647 @@
+┌ Case jpamb.cases.Arrays.arrayContent:() -> assertion error
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arrayContent:()V' '()'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;0%
+│││ divide by zero;0%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+│││ assertion error;100%
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arrayContent:()V' '()'
+│ Expected 'assertion error' and got 'assertion error;100%'
+└ Case jpamb.cases.Arrays.arrayContent:() -> assertion error
+┌ Case jpamb.cases.Arrays.arrayInBounds:() -> ok
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arrayInBounds:()V' '()'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ assertion error;0%
+│││ divide by zero;0%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+│││ ok;100%
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arrayInBounds:()V' '()'
+│ Expected 'ok' and got 'ok;100%'
+└ Case jpamb.cases.Arrays.arrayInBounds:() -> ok
+┌ Case jpamb.cases.Arrays.arrayIsNull:() -> null pointer
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arrayIsNull:()V' '()'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;0%
+│││ assertion error;0%
+│││ divide by zero;0%
+│││ out of bounds;0%
+│││ *;0%
+│││ null pointer;100%
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arrayIsNull:()V' '()'
+│ Expected 'null pointer' and got 'null pointer;100%'
+└ Case jpamb.cases.Arrays.arrayIsNull:() -> null pointer
+┌ Case jpamb.cases.Arrays.arrayIsNullLength:() -> null pointer
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arrayIsNullLength:()V' '()'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;0%
+│││ assertion error;0%
+│││ divide by zero;0%
+│││ out of bounds;0%
+│││ *;0%
+│││ null pointer;100%
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arrayIsNullLength:()V' '()'
+│ Expected 'null pointer' and got 'null pointer;100%'
+└ Case jpamb.cases.Arrays.arrayIsNullLength:() -> null pointer
+┌ Case jpamb.cases.Arrays.arrayLength:() -> ok
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arrayLength:()V' '()'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ assertion error;0%
+│││ divide by zero;0%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+│││ ok;100%
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arrayLength:()V' '()'
+│ Expected 'ok' and got 'ok;100%'
+└ Case jpamb.cases.Arrays.arrayLength:() -> ok
+┌ Case jpamb.cases.Arrays.arrayNotEmpty:([I:1]) -> ok
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arrayNotEmpty:([I)V' '([I:1])'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arrayNotEmpty:([I)V' '([I:1])'
+│ Expected 'ok' and got ''
+└ Case jpamb.cases.Arrays.arrayNotEmpty:([I:1]) -> ok
+┌ Case jpamb.cases.Arrays.arrayNotEmpty:([I:]) -> assertion error
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arrayNotEmpty:([I)V' '([I:])'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arrayNotEmpty:([I)V' '([I:])'
+│ Expected 'assertion error' and got ''
+└ Case jpamb.cases.Arrays.arrayNotEmpty:([I:]) -> assertion error
+┌ Case jpamb.cases.Arrays.arrayOutOfBounds:() -> out of bounds
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arrayOutOfBounds:()V' '()'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;0%
+│││ assertion error;0%
+│││ divide by zero;0%
+│││ null pointer;0%
+│││ *;0%
+│││ out of bounds;100%
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arrayOutOfBounds:()V' '()'
+│ Expected 'out of bounds' and got 'out of bounds;100%'
+└ Case jpamb.cases.Arrays.arrayOutOfBounds:() -> out of bounds
+┌ Case jpamb.cases.Arrays.arraySometimesNull:(0) -> out of bounds
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arraySometimesNull:(I)V' '(0)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arraySometimesNull:(I)V' '(0)'
+│ Expected 'out of bounds' and got ''
+└ Case jpamb.cases.Arrays.arraySometimesNull:(0) -> out of bounds
+┌ Case jpamb.cases.Arrays.arraySometimesNull:(11) -> null pointer
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arraySometimesNull:(I)V' '(11)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arraySometimesNull:(I)V' '(11)'
+│ Expected 'null pointer' and got ''
+└ Case jpamb.cases.Arrays.arraySometimesNull:(11) -> null pointer
+┌ Case jpamb.cases.Arrays.arraySpellsHello:([C:'h', 'e', 'l', 'l', 'o']) -> ok
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arraySpellsHello:([C)V' '([C:'"'"'h'"'"', '"'"'e'"'"', '"'"'l'"'"', '"'"'l'"'"', '"'"'o'"'"'])'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arraySpellsHello:([C)V' '([C:'"'"'h'"'"', '"'"'e'"'"', '"'"'l'"'"', '"'"'l'"'"', '"'"'o'"'"'])'
+│ Expected 'ok' and got ''
+└ Case jpamb.cases.Arrays.arraySpellsHello:([C:'h', 'e', 'l', 'l', 'o']) -> ok
+┌ Case jpamb.cases.Arrays.arraySpellsHello:([C:'x']) -> assertion error
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arraySpellsHello:([C)V' '([C:'"'"'x'"'"'])'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arraySpellsHello:([C)V' '([C:'"'"'x'"'"'])'
+│ Expected 'assertion error' and got ''
+└ Case jpamb.cases.Arrays.arraySpellsHello:([C:'x']) -> assertion error
+┌ Case jpamb.cases.Arrays.arraySpellsHello:([C:]) -> out of bounds
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arraySpellsHello:([C)V' '([C:])'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arraySpellsHello:([C)V' '([C:])'
+│ Expected 'out of bounds' and got ''
+└ Case jpamb.cases.Arrays.arraySpellsHello:([C:]) -> out of bounds
+┌ Case jpamb.cases.Arrays.arraySumIsLarge:([I:50, 100, 200]) -> ok
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arraySumIsLarge:([I)V' '([I:50, 100, 200])'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arraySumIsLarge:([I)V' '([I:50, 100, 200])'
+│ Expected 'ok' and got ''
+└ Case jpamb.cases.Arrays.arraySumIsLarge:([I:50, 100, 200]) -> ok
+┌ Case jpamb.cases.Arrays.arraySumIsLarge:([I:]) -> assertion error
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arraySumIsLarge:([I)V' '([I:])'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.arraySumIsLarge:([I)V' '([I:])'
+│ Expected 'assertion error' and got ''
+└ Case jpamb.cases.Arrays.arraySumIsLarge:([I:]) -> assertion error
+┌ Case jpamb.cases.Arrays.binarySearch:(3) -> ok
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.binarySearch:(I)V' '(3)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.binarySearch:(I)V' '(3)'
+│ Expected 'ok' and got ''
+└ Case jpamb.cases.Arrays.binarySearch:(3) -> ok
+┌ Case jpamb.cases.Arrays.binarySearch:(6) -> assertion error
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.binarySearch:(I)V' '(6)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Arrays.binarySearch:(I)V' '(6)'
+│ Expected 'assertion error' and got ''
+└ Case jpamb.cases.Arrays.binarySearch:(6) -> assertion error
+┌ Case jpamb.cases.Calls.allPrimesArePositive:(-1) -> assertion error
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Calls.allPrimesArePositive:(I)V' '(-1)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Calls.allPrimesArePositive:(I)V' '(-1)'
+│ Expected 'assertion error' and got ''
+└ Case jpamb.cases.Calls.allPrimesArePositive:(-1) -> assertion error
+┌ Case jpamb.cases.Calls.allPrimesArePositive:(0) -> out of bounds
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Calls.allPrimesArePositive:(I)V' '(0)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Calls.allPrimesArePositive:(I)V' '(0)'
+│ Expected 'out of bounds' and got ''
+└ Case jpamb.cases.Calls.allPrimesArePositive:(0) -> out of bounds
+┌ Case jpamb.cases.Calls.allPrimesArePositive:(100) -> ok
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Calls.allPrimesArePositive:(I)V' '(100)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Calls.allPrimesArePositive:(I)V' '(100)'
+│ Expected 'ok' and got ''
+└ Case jpamb.cases.Calls.allPrimesArePositive:(100) -> ok
+┌ Case jpamb.cases.Calls.callsAssertFalse:() -> assertion error
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Calls.callsAssertFalse:()V' '()'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;0%
+│││ divide by zero;0%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+│││ assertion error;100%
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Calls.callsAssertFalse:()V' '()'
+│ Expected 'assertion error' and got 'assertion error;100%'
+└ Case jpamb.cases.Calls.callsAssertFalse:() -> assertion error
+┌ Case jpamb.cases.Calls.callsAssertFib:(0) -> assertion error
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Calls.callsAssertFib:(I)V' '(0)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Calls.callsAssertFib:(I)V' '(0)'
+│ Expected 'assertion error' and got ''
+└ Case jpamb.cases.Calls.callsAssertFib:(0) -> assertion error
+┌ Case jpamb.cases.Calls.callsAssertFib:(8) -> ok
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Calls.callsAssertFib:(I)V' '(8)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Calls.callsAssertFib:(I)V' '(8)'
+│ Expected 'ok' and got ''
+└ Case jpamb.cases.Calls.callsAssertFib:(8) -> ok
+┌ Case jpamb.cases.Calls.callsAssertIf:(false) -> assertion error
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Calls.callsAssertIf:(Z)V' '(false)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Calls.callsAssertIf:(Z)V' '(false)'
+│ Expected 'assertion error' and got ''
+└ Case jpamb.cases.Calls.callsAssertIf:(false) -> assertion error
+┌ Case jpamb.cases.Calls.callsAssertIf:(true) -> ok
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Calls.callsAssertIf:(Z)V' '(true)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Calls.callsAssertIf:(Z)V' '(true)'
+│ Expected 'ok' and got ''
+└ Case jpamb.cases.Calls.callsAssertIf:(true) -> ok
+┌ Case jpamb.cases.Calls.callsAssertIfWithTrue:() -> ok
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Calls.callsAssertIfWithTrue:()V' '()'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ assertion error;0%
+│││ divide by zero;0%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+│││ ok;100%
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Calls.callsAssertIfWithTrue:()V' '()'
+│ Expected 'ok' and got 'ok;100%'
+└ Case jpamb.cases.Calls.callsAssertIfWithTrue:() -> ok
+┌ Case jpamb.cases.Calls.callsAssertTrue:() -> ok
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Calls.callsAssertTrue:()V' '()'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ assertion error;0%
+│││ divide by zero;0%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+│││ ok;100%
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Calls.callsAssertTrue:()V' '()'
+│ Expected 'ok' and got 'ok;100%'
+└ Case jpamb.cases.Calls.callsAssertTrue:() -> ok
+┌ Case jpamb.cases.Loops.forever:() -> *
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Loops.forever:()V' '()'
+││┌ Stderr
+││└ Stderr
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Loops.forever:()V' '()'
+│ Expected '*' and got '*'
+└ Case jpamb.cases.Loops.forever:() -> *
+┌ Case jpamb.cases.Loops.neverAsserts:() -> *
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Loops.neverAsserts:()V' '()'
+││┌ Stderr
+││└ Stderr
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Loops.neverAsserts:()V' '()'
+│ Expected '*' and got '*'
+└ Case jpamb.cases.Loops.neverAsserts:() -> *
+┌ Case jpamb.cases.Loops.neverDivides:() -> *
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Loops.neverDivides:()I' '()'
+││┌ Stderr
+││└ Stderr
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Loops.neverDivides:()I' '()'
+│ Expected '*' and got '*'
+└ Case jpamb.cases.Loops.neverDivides:() -> *
+┌ Case jpamb.cases.Loops.terminates:() -> assertion error
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Loops.terminates:()V' '()'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;0%
+│││ divide by zero;0%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+│││ assertion error;100%
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Loops.terminates:()V' '()'
+│ Expected 'assertion error' and got 'assertion error;100%'
+└ Case jpamb.cases.Loops.terminates:() -> assertion error
+┌ Case jpamb.cases.Simple.assertBoolean:(false) -> assertion error
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.assertBoolean:(Z)V' '(false)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.assertBoolean:(Z)V' '(false)'
+│ Expected 'assertion error' and got ''
+└ Case jpamb.cases.Simple.assertBoolean:(false) -> assertion error
+┌ Case jpamb.cases.Simple.assertBoolean:(true) -> ok
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.assertBoolean:(Z)V' '(true)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.assertBoolean:(Z)V' '(true)'
+│ Expected 'ok' and got ''
+└ Case jpamb.cases.Simple.assertBoolean:(true) -> ok
+┌ Case jpamb.cases.Simple.assertFalse:() -> assertion error
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.assertFalse:()V' '()'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;0%
+│││ divide by zero;0%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+│││ assertion error;100%
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.assertFalse:()V' '()'
+│ Expected 'assertion error' and got 'assertion error;100%'
+└ Case jpamb.cases.Simple.assertFalse:() -> assertion error
+┌ Case jpamb.cases.Simple.assertInteger:(0) -> assertion error
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.assertInteger:(I)V' '(0)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.assertInteger:(I)V' '(0)'
+│ Expected 'assertion error' and got ''
+└ Case jpamb.cases.Simple.assertInteger:(0) -> assertion error
+┌ Case jpamb.cases.Simple.assertInteger:(1) -> ok
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.assertInteger:(I)V' '(1)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.assertInteger:(I)V' '(1)'
+│ Expected 'ok' and got ''
+└ Case jpamb.cases.Simple.assertInteger:(1) -> ok
+┌ Case jpamb.cases.Simple.assertPositive:(-1) -> assertion error
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.assertPositive:(I)V' '(-1)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.assertPositive:(I)V' '(-1)'
+│ Expected 'assertion error' and got ''
+└ Case jpamb.cases.Simple.assertPositive:(-1) -> assertion error
+┌ Case jpamb.cases.Simple.assertPositive:(1) -> ok
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.assertPositive:(I)V' '(1)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.assertPositive:(I)V' '(1)'
+│ Expected 'ok' and got ''
+└ Case jpamb.cases.Simple.assertPositive:(1) -> ok
+┌ Case jpamb.cases.Simple.checkBeforeAssert:(-1) -> assertion error
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.checkBeforeAssert:(I)V' '(-1)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.checkBeforeAssert:(I)V' '(-1)'
+│ Expected 'assertion error' and got ''
+└ Case jpamb.cases.Simple.checkBeforeAssert:(-1) -> assertion error
+┌ Case jpamb.cases.Simple.checkBeforeAssert:(0) -> ok
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.checkBeforeAssert:(I)V' '(0)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.checkBeforeAssert:(I)V' '(0)'
+│ Expected 'ok' and got ''
+└ Case jpamb.cases.Simple.checkBeforeAssert:(0) -> ok
+┌ Case jpamb.cases.Simple.checkBeforeDivideByN2:(0) -> ok
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.checkBeforeDivideByN2:(I)I' '(0)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.checkBeforeDivideByN2:(I)I' '(0)'
+│ Expected 'ok' and got ''
+└ Case jpamb.cases.Simple.checkBeforeDivideByN2:(0) -> ok
+┌ Case jpamb.cases.Simple.checkBeforeDivideByN2:(1) -> ok
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.checkBeforeDivideByN2:(I)I' '(1)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.checkBeforeDivideByN2:(I)I' '(1)'
+│ Expected 'ok' and got ''
+└ Case jpamb.cases.Simple.checkBeforeDivideByN2:(1) -> ok
+┌ Case jpamb.cases.Simple.checkBeforeDivideByN:(0) -> assertion error
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.checkBeforeDivideByN:(I)I' '(0)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.checkBeforeDivideByN:(I)I' '(0)'
+│ Expected 'assertion error' and got ''
+└ Case jpamb.cases.Simple.checkBeforeDivideByN:(0) -> assertion error
+┌ Case jpamb.cases.Simple.checkBeforeDivideByN:(1) -> ok
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.checkBeforeDivideByN:(I)I' '(1)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.checkBeforeDivideByN:(I)I' '(1)'
+│ Expected 'ok' and got ''
+└ Case jpamb.cases.Simple.checkBeforeDivideByN:(1) -> ok
+┌ Case jpamb.cases.Simple.divideByN:(0) -> divide by zero
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.divideByN:(I)I' '(0)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.divideByN:(I)I' '(0)'
+│ Expected 'divide by zero' and got ''
+└ Case jpamb.cases.Simple.divideByN:(0) -> divide by zero
+┌ Case jpamb.cases.Simple.divideByN:(1) -> ok
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.divideByN:(I)I' '(1)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.divideByN:(I)I' '(1)'
+│ Expected 'ok' and got ''
+└ Case jpamb.cases.Simple.divideByN:(1) -> ok
+┌ Case jpamb.cases.Simple.divideByNMinus10054203:(0) -> ok
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.divideByNMinus10054203:(I)I' '(0)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.divideByNMinus10054203:(I)I' '(0)'
+│ Expected 'ok' and got ''
+└ Case jpamb.cases.Simple.divideByNMinus10054203:(0) -> ok
+┌ Case jpamb.cases.Simple.divideByNMinus10054203:(10054203) -> divide by zero
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.divideByNMinus10054203:(I)I' '(10054203)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.divideByNMinus10054203:(I)I' '(10054203)'
+│ Expected 'divide by zero' and got ''
+└ Case jpamb.cases.Simple.divideByNMinus10054203:(10054203) -> divide by zero
+┌ Case jpamb.cases.Simple.divideByZero:() -> divide by zero
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.divideByZero:()I' '()'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;0%
+│││ assertion error;0%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+│││ divide by zero;100%
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.divideByZero:()I' '()'
+│ Expected 'divide by zero' and got 'divide by zero;100%'
+└ Case jpamb.cases.Simple.divideByZero:() -> divide by zero
+┌ Case jpamb.cases.Simple.divideZeroByZero:(0, 0) -> divide by zero
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.divideZeroByZero:(II)I' '(0, 0)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.divideZeroByZero:(II)I' '(0, 0)'
+│ Expected 'divide by zero' and got ''
+└ Case jpamb.cases.Simple.divideZeroByZero:(0, 0) -> divide by zero
+┌ Case jpamb.cases.Simple.divideZeroByZero:(0, 1) -> ok
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.divideZeroByZero:(II)I' '(0, 1)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.divideZeroByZero:(II)I' '(0, 1)'
+│ Expected 'ok' and got ''
+└ Case jpamb.cases.Simple.divideZeroByZero:(0, 1) -> ok
+┌ Case jpamb.cases.Simple.earlyReturn:() -> ok
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.earlyReturn:()I' '()'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ assertion error;0%
+│││ divide by zero;0%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+│││ ok;100%
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.earlyReturn:()I' '()'
+│ Expected 'ok' and got 'ok;100%'
+└ Case jpamb.cases.Simple.earlyReturn:() -> ok
+┌ Case jpamb.cases.Simple.justReturn:() -> ok
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.justReturn:()I' '()'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ assertion error;0%
+│││ divide by zero;0%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+│││ ok;100%
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.justReturn:()I' '()'
+│ Expected 'ok' and got 'ok;100%'
+└ Case jpamb.cases.Simple.justReturn:() -> ok
+┌ Case jpamb.cases.Simple.justReturnNothing:() -> ok
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.justReturnNothing:()V' '()'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ assertion error;0%
+│││ divide by zero;0%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+│││ ok;100%
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.justReturnNothing:()V' '()'
+│ Expected 'ok' and got 'ok;100%'
+└ Case jpamb.cases.Simple.justReturnNothing:() -> ok
+┌ Case jpamb.cases.Simple.multiError:(false) -> assertion error
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.multiError:(Z)I' '(false)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.multiError:(Z)I' '(false)'
+│ Expected 'assertion error' and got ''
+└ Case jpamb.cases.Simple.multiError:(false) -> assertion error
+┌ Case jpamb.cases.Simple.multiError:(true) -> divide by zero
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.multiError:(Z)I' '(true)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Simple.multiError:(Z)I' '(true)'
+│ Expected 'divide by zero' and got ''
+└ Case jpamb.cases.Simple.multiError:(true) -> divide by zero
+┌ Case jpamb.cases.Tricky.collatz:(0) -> assertion error
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Tricky.collatz:(I)V' '(0)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Tricky.collatz:(I)V' '(0)'
+│ Expected 'assertion error' and got ''
+└ Case jpamb.cases.Tricky.collatz:(0) -> assertion error
+┌ Case jpamb.cases.Tricky.collatz:(24) -> ok
+│┌ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Tricky.collatz:(I)V' '(24)'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ 
+││└ Stdout
+│└ Run .venv/bin/python3 ./solutions/interpreter.py 'jpamb.cases.Tricky.collatz:(I)V' '(24)'
+│ Expected 'ok' and got ''
+└ Case jpamb.cases.Tricky.collatz:(24) -> ok
+Total 3/58
