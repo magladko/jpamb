@@ -1,5 +1,11 @@
+import random
 import sys
-from interpreter import *
+
+from interpreter import Frame, Stack, State, step, type_stack_to_heap
+from loguru import logger
+
+import jpamb
+from jpamb import jvm
 
 logger.remove()
 logger.add(sys.stderr, format="[{level}] {message}", level="DEBUG")
