@@ -2,12 +2,39 @@ import sys
 from dataclasses import dataclass
 
 from jpamb import jvm
+import random
 from loguru import logger
 
 import jpamb
 
 logger.remove()
-logger.add(sys.stderr, format="[{level}] {message}", level="INFO")
+logger.add(sys.stderr, format="[{level}] {message}", level="DEBUG")
+
+MOCKUP_ARRAY_LENGTH = (0, 50)
+JRANGES = {
+    jvm.Byte():    (-2**7, 2**7-1),
+    jvm.Short():   (-2**15, 2**15-1),
+    jvm.Int():     (-2**31, 2**31-1),
+    jvm.Long():    (-2**63, 2**63-1),
+    jvm.Float():   (-(2-2**(-23))*2**127, (2-2**(-23))*2**127),
+    jvm.Double():  (-(2-2**(-52))*2**1023, (2-2**(-52))*2**1023),
+    jvm.Char():    (0, 2**16-1),
+    jvm.Boolean(): (0, 1),
+}
+
+def gen_value(t: jvm.Type) -> jvm.Value:
+    match t:
+        case jvm.Float() | jvm.Double():
+            return jvm.Value(t, random.uniform(*JRANGES[t]))
+        case jvm.Byte() | jvm.Short() | jvm.Int() | jvm.Long() | \
+             jvm.Char() | jvm.Boolean():
+            return jvm.Value(t, random.randint(*JRANGES[t]))
+        # case jvm.Array():
+        #     return tuple(gen_value(t.contains)
+        #                  for _ in range(random.randint(
+        #                      *MOCKUP_ARRAY_LENGTH)))
+        case _:
+            raise NotImplementedError(f"Value generation not implemented for type {t!r}")
 
 # import debugpy
 # debugpy.listen(5678)
@@ -24,9 +51,6 @@ methodid = jpamb.getmethodid(
 
 # methodid, input = jpamb.getcase()
 
-if len(methodid.extension.params) > 0:
-    # print("ok;0%")
-    quit()
 
 @dataclass
 class PC:
@@ -131,11 +155,12 @@ def step(state: State) -> State | str:
             frame.pc += 1
             return state
         case jvm.Load(type=type, index=i):
+            assert i in frame.locals, f"Local variable {i} not initialized"
             v = frame.locals[i]
             frame.stack.push(frame.locals[i])
             frame.pc += 1
             return state
-        case jvm.Binary(type=jvm.Int(), operant=operant): #jvm.BinaryOpr.Div):
+        case jvm.Binary(type=jvm.Int(), operant=operant):
             v2, v1 = frame.stack.pop(), frame.stack.pop()
             assert v1.type is jvm.Int(), f"expected int, but got {v1}"
             assert v2.type is jvm.Int(), f"expected int, but got {v2}"
@@ -170,7 +195,6 @@ def step(state: State) -> State | str:
                 if type is not None:
                     v1 = frame.stack.pop()
                     caller_frame.stack.push(v1)
-                frame.pc += 1 # TODO: fix this
                 return state
             else:
                 return "ok"
@@ -366,7 +390,7 @@ def type_heap_to_stack(val: jvm.Value):
             assert isinstance(val.value, bool)
             return jvm.Value(jvm.Boolean(), (1 if val.value else 0))
         case jvm.Char():
-            assert isinstance(val.value, str)
+            assert isinstance(val.value, str), f"Expected str, but got {val.value!r}"
             return jvm.Value(jvm.Char(), ord(val.value))
         case jvm.Array():
             raise NotImplementedError(
@@ -378,16 +402,37 @@ def type_heap_to_stack(val: jvm.Value):
 frame = Frame.from_method(methodid)
 state = State({}, Stack.empty().push(frame))
 
-# for i, v in enumerate(input.values):
-#     match v.type:
-#         case jvm.Array():
-#             ref = jvm.Value(jvm.Reference(), state.heap_ptr)
-#             state.heap[state.heap_ptr] = v
-#             state.heap_ptr += 1
-#             v = ref
-#         case _:
-#             v = type_heap_to_stack(v)
-#     frame.locals[i] = v
+params = False
+if hasattr(input, 'values'):
+    for i, v in enumerate(input.values):
+        match v.type:
+            case jvm.Array():
+                ref = jvm.Value(jvm.Reference(), state.heap_ptr)
+                state.heap[state.heap_ptr] = v
+                state.heap_ptr += 1
+                v = ref
+            case _:
+                v = type_heap_to_stack(v)
+        frame.locals[i] = v
+else:
+    params = True
+    for i, t in enumerate(methodid.extension.params._elements):
+        match t:
+            case jvm.Array():
+                ref = jvm.Value(jvm.Reference(), state.heap_ptr)
+                state.heap[state.heap_ptr] = jvm.Value.array(
+                    t,
+                    tuple(
+                        type_stack_to_heap(gen_value(t.contains)).value
+                        for _ in range(random.randint(*MOCKUP_ARRAY_LENGTH)))
+                )
+                state.heap_ptr += 1
+                v = ref
+            case _:
+                v = gen_value(t)
+                assert isinstance(v, jvm.Value)
+                v = type_heap_to_stack(v)
+        frame.locals[i] = v
 
 results = [
     "ok",
@@ -398,13 +443,26 @@ results = [
     "*",
 ]
 
-for _ in range(1000000):
+for _ in range(10):
     state = step(state)
     if isinstance(state, str):
         break
 else:
     state = "*"
-    print("ok;0%")
+    if params:
+        print("ok;50%")
+    else:
+        print("ok;0%")
 
-[print(f"{r};0%") for r in results if r != state]
-print(f"{state};100%")
+for r in results:
+    if r == state:
+        continue
+    if r == "ok" and params:
+        print(f"{r};50%")
+    elif not params:
+        print(f"{r};0%")
+
+if params:
+    print(f"{state};50%")
+else:
+    print(f"{state};100%")
