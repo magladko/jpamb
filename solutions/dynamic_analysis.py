@@ -6,6 +6,7 @@ from loguru import logger
 
 import jpamb
 from jpamb import jvm
+from syntactic_helper import SyntacticHelper
 
 logger.remove()
 logger.add(sys.stderr, format="[{level}] {message}", level="DEBUG")
@@ -62,7 +63,12 @@ results: dict[str, int] = {
 params = methodid.extension.params._elements
 params_present = len(methodid.extension.params) > 0
 
-# def collect_values() 
+sh = SyntacticHelper()
+interesting_values = sh.find_interesting_values(methodid)
+logger.debug(f"interesting values: {interesting_values}")
+# assert False
+
+# TODO: Prepare input sets for multiple executions
 
 # Generate domain
 # for t in params:
@@ -97,7 +103,7 @@ def execute(methodid: jvm.AbsMethodID, max_steps: int = 1000) -> str:
             return state
     return "*"
 
-result = execute(methodid)
+result = execute(methodid, 0)
 
 if not params_present:
     [print(f"{r};0%") for r in results.keys() if r != result]
