@@ -1,4 +1,3 @@
-import sys
 from typing import Optional
 
 import tree_sitter
@@ -13,7 +12,7 @@ class SyntacticHelper:
     JAVA_LANGUAGE = tree_sitter.Language(tree_sitter_java.language())
     parser = tree_sitter.Parser(JAVA_LANGUAGE)
 
-    def find_interesting_values(self, methodid: jvm.AbsMethodID) -> list[jvm.Value]:
+    def find_interesting_values(self, methodid: jvm.AbsMethodID) -> set[jvm.Value]:
         self.tree = self.parse_source_file(self.parser, methodid)
         self.simple_classname = str(methodid.classname.name)
 
@@ -22,8 +21,58 @@ class SyntacticHelper:
         method_node = self.find_method_node(class_node, methodid)
         assert method_node, f"Method {methodid.extension.name} not found in class {self.simple_classname}."
 
-        
-        
+        return self._gather_numeric_values(method_node)
+
+    def _gather_numeric_values(self, method_node: tree_sitter.Node, include_oposite: bool = True) -> set[jvm.Value]:
+        """Gather all numeric values from the method node using tree_sitter."""
+        numeric_values = set()
+
+        numeric_query = tree_sitter.Query(self.JAVA_LANGUAGE, """
+            [
+                (decimal_integer_literal) @number
+                (hex_integer_literal) @number
+                (octal_integer_literal) @number
+                (binary_integer_literal) @number
+                (decimal_floating_point_literal) @number
+                (hex_floating_point_literal) @number
+            ]
+        """)
+
+        captures = tree_sitter.QueryCursor(numeric_query).captures(method_node)
+        number_nodes = captures.get("number", [])
+
+        for node in number_nodes:
+            if node.text is None:
+                continue
+            text = node.text.decode('utf-8')
+            try:
+                if '.' in text or 'e' in text.lower() or 'f' in text.lower() or 'd' in text.lower():
+                    value = float(text.rstrip('fFdD'))
+                    if 'f' in text.lower():
+                        v = jvm.Value(jvm.Float(), value)
+                        # numeric_values.add(jvm.Value(jvm.Float(), value))
+                    else:
+                        v = jvm.Value(jvm.Double(), value)
+                        # numeric_values.add(jvm.Value(jvm.Double(), value))
+                else:
+                    text_clean = text.rstrip('lL')
+                    if text_clean.startswith('0x') or text_clean.startswith('0X'):
+                        value = int(text_clean, 16)
+                    elif text_clean.startswith('0b') or text_clean.startswith('0B'):
+                        value = int(text_clean, 2)
+                    elif text_clean.startswith('0') and len(text_clean) > 1:
+                        value = int(text_clean, 8)
+                    else:
+                        value = int(text_clean)
+                    v = jvm.Value.int(value)
+                
+                numeric_values.add(v)
+                numeric_values.add(jvm.Value(v.type, -value))
+
+            except ValueError:
+                continue
+
+        return numeric_values
 
     def parse_source_file(self, parser: tree_sitter.Parser, methodid: jvm.AbsMethodID) -> tree_sitter.Tree:
         """Parse the Java source file for the given method."""
