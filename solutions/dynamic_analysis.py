@@ -59,7 +59,7 @@ results: dict[str, int] = {
     "*": 0,
 }
 
-params = methodid.extension.params
+params = methodid.extension.params._elements
 params_present = len(methodid.extension.params) > 0
 
 # def collect_values() 
