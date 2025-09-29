@@ -496,6 +496,10 @@ def evaluate(ctx, program, report, timeout, iterations, with_python):
 
 @cli.command()
 @click.option(
+    "--compile / --no-compile",
+    help="compile the java source files.",
+)
+@click.option(
     "--decompile / --no-decompile",
     help="decompile the classfiles using jvm2json.",
 )
@@ -508,15 +512,16 @@ def evaluate(ctx, program, report, timeout, iterations, with_python):
     help="test that all cases are correct.",
 )
 @click.pass_obj
-def build(suite, decompile, document, test):
+def build(suite, compile, decompile, document, test):
     """Rebuild all benchmarks."""
 
-    run(
-        ["mvn", "compile"],
-        logerr=log.warning,
-        logout=log.info,
-        timeout=600,
-    )
+    if compile:
+        run(
+            ["mvn", "compile"],
+            logerr=log.warning,
+            logout=log.info,
+            timeout=600,
+        )
 
     if decompile:
         log.info("Decompiling")
