@@ -59,7 +59,13 @@ results: dict[str, int] = {
     "*": 0,
 }
 
-params = len(methodid.extension.params._elements) > 0
+params = methodid.extension.params
+params_present = len(methodid.extension.params) > 0
+
+# def collect_values() 
+
+# Generate domain
+# for t in params:
 
 
 def execute(methodid: jvm.AbsMethodID, max_steps: int = 1000) -> str:
@@ -68,7 +74,7 @@ def execute(methodid: jvm.AbsMethodID, max_steps: int = 1000) -> str:
     state = State({}, Stack.empty().push(frame))
 
     # Initialize locals, if there are any parameters
-    for i, t in enumerate(methodid.extension.params._elements):
+    for i, t in enumerate(params):
         match t:
             case jvm.Array():
                 ref = jvm.Value(jvm.Reference(), state.heap_ptr)
@@ -93,7 +99,7 @@ def execute(methodid: jvm.AbsMethodID, max_steps: int = 1000) -> str:
 
 result = execute(methodid)
 
-if not params:
+if not params_present:
     [print(f"{r};0%") for r in results.keys() if r != result]
     if result == "*":
         print(f"{result};99%")
