@@ -5,6 +5,8 @@ import enum
 import math
 import sys
 import json
+from inspect import getsourcelines, getsourcefile
+from collections import Counter
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 
@@ -498,11 +500,15 @@ def evaluate(ctx, program, report, timeout, iterations, with_python):
     help="decompile the classfiles using jvm2json.",
 )
 @click.option(
+    "--document / --no-document",
+    help="decompile the classfiles using jvm2json.",
+)
+@click.option(
     "--test / --no-test",
     help="test that all cases are correct.",
 )
 @click.pass_obj
-def build(suite, decompile, test):
+def build(suite, decompile, document, test):
     """Rebuild all benchmarks."""
 
     run(
@@ -527,6 +533,58 @@ def build(suite, decompile, test):
             with open(suite.decompiledfile(cl), "w") as f:
                 json.dump(json.loads(res), f, indent=2, sort_keys=True)
         log.success("Done decompiling")
+
+    if document:
+        opcode_counts = Counter()
+        opcode_urls = {}
+        class_opcodes = {}
+        for case in suite.cases:
+            class_opcodes[str(case.methodid.classname).split(".")[-1]] = set()
+            list_ops = []
+            for opcode in suite.method_opcodes(case.methodid):
+                index = opcode.mnemonic()  # opcode.real().split()[0]
+                list_ops.append(index)
+
+                opcode_urls[index] = (
+                    opcode.mnemonic(),
+                    opcode.url(),
+                    opcode,
+                )
+
+                opcode_counts[index] += 1
+
+            for o in list_ops:
+                class_opcodes[str(case.methodid.classname).split(".")[-1]].add(o)
+
+        with open("OPCODES.md", "w") as document:
+            document.write("#Bytecode instructions\n")
+            document.write("| Mnemonic | Opcode Name |  Exists in |  Count |\n")
+            document.write("| :---- | :---- | :----- | -----: |\n")
+
+            for op, count in opcode_counts.most_common():
+                (mnemonic, url, opcode) = opcode_urls[op]
+                in_classes = ""
+
+                for classname in class_opcodes:
+                    if op in class_opcodes[classname]:
+                        in_classes += " " + classname
+
+                rel = Path(getsourcefile(opcode.__class__)).relative_to(Path.cwd())
+                giturl = f"{rel}?plain=1#L{getsourcelines(opcode.__class__)[1]}"
+
+                document.write(
+                    " | ["
+                    + mnemonic
+                    + "]("
+                    + url
+                    + ") | "
+                    + f"[{opcode.__class__.__name__}]({giturl})"
+                    + " | "
+                    + in_classes
+                    + " | "
+                    + str(count)
+                    + " |\n"
+                )
 
     if test:
         log.info("Testing")
