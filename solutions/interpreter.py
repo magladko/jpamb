@@ -1,6 +1,3 @@
-
-# methodid, input = jpamb.getcase()
-
 from dataclasses import dataclass
 
 from loguru import logger
@@ -8,6 +5,7 @@ from loguru import logger
 import jpamb
 from jpamb import jvm
 
+# methodid, input = jpamb.getcase()
 
 @dataclass
 class PC:
