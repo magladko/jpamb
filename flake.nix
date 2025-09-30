@@ -32,6 +32,62 @@
             ];
           };
         };
+
+        packages = {
+          docker = pkgs.dockerTools.buildImage {
+            name = "jpamb";
+            tag = "latest";
+
+            copyToRoot = pkgs.buildEnv {
+              name = "jpamb-env";
+              paths = with pkgs; [
+                jdk
+                maven
+                jvm2json.packages.${system}.default
+                uv
+                python3
+                bash
+                coreutils
+              ];
+            };
+
+            config = {
+              Cmd = [ "${pkgs.bash}/bin/bash" ];
+              WorkingDir = "/workspace";
+              Env = [
+                "PATH=${pkgs.jdk}/bin:${pkgs.maven}/bin:${jvm2json.packages.${system}.default}/bin:${pkgs.uv}/bin:${pkgs.python3}/bin:${pkgs.bash}/bin:${pkgs.coreutils}/bin"
+                "JAVA_HOME=${pkgs.jdk}"
+              ];
+            };
+          };
+
+          default = pkgs.dockerTools.buildImage {
+            name = "jpamb";
+            tag = "latest";
+
+            copyToRoot = pkgs.buildEnv {
+              name = "jpamb-env";
+              paths = with pkgs; [
+                jdk
+                maven
+                jvm2json.packages.${system}.default
+                uv
+                python3
+                bash
+                coreutils
+              ];
+            };
+
+            config = {
+              Cmd = [ "${pkgs.bash}/bin/bash" ];
+              WorkingDir = "/workspace";
+              Env = [
+                "PATH=${pkgs.jdk}/bin:${pkgs.maven}/bin:${jvm2json.packages.${system}.default}/bin:${pkgs.uv}/bin:${pkgs.python3}/bin:${pkgs.bash}/bin:${pkgs.coreutils}/bin"
+                "JAVA_HOME=${pkgs.jdk}"
+              ];
+            };
+          };
+        };
       }
     );
 }
