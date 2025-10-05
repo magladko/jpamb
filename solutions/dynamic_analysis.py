@@ -66,7 +66,7 @@ params_present = len(methodid.extension.params) > 0
 sh = SyntacticHelper()
 interesting_values = sh.find_interesting_values(methodid)
 logger.debug(f"interesting values: {interesting_values}")
-assert False
+# assert False
 
 # TODO: Prepare input sets for multiple executions
 
