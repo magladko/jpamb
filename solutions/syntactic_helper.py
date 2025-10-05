@@ -23,7 +23,9 @@ class SyntacticHelper:
 
         return self._gather_numeric_values(method_node)
 
-    def _gather_numeric_values(self, method_node: tree_sitter.Node, include_oposite: bool = True) -> set[jvm.Value]:
+    def _gather_numeric_values(self, method_node: tree_sitter.Node, 
+                               include_oposite: bool = True,
+                               include_zero: bool = True) -> set[jvm.Value]:
         """Gather all numeric values from the method node using tree_sitter."""
         numeric_values = set()
 
@@ -69,6 +71,8 @@ class SyntacticHelper:
                 numeric_values.add(v)
                 if include_oposite:
                     numeric_values.add(jvm.Value(v.type, -value))
+                if include_zero:
+                    numeric_values.add(jvm.Value(v.type, 0))
 
             except ValueError:
                 continue
