@@ -72,11 +72,11 @@ interesting_values = sh.find_interesting_values(methodid)
 logger.debug(f"interesting values: {interesting_values}")
 # assert False
 
+# Currently - random value selected indepentently for each argument
 # TODO: Prepare input sets for multiple executions
 
 # Generate domain
 # for t in params:
-
 
 def execute(methodid: jvm.AbsMethodID, max_steps: int = 1000) -> str:
 
