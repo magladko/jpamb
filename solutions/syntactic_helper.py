@@ -67,7 +67,8 @@ class SyntacticHelper:
                     v = jvm.Value.int(value)
                 
                 numeric_values.add(v)
-                numeric_values.add(jvm.Value(v.type, -value))
+                if include_oposite:
+                    numeric_values.add(jvm.Value(v.type, -value))
 
             except ValueError:
                 continue
