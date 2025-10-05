@@ -11,6 +11,10 @@ from syntactic_helper import SyntacticHelper
 logger.remove()
 logger.add(sys.stderr, format="[{level}] {message}", level="DEBUG")
 
+MAX_EXEC_STEPS        = 1000
+ARGS_REROLL           = 50
+ARG_GUESS_LOWER_LIMIT = 25
+
 MOCKUP_ARRAY_LENGTH = (0, 50)
 JRANGES = {
     jvm.Byte():    (-2**7, 2**7-1),
@@ -81,19 +85,28 @@ def execute(methodid: jvm.AbsMethodID, max_steps: int = 1000) -> str:
 
     # Initialize locals, if there are any parameters
     for i, t in enumerate(params):
+        vals = [v for v in interesting_values if v.type == t]
+        logger.debug(f"vals: {vals}")
         match t:
             case jvm.Array():
                 ref = jvm.Value(jvm.Reference(), state.heap_ptr)
-                state.heap[state.heap_ptr] = jvm.Value.array(
-                    t,
-                    tuple(
-                        type_stack_to_heap(gen_value(t.contains)).value
-                        for _ in range(random.randint(*MOCKUP_ARRAY_LENGTH)))
-                )
+                arr_vals = tuple()
+                rr = range(random.randint(*MOCKUP_ARRAY_LENGTH))
+                if len(vals) > 0:
+                    arr_vals = tuple(random.choice(vals).value for _ in rr)
+                else:
+                    arr_vals = tuple(
+                        type_stack_to_heap(gen_value(t.contains)).value 
+                        for _ in rr)
+                state.heap[state.heap_ptr] = jvm.Value.array(t, arr_vals)
+                
+                logger.debug(f"Arr: {state.heap[state.heap_ptr]}")
+
                 state.heap_ptr += 1
                 v = ref
             case _:
-                v = gen_value(t)
+                v = random.choice(vals) if len(vals) > 0 else gen_value(t)
+                logger.debug(f"v: {v}")
                 assert isinstance(v, jvm.Value)
         frame.locals[i] = v
 
@@ -103,21 +116,24 @@ def execute(methodid: jvm.AbsMethodID, max_steps: int = 1000) -> str:
             return state
     return "*"
 
-result = execute(methodid, 0)
+result = execute(methodid, MAX_EXEC_STEPS)#, 0)
 
 if not params_present:
-    [print(f"{r};0%") for r in results.keys() if r != result]
     if result == "*":
+        [print(f"{r};0%") for r in results.keys() if r not in (result, "ok") ]
         print(f"{result};99%")
+        print("ok;1%")
     else:
+        [print(f"{r};0%") for r in results.keys() if r != result]
         print(f"{result};100%")
 else:
     results[result] += 1
     total = 1
-    for _ in range(10):
+    for _ in range(ARGS_REROLL):
         r = execute(methodid)
         results[r] += 1
         total += 1
 
-    [print(f"{k};{max((v * 100) // total, 20)}%") for k, v in results.items()]
+    [print(f"{k};{max((v * 100) // total, ARG_GUESS_LOWER_LIMIT)}%") 
+     for k, v in results.items()]
     # print(f"{result};99%")
