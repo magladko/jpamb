@@ -15,7 +15,7 @@ MAX_EXEC_STEPS        = 1000
 ARGS_REROLL           = 50
 ARG_GUESS_LOWER_LIMIT = 20
 
-MOCKUP_ARRAY_LENGTH = (0, 50)
+MOCKUP_ARRAY_LENGTH = (-50, 50)
 JRANGES = {
     jvm.Byte():    (-2**7, 2**7-1),
     jvm.Short():   (-2**15, 2**15-1),
@@ -85,32 +85,6 @@ def execute(methodid: jvm.AbsMethodID, inputs: list[jvm.Value] = [], max_steps: 
     state = State({}, Stack.empty().push(frame))
     for i, v in enumerate(inputs):
         frame.locals[i] = v
-    # # Initialize locals, if there are any parameters
-    # for i, t in enumerate(params):
-    #     vals = [v for v in interesting_values if v.type == t]
-    #     logger.debug(f"vals: {vals}")
-    #     match t:
-    #         case jvm.Array():
-    #             ref = jvm.Value(jvm.Reference(), state.heap_ptr)
-    #             arr_vals = tuple()
-    #             rr = range(random.randint(*MOCKUP_ARRAY_LENGTH))
-    #             if len(vals) > 0:
-    #                 arr_vals = tuple(random.choice(vals).value for _ in rr)
-    #             else:
-    #                 arr_vals = tuple(
-    #                     type_stack_to_heap(gen_value(t.contains)).value 
-    #                     for _ in rr)
-    #             state.heap[state.heap_ptr] = jvm.Value.array(t, arr_vals)
-                
-    #             logger.debug(f"Arr: {state.heap[state.heap_ptr]}")
-
-    #             state.heap_ptr += 1
-    #             v = ref
-    #         case _:
-    #             v = random.choice(vals) if len(vals) > 0 else gen_value(t)
-    #             logger.debug(f"v: {v}")
-    #             assert isinstance(v, jvm.Value)
-    #     frame.locals[i] = v
 
     for _ in range(max_steps):
         state = step(state)
@@ -129,6 +103,7 @@ def generate_inputs() -> list[list[jvm.Value]]:
                 case jvm.Array():
                     arr_vals = tuple()
                     rr = range(random.randint(*MOCKUP_ARRAY_LENGTH))
+                    rr = range(0) if rr.stop < 0 else rr
                     if len(vals) > 0:
                         arr_vals = tuple(random.choice(vals).value for _ in rr)
                     else:
@@ -143,6 +118,27 @@ def generate_inputs() -> list[list[jvm.Value]]:
             inputs[i].append(value)
     return inputs
 
+def determine_baseline() -> int:
+    found_results = []
+    for k, v in results.items():
+        if v > 0:
+            found_results.append(k)
+
+    if len(found_results) == 2:
+        first = results[found_results[0]] / ARGS_REROLL
+        second = results[found_results[1]] / ARGS_REROLL
+        minus = first - second
+        diff = abs(minus)
+        logger.debug(f"first: {first}, second: {second}, minus: {minus} diff: {diff}")
+        if diff < 0.1:
+            # results[found_results[0]] = 24
+            # results[found_results[1]] = 24
+            return 20
+        elif diff > 0.90:
+            results[found_results[0]] = 25
+            results[found_results[1]] = 25
+            return 1
+    return ARG_GUESS_LOWER_LIMIT
 
 
 if not params_present:
@@ -160,11 +156,12 @@ else:
         logger.debug(f"round {i} with inputs: {all_inputs[i]}")
         r = execute(methodid, all_inputs[i])
         results[r] += 1
-    multi = 1
-    if single_bool:
-        ARG_GUESS_LOWER_LIMIT = 0
-        multi = 2
     logger.debug(f"Results: {results}")
-    [print(f"{k};{((v * multi * (100-ARG_GUESS_LOWER_LIMIT)) // ARGS_REROLL + ARG_GUESS_LOWER_LIMIT)}%") 
+    multi = 1
+    baseline = determine_baseline()
+    if single_bool or baseline == 1:
+        baseline = 1
+        multi = 2
+    [print(f"{k};{min((v * multi * (100-baseline)) // ARGS_REROLL + baseline, 100)}%") 
      for k, v in results.items()]
     # print(f"{result};99%")
