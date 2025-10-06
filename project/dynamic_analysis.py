@@ -13,7 +13,7 @@ logger.add(sys.stderr, format="[{level}] {message}", level="DEBUG")
 
 MAX_EXEC_STEPS        = 1000
 ARGS_REROLL           = 50
-ARG_GUESS_LOWER_LIMIT = 25
+ARG_GUESS_LOWER_LIMIT = 20
 
 MOCKUP_ARRAY_LENGTH = (0, 50)
 JRANGES = {
@@ -134,6 +134,6 @@ else:
         results[r] += 1
         total += 1
 
-    [print(f"{k};{max((v * 100) // total, ARG_GUESS_LOWER_LIMIT)}%") 
+    [print(f"{k};{((v * (100-ARG_GUESS_LOWER_LIMIT)) // total + ARG_GUESS_LOWER_LIMIT)}%") 
      for k, v in results.items()]
     # print(f"{result};99%")
