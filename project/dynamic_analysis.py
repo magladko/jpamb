@@ -116,9 +116,8 @@ def execute(methodid: jvm.AbsMethodID, max_steps: int = 1000) -> str:
             return state
     return "*"
 
-result = execute(methodid, MAX_EXEC_STEPS)#, 0)
-
 if not params_present:
+    result = execute(methodid, MAX_EXEC_STEPS)#, 0)
     if result == "*":
         [print(f"{r};0%") for r in results.keys() if r not in (result, "ok") ]
         print(f"{result};99%")
@@ -127,13 +126,10 @@ if not params_present:
         [print(f"{r};0%") for r in results.keys() if r != result]
         print(f"{result};100%")
 else:
-    results[result] += 1
-    total = 1
     for _ in range(ARGS_REROLL):
         r = execute(methodid)
         results[r] += 1
-        total += 1
 
-    [print(f"{k};{((v * (100-ARG_GUESS_LOWER_LIMIT)) // total + ARG_GUESS_LOWER_LIMIT)}%") 
+    [print(f"{k};{((v * (100-ARG_GUESS_LOWER_LIMIT)) // ARGS_REROLL + ARG_GUESS_LOWER_LIMIT)}%") 
      for k, v in results.items()]
     # print(f"{result};99%")
