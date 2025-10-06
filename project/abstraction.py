@@ -22,9 +22,9 @@ class SignSet:
         if s1 == s2:
             return {s1}
         if s1 == "0" and s2 != "0":
-            return {s1}
-        if s1 != "0" and s2 == "0":
             return {s2}
+        if s1 != "0" and s2 == "0":
+            return {s1}
         return {"+", "-", "0"}
 
     def __contains__(self, member : int):
