@@ -159,8 +159,10 @@ else:
     logger.debug(f"Results: {results}")
     multi = 1
     baseline = determine_baseline()
-    if single_bool or baseline == 1:
-        baseline = 1
+    if baseline == 1:
+        multi = 2
+    if single_bool:
+        baseline = 0
         multi = 2
     [print(f"{k};{min((v * multi * (100-baseline)) // ARGS_REROLL + baseline, 100)}%") 
      for k, v in results.items()]
