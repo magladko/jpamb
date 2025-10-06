@@ -85,7 +85,6 @@ exclude = [
   "dist",
   "venv",
   "jpamb",
-  "solutions/syntaxer.py",
 ]
 
 [tool.ruff.format]
