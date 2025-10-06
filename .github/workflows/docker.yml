@@ -96,7 +96,7 @@ jobs:
         done
 
     - name: Upload Docker tarball as artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: jpamb-docker-${{ github.sha }}
         path: result
@@ -155,7 +155,7 @@ jobs:
         nix build .#packages.${{ matrix.system }}.default --print-build-logs
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: jpamb-docker-${{ matrix.system }}-${{ github.sha }}
         path: result
