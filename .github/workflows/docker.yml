@@ -2,7 +2,7 @@ name: Build and Distribute with Nix
 
 on:
   push:
-    branches: [ main, docker_in_nix ]
+    branches: [ main ]
     tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
@@ -42,34 +42,19 @@ jobs:
       run: |
         echo "Building Docker image using Nix flake..."
         nix build .#packages.x86_64-linux.default --print-build-logs
-
-        # Store the result path
-        RESULT_PATH=$(readlink -f result)
-        echo "RESULT_PATH=$RESULT_PATH" >> $GITHUB_ENV
-
-        # Get image info from the tarball
-        echo "Docker image built at: $RESULT_PATH"
-        ls -lh result
-
     - name: Load and test image locally
       run: |
         # Load the image
-        docker load < result
-
-        # Get the loaded image info
-        IMAGE_INFO=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep jpamb | head -1)
-        echo "Loaded image: $IMAGE_INFO"
-        echo "LOCAL_IMAGE=$IMAGE_INFO" >> $GITHUB_ENV
-
+        nix run .#image.load
         # Run basic tests
         echo "=== Testing Java ==="
-        docker run --rm "$IMAGE_INFO" java -version
-
+        nix run .#image.run -- java -version
         echo "=== Testing Maven ==="
-        docker run --rm "$IMAGE_INFO" mvn --version
-
+        nix run .#image.run -- mvn --version
         echo "=== Testing UV ==="
-        docker run --rm "$IMAGE_INFO" uv --version
+        nix run .#image.run -- uv --version
+        echo "=== Testing JPAMB ==="
+        nix run .#image.jpamb --help
 
     - name: Push to GitHub Container Registry
       if: |
@@ -127,36 +112,36 @@ jobs:
           docker run -it --rm -v $(pwd):/workspace ghcr.io/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
           ```
 
-  build-multi-arch:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    strategy:
-      matrix:
-        system: [x86_64-linux, aarch64-linux]
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Install Nix with flakes
-      uses: DeterminateSystems/nix-installer-action@v9
-      with:
-        extra-conf: |
-          experimental-features = nix-command flakes
-          trusted-users = root runner
-          extra-platforms = aarch64-linux
-
-    - name: Setup QEMU for cross-compilation
-      if: matrix.system == 'aarch64-linux'
-      uses: docker/setup-qemu-action@v3
-
-    - name: Build for ${{ matrix.system }}
-      run: |
-        nix build .#packages.${{ matrix.system }}.default --print-build-logs
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: jpamb-docker-${{ matrix.system }}-${{ github.sha }}
-        path: result
-        retention-days: 7
+#  build-multi-arch:
+#    runs-on: ubuntu-latest
+#    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+#    strategy:
+#      matrix:
+#        system: [x86_64-linux, aarch64-linux]
+#
+#    steps:
+#    - name: Checkout repository
+#      uses: actions/checkout@v4
+#
+#    - name: Install Nix with flakes
+#      uses: DeterminateSystems/nix-installer-action@v9
+#      with:
+#        extra-conf: |
+#          experimental-features = nix-command flakes
+#          trusted-users = root runner
+#          extra-platforms = aarch64-linux
+#
+#    - name: Setup QEMU for cross-compilation
+#      if: matrix.system == 'aarch64-linux'
+#      uses: docker/setup-qemu-action@v3
+#
+#    - name: Build for ${{ matrix.system }}
+#      run: |
+#        nix build .#packages.${{ matrix.system }}.default --print-build-logs
+#
+#    - name: Upload artifact
+#      uses: actions/upload-artifact@v4
+#      with:
+#        name: jpamb-docker-${{ matrix.system }}-${{ github.sha }}
+#        path: result
+#        retention-days: 7
