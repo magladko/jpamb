@@ -2,16 +2,19 @@
 import logging
 import re
 import sys
+from collections.abc import Iterator
+from pathlib import Path
 
 import tree_sitter
 import tree_sitter_java
 
 import jpamb
+from jpamb import jvm
 
 
 class Prediction:
 
-    def __init__(self, title: str, probability: int):
+    def __init__(self, title: str, probability: int) -> None:
         self.title = title
         self.probability = probability
 
@@ -21,17 +24,17 @@ class Prediction:
     def __repr__(self) -> str:
         return f"Prediction({self.title}, {self.probability}%)"
 
-    def set(self, probability: int):
+    def set(self, probability: int) -> None:
         self.probability = probability
 
-    def adjust(self, delta: int, relative=True):
-        if relative:
-            self.probability = max(
-                0,
-                min(100, int(self.probability * (1 + delta / 100)))
-            )
-        else:
-            self.probability = max(0, min(100, self.probability + delta))
+    def adjust_relative(self, delta: int) -> None:
+        self.probability = max(
+            0,
+            min(100, int(self.probability * (1 + delta / 100))),
+        )
+
+    def adjust_absolute(self, delta: int) -> None:
+        self.probability = max(0, min(100, self.probability + delta))
 
     def get(self) -> int:
         return self.probability
@@ -51,7 +54,7 @@ class Result:
     null_pointer    = Prediction("null pointer",    0)
     infinite_loop   = Prediction("*",               0)
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.set_defaults()
 
     @staticmethod
@@ -62,7 +65,7 @@ class Result:
             "divide by zero": "0%",
             "out of bounds": "0%",
             "null pointer": "0%",
-            "*": "0%"
+            "*": "0%",
         }
 
     def set_defaults(self) -> None:
@@ -81,17 +84,17 @@ class Result:
             "divide by zero": f"{self.divide_by_zero.get()}%",
             "out of bounds": f"{self.out_of_bounds.get()}%",
             "null pointer": f"{self.null_pointer.get()}%",
-            "*": f"{self.infinite_loop.get()}%"
+            "*": f"{self.infinite_loop.get()}%",
         }
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Prediction]:
         yield from [
             self.ok,
             self.assertion_error,
             self.divide_by_zero,
             self.out_of_bounds,
             self.null_pointer,
-            self.infinite_loop
+            self.infinite_loop,
         ]
         # for outcome in self.as_dict().items():
         #     yield outcome
@@ -100,7 +103,7 @@ class Result:
 class JavaAnalyzer:
     """A Java program analysis tool that predicts method outcomes."""
 
-    def __init__(self, debug=False):
+    def __init__(self) -> None:
         self.java_language = tree_sitter.Language(tree_sitter_java.language())
         self.parser = tree_sitter.Parser(self.java_language)
         self.log = logging
@@ -117,28 +120,29 @@ class JavaAnalyzer:
         )
 
         # Optional debugging setup
-        if debug:
-            self.log.basicConfig(level=logging.DEBUG)
-            self._setup_debugger()
+        # if debug:
+        #     self.log.basicConfig(level=logging.DEBUG)
+        #     self._setup_debugger()
 
-    def _setup_debugger(self):
-        """Setup debugger if available."""
-        try:
-            import debugpy
-            debugpy.listen(5678)
-            debugpy.wait_for_client()
-        except ImportError:
-            pass
+    # def _setup_debugger(self) -> None:
+    #     """Setup debugger if available."""
+    #     try:
+    #         import debugpy
+    #         debugpy.listen(5678)
+    #         debugpy.wait_for_client()
+    #     except ImportError:
+    #         pass
 
-    def parse_source_file(self, methodid) -> tree_sitter.Tree:
+    def parse_source_file(self, methodid: jvm.AbsMethodID) -> tree_sitter.Tree:
         """Parse the Java source file for the given method."""
         srcfile = jpamb.Suite().sourcefile(methodid.classname)
 
-        with open(srcfile, "rb") as f:
+        with Path.open(srcfile, "rb") as f:
             self.log.debug("parse sourcefile %s", srcfile)
             return self.parser.parse(f.read())
 
-    def find_class_node(self, tree: tree_sitter.Tree, class_name: str) -> tree_sitter.Node:
+    def find_class_node(self, tree: tree_sitter.Tree,
+                        class_name: str) -> tree_sitter.Node:
         """Find the class node in the parsed tree."""
         self.log.debug(f"Looking for class: {class_name}")
 
@@ -160,7 +164,8 @@ class JavaAnalyzer:
         self.log.debug("Found class %s", class_node.range)
         return class_node
 
-    def find_method_node(self, class_node: tree_sitter.Node, methodid) -> tree_sitter.Node:
+    def find_method_node(self, class_node: tree_sitter.Node,
+                         methodid: jvm.AbsMethodID) -> tree_sitter.Node:
         """Find the specific method node within the class."""
         method_name = methodid.extension.name
 
@@ -180,10 +185,12 @@ class JavaAnalyzer:
                 self.log.debug("Found method %s %s", method_name, method_node.range)
                 return method_node
 
-        self.log.warning(f"Could not find method '{method_name}' with matching signature")
+        self.log.warning(
+            f"Could not find method '{method_name}' with matching signature")
         sys.exit(-1)
 
-    def _method_matches_signature(self, method_node: tree_sitter.Node, methodid) -> bool:
+    def _method_matches_signature(self, method_node: tree_sitter.Node,
+                                  methodid: jvm.AbsMethodID) -> bool:
         """Check if method node matches the expected signature."""
         parameters_node = method_node.child_by_field_name("parameters")
         if not parameters_node:
@@ -203,11 +210,12 @@ class JavaAnalyzer:
             param_type = actual_param.child_by_field_name("type")
             if not param_type or not param_type.text:
                 return False
-            # TODO: Add more sophisticated type checking here
+            # TODO(kornel): Add more sophisticated type checking here
 
         return True
 
-    def _get_called_method_bodies(self, body_node):
+    def _get_called_method_bodies(
+            self, body_node: tree_sitter.Node) -> list[tree_sitter.Node]:
         called_bodies = []
         # Find all method invocations in the body
         call_query = tree_sitter.Query(self.java_language,
@@ -216,11 +224,18 @@ class JavaAnalyzer:
         call_nodes = captures.get("call", [])
         for call_node in call_nodes:
             called_name_node = call_node.child_by_field_name("name")
-            called_name = called_name_node.text.decode() if called_name_node and called_name_node.text else ""
+            called_name = called_name_node.text.decode() \
+                if called_name_node and called_name_node.text else ""
             # Find method node in the same class
-            method_query = tree_sitter.Query(self.java_language,
-                f"""(method_declaration name: ((identifier) @method-name (#eq? @method-name "{called_name}"))) @method""")
+            method_query = tree_sitter.Query(
+                self.java_language,
+                f"""
+                (method_declaration
+                    name: ((identifier) @method-name
+                    (#eq? @method-name "{called_name}"))) @method
+                """)
             class_node = body_node.parent
+            assert class_node is not None
             method_captures = tree_sitter.QueryCursor(method_query).captures(class_node)
             method_nodes = method_captures.get("method", [])
             for method_node in method_nodes:
@@ -266,11 +281,11 @@ class JavaAnalyzer:
         self._analyze_infinite_loops(body)
 
         self.predictions.ok.set(100 - max(
-            [p.get() for p in self.predictions if p.title != "ok"]
+            [p.get() for p in self.predictions if p.title != "ok"],
         ))
 
         # Adjust not to get -inf points for method calls
-        # TODO: improve
+        # TODO(kornel): improve
         for p in self.predictions:
             if p.get() == 0:
                 p.set(5)
@@ -278,33 +293,11 @@ class JavaAnalyzer:
         # Fill in any missing predictions with defaults
         return self.predictions.as_dict()
 
-    def _complete_predictions(self):
-        """Fill in missing predictions with defaults and ensure they sum appropriately."""
-        # defaults = Result.get_defaults()
-
-        # # Fill in missing outcomes
-        # for outcome in defaults:
-        #     if outcome not in predictions:
-        #         predictions[outcome] = "0%"
-
-        # If we have high confidence in a specific outcome, reduce others
-        # high_confidence_outcomes = [k for k, v in predictions.items()
-        #                            if v.endswith('%') and int(v[:-1]) >= 80]
-
-        # if high_confidence_outcomes:
-        #     # Reduce other outcomes when we have high confidence
-        #     for outcome in predictions:
-        #         if outcome not in high_confidence_outcomes:
-        #             predictions[outcome] = "5%"
-
-        # return predictions
-        pass
-
     def _analyze_assertions(self, body_node: tree_sitter.Node) -> None:
         """Analyze assertions in the method body."""
         assert_query = tree_sitter.Query(
             self.java_language,
-            """(assert_statement) @assert"""
+            """(assert_statement) @assert""",
         )
         captures = tree_sitter.QueryCursor(assert_query).captures(body_node)
         assert_nodes = captures.get("assert", [])
@@ -344,7 +337,7 @@ class JavaAnalyzer:
         body_text = body_node.text.decode() if body_node.text else ""
 
         # Regex to match division by zero (e.g., "/ 0", "/0", "1/0", "x / 0")
-        if re.search(r'/\s*0\b', body_text):
+        if re.search(r"/\s*0\b", body_text):
             self.log.debug("Found explicit divide by zero")
             self.predictions.divide_by_zero.set(95)
             return
@@ -364,9 +357,10 @@ class JavaAnalyzer:
         if not array_nodes:
             return self.predictions.out_of_bounds.set(5)
 
-        # TODO: Add more sophisticated analysis for bounds checking
+        # TODO(kornel): Add more sophisticated analysis for bounds checking
         self.log.debug("Found array access operations")
         self.predictions.out_of_bounds.set(30)
+        return None
 
     def _analyze_null_pointer(self, body_node: tree_sitter.Node) -> None:
         """Analyze potential null pointer dereferences."""
@@ -409,7 +403,7 @@ class JavaAnalyzer:
         self.predictions.infinite_loop.set(10)
 
     def analyze_method(self) -> dict:
-        """Main method to analyze a Java method and return all predictions."""
+        """Analyze a Java method and return all predictions."""
         tree = self.parse_source_file(self.methodid)
         class_name = str(self.methodid.classname.name)
         class_node = self.find_class_node(tree, class_name)
@@ -419,7 +413,8 @@ class JavaAnalyzer:
     def format_predictions(self, predictions: dict) -> str:
         """Format predictions in the required output format."""
         # Ensure all required outcomes are present in the correct order
-        outcomes = ["ok", "divide by zero", "assertion error", "out of bounds", "null pointer", "*"]
+        outcomes = ["ok", "divide by zero", "assertion error",
+                    "out of bounds", "null pointer", "*"]
 
         formatted_lines = []
         for outcome in outcomes:
@@ -429,9 +424,9 @@ class JavaAnalyzer:
         return "\n".join(formatted_lines)
 
 
-def main():
+def main() -> None:
     # Analyze the specified method
-    analyzer = JavaAnalyzer(False)
+    analyzer = JavaAnalyzer()
     predictions = analyzer.analyze_method()
     formatted_output = analyzer.format_predictions(predictions)
     print(formatted_output)

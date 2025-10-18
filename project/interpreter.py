@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Self
 
 from loguru import logger
 
@@ -12,14 +13,14 @@ class PC:
     method: jvm.AbsMethodID
     offset: int
 
-    def __iadd__(self, delta):
+    def __iadd__(self, delta: int) -> Self:
         self.offset += delta
         return self
 
-    def __add__(self, delta):
+    def __add__(self, delta: int) -> "PC":
         return PC(self.method, self.offset + delta)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.method}:{self.offset}"
 
 
@@ -46,7 +47,7 @@ class Stack[T]:
         return len(self.items) > 0
 
     @classmethod
-    def empty(cls):
+    def empty(cls) -> "Stack[T]":
         return cls([])
 
     def peek(self) -> T:
@@ -55,11 +56,11 @@ class Stack[T]:
     def pop(self) -> T:
         return self.items.pop(-1)
 
-    def push(self, value):
+    def push(self, value: T) -> Self:
         self.items.append(value)
         return self
 
-    def __str__(self):
+    def __str__(self) -> str:
         if not self:
             return "ϵ"
         return "".join(f"{v}" for v in self.items)
@@ -72,9 +73,9 @@ class Frame:
     stack: Stack[jvm.Value]
     pc: PC
 
-    def __str__(self):
-        locals = ", ".join(f"{k}:{v}" for k, v in sorted(self.locals.items()))
-        return f"<{{{locals}}}, {self.stack}, {self.pc}>"
+    def __str__(self) -> str:
+        locals_str = ", ".join(f"{k}:{v}" for k, v in sorted(self.locals.items()))
+        return f"<{{{locals_str}}}, {self.stack}, {self.pc}>"
 
     @classmethod
     def from_method(cls, method: jvm.AbsMethodID) -> "Frame":
@@ -89,11 +90,11 @@ class State:
     heap_ptr: int = 0
     bc = Bytecode(jpamb.Suite(), {})
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.heap} {self.frames}"
 
 
-def step(state: State) -> State | str:
+def step(state: State) -> State | str:  # noqa: C901, PLR0911, PLR0912, PLR0915
     assert isinstance(state, State), f"expected frame but got {state}"
     frame = state.frames.peek()
     opr = state.bc[frame.pc]
@@ -149,17 +150,16 @@ def step(state: State) -> State | str:
                     v1 = frame.stack.pop()
                     caller_frame.stack.push(v1)
                 return state
-            else:
-                return "ok"
+            return "ok"
         case jvm.Get(
             static=True,
             field=jvm.AbsFieldID(
-                classname=classname,
+                classname=_,
                 extension=jvm.FieldID(
-                    name='$assertionsDisabled',
+                    name="$assertionsDisabled",
                     type=jvm.Boolean()))):
             frame.stack.push(
-                type_heap_to_stack(jvm.Value.boolean(False)))
+                type_heap_to_stack(jvm.Value.boolean(False)))  # noqa: FBT003
             frame.pc += 1
             return state
         case jvm.Ifz(condition=condition, target=target):
@@ -178,9 +178,9 @@ def step(state: State) -> State | str:
                 frame.pc += 1
             return state
         case jvm.New(
-            classname=jvm.ClassName(_as_string='java/lang/AssertionError')):
-            return 'assertion error'
-        case jvm.NewArray(type=type, dim=dim):
+            classname=jvm.ClassName(_as_string="java/lang/AssertionError")):
+            return "assertion error"
+        case jvm.NewArray(type=type, dim=_):
             count = frame.stack.pop()
             assert count.type is jvm.Int()
             assert isinstance(count.value, int)
@@ -200,8 +200,9 @@ def step(state: State) -> State | str:
             arr = None
             if ref.type is jvm.Reference():
                 if ref.value is None:
-                    return 'null pointer'
-                assert isinstance(ref.value, int), f"Expected int, but got {ref.value!r}"
+                    return "null pointer"
+                assert isinstance(ref.value, int), (
+                    f"Expected int, but got {ref.value!r}")
                 arr = state.heap[ref.value].value
             elif isinstance(ref.type, jvm.Array):
                 arr = ref.value
@@ -215,13 +216,13 @@ def step(state: State) -> State | str:
             return state
         case jvm.ArrayStore(type=type):
             val, idx, ref = frame.stack.pop(), frame.stack.pop(), frame.stack.pop()
-            # TODO: if ref is null -> throw null_ptr exception
+            # TODO(kornel): if ref is null -> throw null_ptr exception
             assert ref.type is jvm.Reference()
             assert val.type is jvm.Int()
             assert idx.type is jvm.Int()
 
             if ref.value is None:
-                return 'null pointer'
+                return "null pointer"
 
             assert isinstance(ref.value, int)
             assert isinstance(val.value, int)
@@ -231,12 +232,13 @@ def step(state: State) -> State | str:
             assert isinstance(arr, tuple)
 
             if idx.value < 0 or idx.value >= len(arr):
-                return 'out of bounds'
+                return "out of bounds"
 
             state.heap[ref.value] = jvm.Value.array(
-                type, arr[:idx.value] +
-                (type_stack_to_heap(jvm.Value(type, val.value)).value,) +
-                arr[idx.value+1:])
+                type,
+                (*arr[:idx.value],
+                 type_stack_to_heap(jvm.Value(type, val.value)).value,
+                 *arr[idx.value + 1:]))
 
             frame.pc += 1
             return state
@@ -251,11 +253,11 @@ def step(state: State) -> State | str:
                 assert isinstance(arr.value, int)
                 arr = state.heap[arr.value].value
             else:
-                raise ValueError(f"Unexpected ref type got: {arr.type!r}")
+                raise TypeError(f"Unexpected ref type got: {arr.type!r}")
 
             assert isinstance(arr, tuple)
             if idx.value < 0 or idx.value >= len(arr):
-                return 'out of bounds'
+                return "out of bounds"
 
             frame.stack.push(
                 type_heap_to_stack(jvm.Value(type=type, value=arr[idx.value])))
@@ -270,7 +272,9 @@ def step(state: State) -> State | str:
         case jvm.Store(type=type, index=index):
             v = frame.stack.pop()
             if v and v.value is not None:
-                assert isinstance(v.value, int), f"Expected type {int}, but got {v.value!r}"
+                assert isinstance(v.value, int), (
+                    f"Expected type {int}, but got {v.value!r}"
+                )
             frame.locals[index] = v
             frame.pc += 1
             return state
@@ -293,7 +297,7 @@ def step(state: State) -> State | str:
             frame.pc += 1
             return state
         case jvm.Cast(from_=from_, to_=to_):
-            # TODO make lossful casts
+            # TODO(kornel): make lossful casts
             v = frame.stack.pop()
             assert v.type is from_, f"Expected type {from_!r}, but got {v.type!r}"
             v = jvm.Value(to_, v.value)
@@ -308,17 +312,23 @@ def compare(v1: jvm.Value, op: str, v2: jvm.Value) -> bool:
     assert isinstance(v2.value, (int, float)), f"Unexpected value {v2.value!r}"
 
     match op:
-        case 'eq': return (v1.value == v2.value)
-        case 'ge': return (v1.value >= v2.value)
-        case 'gt': return (v1.value >  v2.value)
-        case 'le': return (v1.value <= v2.value)
-        case 'lt': return (v1.value <  v2.value)
-        case 'ne': return (v1.value != v2.value)
+        case "eq":
+            return (v1.value == v2.value)
+        case "ge":
+            return (v1.value >= v2.value)
+        case "gt":
+            return (v1.value >  v2.value)
+        case "le":
+            return (v1.value <= v2.value)
+        case "lt":
+            return (v1.value <  v2.value)
+        case "ne":
+            return (v1.value != v2.value)
         case c:
             raise NotImplementedError(
                 f"Comparison not implemented for condition {c}")
 
-def type_stack_to_heap(val: jvm.Value):
+def type_stack_to_heap(val: jvm.Value) -> jvm.Value:
     match val.type:
         case jvm.Int() | jvm.Float() | jvm.Reference():
             return val
@@ -335,7 +345,7 @@ def type_stack_to_heap(val: jvm.Value):
             raise NotImplementedError(
                 f"Stack to heap conversion not implemented for {val.type!r}")
 
-def type_heap_to_stack(val: jvm.Value):
+def type_heap_to_stack(val: jvm.Value) -> jvm.Value:
     match val.type:
         case jvm.Int() | jvm.Float() | jvm.Reference():
             return val

@@ -3,10 +3,10 @@ import sys
 
 from interpreter import Frame, Stack, State, step, type_stack_to_heap
 from loguru import logger
+from syntactic_helper import SyntacticHelper
 
 import jpamb
 from jpamb import jvm
-from syntactic_helper import SyntacticHelper
 
 logger.remove()
 logger.add(sys.stderr, format="[{level}] {message}", level="DEBUG")
@@ -40,7 +40,7 @@ def gen_value(t: jvm.Type) -> jvm.Value:
         #                  for _ in range(random.randint(
         #                      *MOCKUP_ARRAY_LENGTH)))
         case _:
-            raise NotImplementedError(f"Value generation not implemented for type {t!r}")
+            raise NotImplementedError(f"Value gen. not implemented for type {t!r}")
 
 # import debugpy
 # debugpy.listen(5678)
@@ -73,7 +73,7 @@ logger.debug(f"interesting values: {interesting_values}")
 # assert False
 
 # Currently - random value selected indepentently for each argument
-# TODO: Prepare input sets for multiple executions
+# TODO(kornel): Prepare input sets for multiple executions
 
 # Generate domain
 # for t in params:
@@ -90,16 +90,16 @@ def execute(methodid: jvm.AbsMethodID, max_steps: int = 1000) -> str:
         match t:
             case jvm.Array():
                 ref = jvm.Value(jvm.Reference(), state.heap_ptr)
-                arr_vals = tuple()
+                arr_vals = ()
                 rr = range(random.randint(*MOCKUP_ARRAY_LENGTH))
                 if len(vals) > 0:
                     arr_vals = tuple(random.choice(vals).value for _ in rr)
                 else:
                     arr_vals = tuple(
-                        type_stack_to_heap(gen_value(t.contains)).value 
+                        type_stack_to_heap(gen_value(t.contains)).value
                         for _ in rr)
                 state.heap[state.heap_ptr] = jvm.Value.array(t, arr_vals)
-                
+
                 logger.debug(f"Arr: {state.heap[state.heap_ptr]}")
 
                 state.heap_ptr += 1
@@ -119,17 +119,18 @@ def execute(methodid: jvm.AbsMethodID, max_steps: int = 1000) -> str:
 if not params_present:
     result = execute(methodid, MAX_EXEC_STEPS)#, 0)
     if result == "*":
-        [print(f"{r};0%") for r in results.keys() if r not in (result, "ok") ]
+        [print(f"{r};0%") for r in results if r not in (result, "ok") ]
         print(f"{result};99%")
         print("ok;1%")
     else:
-        [print(f"{r};0%") for r in results.keys() if r != result]
+        [print(f"{r};0%") for r in results if r != result]
         print(f"{result};100%")
 else:
     for _ in range(ARGS_REROLL):
         r = execute(methodid)
         results[r] += 1
 
-    [print(f"{k};{((v * (100-ARG_GUESS_LOWER_LIMIT)) // ARGS_REROLL + ARG_GUESS_LOWER_LIMIT)}%") 
+    argg_ll = ARG_GUESS_LOWER_LIMIT
+    [print(f"{k};{((v * (100-argg_ll)) // ARGS_REROLL + argg_ll)}%")
      for k, v in results.items()]
     # print(f"{result};99%")
