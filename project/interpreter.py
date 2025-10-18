@@ -8,6 +8,7 @@ from jpamb import jvm
 
 # methodid, input = jpamb.getcase()
 
+
 @dataclass
 class PC:
     method: jvm.AbsMethodID
@@ -64,7 +65,6 @@ class Stack[T]:
         if not self:
             return "ϵ"
         return "".join(f"{v}" for v in self.items)
-
 
 
 @dataclass
@@ -155,11 +155,10 @@ def step(state: State) -> State | str:  # noqa: C901, PLR0911, PLR0912, PLR0915
             static=True,
             field=jvm.AbsFieldID(
                 classname=_,
-                extension=jvm.FieldID(
-                    name="$assertionsDisabled",
-                    type=jvm.Boolean()))):
-            frame.stack.push(
-                type_heap_to_stack(jvm.Value.boolean(False)))  # noqa: FBT003
+                extension=jvm.FieldID(name="$assertionsDisabled", type=jvm.Boolean()),
+            ),
+        ):
+            frame.stack.push(type_heap_to_stack(jvm.Value.boolean(False)))  # noqa: FBT003
             frame.pc += 1
             return state
         case jvm.Ifz(condition=condition, target=target):
@@ -177,8 +176,7 @@ def step(state: State) -> State | str:  # noqa: C901, PLR0911, PLR0912, PLR0915
             else:
                 frame.pc += 1
             return state
-        case jvm.New(
-            classname=jvm.ClassName(_as_string="java/lang/AssertionError")):
+        case jvm.New(classname=jvm.ClassName(_as_string="java/lang/AssertionError")):
             return "assertion error"
         case jvm.NewArray(type=type, dim=_):
             count = frame.stack.pop()
@@ -202,7 +200,8 @@ def step(state: State) -> State | str:  # noqa: C901, PLR0911, PLR0912, PLR0915
                 if ref.value is None:
                     return "null pointer"
                 assert isinstance(ref.value, int), (
-                    f"Expected int, but got {ref.value!r}")
+                    f"Expected int, but got {ref.value!r}"
+                )
                 arr = state.heap[ref.value].value
             elif isinstance(ref.type, jvm.Array):
                 arr = ref.value
@@ -236,9 +235,12 @@ def step(state: State) -> State | str:  # noqa: C901, PLR0911, PLR0912, PLR0915
 
             state.heap[ref.value] = jvm.Value.array(
                 type,
-                (*arr[:idx.value],
-                 type_stack_to_heap(jvm.Value(type, val.value)).value,
-                 *arr[idx.value + 1:]))
+                (
+                    *arr[: idx.value],
+                    type_stack_to_heap(jvm.Value(type, val.value)).value,
+                    *arr[idx.value + 1 :],
+                ),
+            )
 
             frame.pc += 1
             return state
@@ -260,8 +262,9 @@ def step(state: State) -> State | str:  # noqa: C901, PLR0911, PLR0912, PLR0915
                 return "out of bounds"
 
             frame.stack.push(
-                type_heap_to_stack(jvm.Value(type=type, value=arr[idx.value])))
-                # jvm.Value(type=type, value=arr[idx.value]))
+                type_heap_to_stack(jvm.Value(type=type, value=arr[idx.value]))
+            )
+            # jvm.Value(type=type, value=arr[idx.value]))
             frame.pc += 1
             return state
         case jvm.Dup(words=1):
@@ -307,26 +310,27 @@ def step(state: State) -> State | str:  # noqa: C901, PLR0911, PLR0912, PLR0915
         case a:
             raise NotImplementedError(f"Don't know how to handle: {a!r}")
 
+
 def compare(v1: jvm.Value, op: str, v2: jvm.Value) -> bool:
     assert isinstance(v1.value, (int, float)), f"Unexpected value {v1.value!r}"
     assert isinstance(v2.value, (int, float)), f"Unexpected value {v2.value!r}"
 
     match op:
         case "eq":
-            return (v1.value == v2.value)
+            return v1.value == v2.value
         case "ge":
-            return (v1.value >= v2.value)
+            return v1.value >= v2.value
         case "gt":
-            return (v1.value >  v2.value)
+            return v1.value > v2.value
         case "le":
-            return (v1.value <= v2.value)
+            return v1.value <= v2.value
         case "lt":
-            return (v1.value <  v2.value)
+            return v1.value < v2.value
         case "ne":
-            return (v1.value != v2.value)
+            return v1.value != v2.value
         case c:
-            raise NotImplementedError(
-                f"Comparison not implemented for condition {c}")
+            raise NotImplementedError(f"Comparison not implemented for condition {c}")
+
 
 def type_stack_to_heap(val: jvm.Value) -> jvm.Value:
     match val.type:
@@ -340,10 +344,13 @@ def type_stack_to_heap(val: jvm.Value) -> jvm.Value:
             return jvm.Value(jvm.Char(), chr(val.value))
         case jvm.Array():
             raise NotImplementedError(
-                "Stack to heap conversion not implemented for arrays")
+                "Stack to heap conversion not implemented for arrays"
+            )
         case _:
             raise NotImplementedError(
-                f"Stack to heap conversion not implemented for {val.type!r}")
+                f"Stack to heap conversion not implemented for {val.type!r}"
+            )
+
 
 def type_heap_to_stack(val: jvm.Value) -> jvm.Value:
     match val.type:
@@ -357,8 +364,9 @@ def type_heap_to_stack(val: jvm.Value) -> jvm.Value:
             return jvm.Value(jvm.Char(), ord(val.value))
         case jvm.Array():
             raise NotImplementedError(
-                "Heap to stack conversion not implemented for arrays")
+                "Heap to stack conversion not implemented for arrays"
+            )
         case _:
             raise NotImplementedError(
-                f"Heap to stack conversion not implemented for {val.type!r}")
-
+                f"Heap to stack conversion not implemented for {val.type!r}"
+            )

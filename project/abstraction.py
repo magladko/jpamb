@@ -3,12 +3,13 @@ from typing import Literal
 
 type Sign = Literal["+", "-", "0"]
 
+
 @dataclass
 class SignSet:
-    signs : set[Sign]
+    signs: set[Sign]
 
     @classmethod
-    def abstract(cls, items : set[int]) -> "SignSet":
+    def abstract(cls, items: set[int]) -> "SignSet":
         signset = set()
         if 0 in items:
             signset.add("0")
@@ -27,10 +28,10 @@ class SignSet:
             return {s1}
         return {"+", "-", "0"}
 
-    def __contains__(self, member : int) -> bool:
-        if (member == 0 and "0" in self.signs):
+    def __contains__(self, member: int) -> bool:
+        if member == 0 and "0" in self.signs:
             return True
-        if (member > 0 and "+" in self.signs):
+        if member > 0 and "+" in self.signs:
             return True
         return bool(member < 0 and "-" in self.signs)
 

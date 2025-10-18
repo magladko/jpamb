@@ -82,6 +82,7 @@ select = [
 
 # Ignore specific rules if needed
 ignore = [
+  "COM812",   # Trailing comma missing
   # == Missing docstring
   "D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107",
   # --

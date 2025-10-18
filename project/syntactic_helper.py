@@ -1,4 +1,3 @@
-
 from enum import Flag, auto
 from pathlib import Path
 
@@ -10,7 +9,6 @@ from jpamb import jvm
 
 
 class SyntacticHelper:
-
     JAVA_LANGUAGE = tree_sitter.Language(tree_sitter_java.language())
     parser = tree_sitter.Parser(JAVA_LANGUAGE)
 
@@ -34,12 +32,16 @@ class SyntacticHelper:
         ALL = OPOSITE | ZERO
 
     def _gather_numeric_values(
-            self, method_node: tree_sitter.Node,
-            include_extra: ExtraValues = ExtraValues.ALL) -> set[jvm.Value]:
+        self,
+        method_node: tree_sitter.Node,
+        include_extra: ExtraValues = ExtraValues.ALL,
+    ) -> set[jvm.Value]:
         """Gather all numeric values from the method node using tree_sitter."""
         numeric_values = set()
 
-        numeric_query = tree_sitter.Query(self.JAVA_LANGUAGE, """
+        numeric_query = tree_sitter.Query(
+            self.JAVA_LANGUAGE,
+            """
             [
                 (decimal_integer_literal) @number
                 (hex_integer_literal) @number
@@ -48,7 +50,8 @@ class SyntacticHelper:
                 (decimal_floating_point_literal) @number
                 (hex_floating_point_literal) @number
             ]
-        """)
+        """,
+        )
 
         captures = tree_sitter.QueryCursor(numeric_query).captures(method_node)
         number_nodes = captures.get("number", [])
@@ -84,23 +87,27 @@ class SyntacticHelper:
 
         return numeric_values
 
-    def parse_source_file(self, parser: tree_sitter.Parser,
-                          methodid: jvm.AbsMethodID) -> tree_sitter.Tree:
+    def parse_source_file(
+        self, parser: tree_sitter.Parser, methodid: jvm.AbsMethodID
+    ) -> tree_sitter.Tree:
         """Parse the Java source file for the given method."""
         srcfile = jpamb.Suite().sourcefile(methodid.classname)
 
         with Path.open(srcfile, "rb") as f:
             return parser.parse(f.read())
 
-    def find_class_node(self, tree: tree_sitter.Tree,
-                        class_name: str) -> tree_sitter.Node | None:
+    def find_class_node(
+        self, tree: tree_sitter.Tree, class_name: str
+    ) -> tree_sitter.Node | None:
         """Find the class node in the parsed tree."""
-        class_query = tree_sitter.Query(self.JAVA_LANGUAGE,
+        class_query = tree_sitter.Query(
+            self.JAVA_LANGUAGE,
             f"""
             (class_declaration
                 name: ((identifier) @class-name
                         (#eq? @class-name "{class_name}"))) @class
-            """)
+            """,
+        )
 
         captures = tree_sitter.QueryCursor(class_query).captures(tree.root_node)
         class_nodes = captures.get("class", [])
@@ -109,17 +116,20 @@ class SyntacticHelper:
             return class_nodes[0]
         return None
 
-    def find_method_node(self, class_node: tree_sitter.Node,
-                         methodid: jvm.AbsMethodID) -> tree_sitter.Node | None:
+    def find_method_node(
+        self, class_node: tree_sitter.Node, methodid: jvm.AbsMethodID
+    ) -> tree_sitter.Node | None:
         """Find the specific method node within the class."""
         method_name = methodid.extension.name
 
-        method_query = tree_sitter.Query(self.JAVA_LANGUAGE,
+        method_query = tree_sitter.Query(
+            self.JAVA_LANGUAGE,
             f"""
             (method_declaration name:
               ((identifier) @method-name (#eq? @method-name "{method_name}"))
             ) @method
-        """)
+        """,
+        )
 
         captures = tree_sitter.QueryCursor(method_query).captures(class_node)
         method_nodes = captures.get("method", [])
@@ -131,15 +141,15 @@ class SyntacticHelper:
 
         return None
 
-    def _method_matches_signature(self, method_node: tree_sitter.Node,
-                                  methodid: jvm.AbsMethodID) -> bool:
+    def _method_matches_signature(
+        self, method_node: tree_sitter.Node, methodid: jvm.AbsMethodID
+    ) -> bool:
         """Check if method node matches the expected signature."""
         parameters_node = method_node.child_by_field_name("parameters")
         if not parameters_node:
             return False
 
-        params = [c for c in parameters_node.children
-                  if c.type == "formal_parameter"]
+        params = [c for c in parameters_node.children if c.type == "formal_parameter"]
 
         if len(params) != len(methodid.extension.params):
             return False
@@ -152,4 +162,3 @@ class SyntacticHelper:
             # TODO(kornel): Add more sophisticated type checking here
 
         return True
-

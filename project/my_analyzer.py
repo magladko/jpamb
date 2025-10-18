@@ -13,7 +13,6 @@ from jpamb import jvm
 
 
 class Prediction:
-
     def __init__(self, title: str, probability: int) -> None:
         self.title = title
         self.probability = probability
@@ -47,12 +46,12 @@ class Prediction:
 
 
 class Result:
-    ok              = Prediction("ok",              60)
+    ok = Prediction("ok", 60)
     assertion_error = Prediction("assertion error", 0)
-    divide_by_zero  = Prediction("divide by zero",  0)
-    out_of_bounds   = Prediction("out of bounds",   0)
-    null_pointer    = Prediction("null pointer",    0)
-    infinite_loop   = Prediction("*",               0)
+    divide_by_zero = Prediction("divide by zero", 0)
+    out_of_bounds = Prediction("out of bounds", 0)
+    null_pointer = Prediction("null pointer", 0)
+    infinite_loop = Prediction("*", 0)
 
     def __init__(self) -> None:
         self.set_defaults()
@@ -141,17 +140,20 @@ class JavaAnalyzer:
             self.log.debug("parse sourcefile %s", srcfile)
             return self.parser.parse(f.read())
 
-    def find_class_node(self, tree: tree_sitter.Tree,
-                        class_name: str) -> tree_sitter.Node:
+    def find_class_node(
+        self, tree: tree_sitter.Tree, class_name: str
+    ) -> tree_sitter.Node:
         """Find the class node in the parsed tree."""
         self.log.debug(f"Looking for class: {class_name}")
 
-        class_query = tree_sitter.Query(self.java_language,
+        class_query = tree_sitter.Query(
+            self.java_language,
             f"""
             (class_declaration
                 name: ((identifier) @class-name
                        (#eq? @class-name "{class_name}"))) @class
-            """)
+            """,
+        )
 
         captures = tree_sitter.QueryCursor(class_query).captures(tree.root_node)
         class_nodes = captures.get("class", [])
@@ -164,17 +166,20 @@ class JavaAnalyzer:
         self.log.debug("Found class %s", class_node.range)
         return class_node
 
-    def find_method_node(self, class_node: tree_sitter.Node,
-                         methodid: jvm.AbsMethodID) -> tree_sitter.Node:
+    def find_method_node(
+        self, class_node: tree_sitter.Node, methodid: jvm.AbsMethodID
+    ) -> tree_sitter.Node:
         """Find the specific method node within the class."""
         method_name = methodid.extension.name
 
-        method_query = tree_sitter.Query(self.java_language,
+        method_query = tree_sitter.Query(
+            self.java_language,
             f"""
             (method_declaration name:
               ((identifier) @method-name (#eq? @method-name "{method_name}"))
             ) @method
-        """)
+        """,
+        )
 
         captures = tree_sitter.QueryCursor(method_query).captures(class_node)
         method_nodes = captures.get("method", [])
@@ -186,11 +191,13 @@ class JavaAnalyzer:
                 return method_node
 
         self.log.warning(
-            f"Could not find method '{method_name}' with matching signature")
+            f"Could not find method '{method_name}' with matching signature"
+        )
         sys.exit(-1)
 
-    def _method_matches_signature(self, method_node: tree_sitter.Node,
-                                  methodid: jvm.AbsMethodID) -> bool:
+    def _method_matches_signature(
+        self, method_node: tree_sitter.Node, methodid: jvm.AbsMethodID
+    ) -> bool:
         """Check if method node matches the expected signature."""
         parameters_node = method_node.child_by_field_name("parameters")
         if not parameters_node:
@@ -215,17 +222,23 @@ class JavaAnalyzer:
         return True
 
     def _get_called_method_bodies(
-            self, body_node: tree_sitter.Node) -> list[tree_sitter.Node]:
+        self, body_node: tree_sitter.Node
+    ) -> list[tree_sitter.Node]:
         called_bodies = []
         # Find all method invocations in the body
-        call_query = tree_sitter.Query(self.java_language,
-            """(method_invocation name: (identifier) @called_name) @call""")
+        call_query = tree_sitter.Query(
+            self.java_language,
+            """(method_invocation name: (identifier) @called_name) @call""",
+        )
         captures = tree_sitter.QueryCursor(call_query).captures(body_node)
         call_nodes = captures.get("call", [])
         for call_node in call_nodes:
             called_name_node = call_node.child_by_field_name("name")
-            called_name = called_name_node.text.decode() \
-                if called_name_node and called_name_node.text else ""
+            called_name = (
+                called_name_node.text.decode()
+                if called_name_node and called_name_node.text
+                else ""
+            )
             # Find method node in the same class
             method_query = tree_sitter.Query(
                 self.java_language,
@@ -233,7 +246,8 @@ class JavaAnalyzer:
                 (method_declaration
                     name: ((identifier) @method-name
                     (#eq? @method-name "{called_name}"))) @method
-                """)
+                """,
+            )
             class_node = body_node.parent
             assert class_node is not None
             method_captures = tree_sitter.QueryCursor(method_query).captures(class_node)
@@ -280,9 +294,12 @@ class JavaAnalyzer:
         # Check for infinite loops
         self._analyze_infinite_loops(body)
 
-        self.predictions.ok.set(100 - max(
-            [p.get() for p in self.predictions if p.title != "ok"],
-        ))
+        self.predictions.ok.set(
+            100
+            - max(
+                [p.get() for p in self.predictions if p.title != "ok"],
+            )
+        )
 
         # Adjust not to get -inf points for method calls
         # TODO(kornel): improve
@@ -323,8 +340,9 @@ class JavaAnalyzer:
     def _analyze_divide_by_zero(self, body_node: tree_sitter.Node) -> None:
         """Analyze potential divide by zero operations."""
         # Look for division operations
-        div_query = tree_sitter.Query(self.java_language,
-            """(binary_expression operator: "/" @div)""")
+        div_query = tree_sitter.Query(
+            self.java_language, """(binary_expression operator: "/" @div)"""
+        )
 
         captures = tree_sitter.QueryCursor(div_query).captures(body_node)
         div_nodes = captures.get("div", [])
@@ -348,8 +366,9 @@ class JavaAnalyzer:
     def _analyze_array_bounds(self, body_node: tree_sitter.Node) -> None:
         """Analyze potential array out of bounds access."""
         # Look for array access expressions
-        array_query = tree_sitter.Query(self.java_language,
-            """(array_access) @array_access""")
+        array_query = tree_sitter.Query(
+            self.java_language, """(array_access) @array_access"""
+        )
 
         captures = tree_sitter.QueryCursor(array_query).captures(body_node)
         array_nodes = captures.get("array_access", [])
@@ -365,8 +384,7 @@ class JavaAnalyzer:
     def _analyze_null_pointer(self, body_node: tree_sitter.Node) -> None:
         """Analyze potential null pointer dereferences."""
         # Look for explicit 'null' usage in the AST
-        null_query = tree_sitter.Query(self.java_language,
-            """(null_literal) @null""")
+        null_query = tree_sitter.Query(self.java_language, """(null_literal) @null""")
         captures = tree_sitter.QueryCursor(null_query).captures(body_node)
         null_nodes = captures.get("null", [])
 
@@ -380,8 +398,9 @@ class JavaAnalyzer:
     def _analyze_infinite_loops(self, body_node: tree_sitter.Node) -> None:
         """Analyze potential infinite loops."""
         # Look for while loops
-        while_query = tree_sitter.Query(self.java_language,
-            """(while_statement condition: (_) @condition)""")
+        while_query = tree_sitter.Query(
+            self.java_language, """(while_statement condition: (_) @condition)"""
+        )
 
         captures = tree_sitter.QueryCursor(while_query).captures(body_node)
 
@@ -413,8 +432,14 @@ class JavaAnalyzer:
     def format_predictions(self, predictions: dict) -> str:
         """Format predictions in the required output format."""
         # Ensure all required outcomes are present in the correct order
-        outcomes = ["ok", "divide by zero", "assertion error",
-                    "out of bounds", "null pointer", "*"]
+        outcomes = [
+            "ok",
+            "divide by zero",
+            "assertion error",
+            "out of bounds",
+            "null pointer",
+            "*",
+        ]
 
         formatted_lines = []
         for outcome in outcomes:
