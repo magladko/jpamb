@@ -46,7 +46,7 @@ jobs:
       run: |
         # Load the image
         nix run .#image.load
-        nix run .#image.jpamb -- -vv checkhealth --fail-fast
+        nix run .#image.jpamb -- -vv checkhealth
     - name: Push to GitHub Container Registry
       if: |
         github.event_name == 'push' &&
