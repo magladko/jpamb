@@ -46,16 +46,7 @@ jobs:
       run: |
         # Load the image
         nix run .#image.load
-        # Run basic tests
-        echo "=== Testing Java ==="
-        nix run .#image.run -- java -version
-        echo "=== Testing Maven ==="
-        nix run .#image.run -- mvn --version
-        echo "=== Testing UV ==="
-        nix run .#image.run -- uv --version
-        echo "=== Testing JPAMB ==="
-        nix run .#image.jpamb --help
-
+        nix run .#image.jpamb -- -vv checkhealth --fail-fast
     - name: Push to GitHub Container Registry
       if: |
         github.event_name == 'push' &&

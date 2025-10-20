@@ -2,7 +2,7 @@
   description = "JPAMB: Java Program Analysis Micro Benchmarks";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/ca77296380960cd497a765102eeb1356eb80fed0";
+    nixpkgs.url = "github:nixos/nixpkgs/ca77296380960cd497a765102eeb1356eb80fed0";
     jvm2json.url = "github:kalhauge/jvm2json";
     jvm2json.inputs.nixpkgs.follows = "nixpkgs";
   };
@@ -10,6 +10,7 @@
     {
       nixpkgs,
       jvm2json,
+      self,
       ...
     }:
     let
@@ -34,9 +35,9 @@
                     jdt-language-server
                     jdk
                     maven
-                    uv
                     final.jvm2json
                   ];
+                  jpamb = final.callPackage ./build.nix { inherit self; };
                 })
               ];
             };
@@ -44,16 +45,6 @@
         );
     in
     rec {
-      devShells = perSystem {
-        do =
-          { pkgs, ... }:
-          {
-            default = pkgs.mkShell {
-              name = "jpamb";
-              packages = pkgs.needed;
-            };
-          };
-      };
       apps = perSystem {
         do =
           { pkgs, ... }:
@@ -82,7 +73,10 @@
             };
           in
           {
-            image = {
+            image = rec {
+              type = "app";
+              program = load.program;
+
               load = makeApp "load" ''
                 ${detect_container}
                 echo "Loading Docker image..."
@@ -90,52 +84,62 @@
               '';
               run = makeApp "run" ''
                 ${get_image_name}
-                $CONTAINER_CMD run --rm "$IMAGE_NAME"\
+                set -x
+                $CONTAINER_CMD run --rm \
                     -v "$(pwd):/workspace" \
                     -w /workspace \
+                    "$IMAGE_NAME" \
                     $@
               '';
               jpamb = makeApp "jpamb" ''
                 ${get_image_name}
-                $CONTAINER_CMD run --rm "$IMAGE_NAME"\
+                $CONTAINER_CMD run --rm \
                     -v "$(pwd):/workspace" \
                     -w /workspace \
-                    uv run jpamb $@
+                    "$IMAGE_NAME" \
+                    jpamb $@
               '';
             };
           };
       };
-      packages = perSystem {
-        systems = [ "x86_64-linux" ];
-        do =
-          { pkgs, ... }:
-          {
-            default = packages.docker_image;
-            docker_image = pkgs.dockerTools.buildImage {
-              name = "jpamb";
-              tag = "latest";
+      packages =
 
-              copyToRoot = pkgs.buildEnv {
-                name = "jpamb-env";
-                paths =
-                  pkgs.needed
-                  ++ (with pkgs; [
-                    python3
-                    bash
-                    coreutils
-                  ]);
-              };
+        perSystem {
+          do =
+            { pkgs, ... }:
+            {
+              default = pkgs.jpamb;
+              inherit (pkgs) jpamb jvm2json;
+            };
+        }
+        // perSystem {
+          systems = [ "x86_64-linux" ];
+          do =
+            { pkgs, ... }:
+            {
+              docker_image = pkgs.dockerTools.buildImage {
+                name = "jpamb";
+                tag = "latest";
 
-              config = {
-                Cmd = [ "${pkgs.bash}/bin/bash" ];
-                WorkingDir = "/workspace";
-                Env = [
-                  #  "PATH=${pkgs.jdk}/bin:${pkgs.maven}/bin:${jvm2jsonPkg}/bin:${pkgs.uv}/bin:${pkgs.python3}/bin:${pkgs.bash}/bin:${pkgs.coreutils}/bin"
-                  "JAVA_HOME=${pkgs.jdk}"
-                ];
+                copyToRoot = pkgs.buildEnv {
+                  name = "jpamb-env";
+                  paths = [
+                    pkgs.jpamb
+                    pkgs.bash
+                    pkgs.coreutils
+                  ];
+                };
+
+                config = {
+                  Cmd = [ "${pkgs.jpamb}/bin/jpamb" ];
+                  WorkingDir = "/workspace";
+                  Env = [
+                    #  "PATH=${pkgs.jdk}/bin:${pkgs.maven}/bin:${jvm2jsonPkg}/bin:${pkgs.uv}/bin:${pkgs.python3}/bin:${pkgs.bash}/bin:${pkgs.coreutils}/bin"
+                    # "JAVA_HOME=${pkgs.jdk}"
+                  ];
+                };
               };
             };
-          };
-      };
+        };
     };
 }

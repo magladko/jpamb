@@ -214,10 +214,14 @@ def cli(ctx, workdir: Path, verbose):
 
 
 @cli.command()
+@click.option(
+    "--fail-fast/--no-fail-fast",
+    help="if we should stop after the first error.",
+)
 @click.pass_obj
-def checkhealth(suite):
+def checkhealth(suite, fail_fast):
     """Check that the repostiory is setup correctly"""
-    suite.checkhealth()
+    suite.checkhealth(fail_fast)
 
 
 @cli.command()
