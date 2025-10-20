@@ -367,15 +367,12 @@ uv run jpamb evaluate -W my_analyzer.py > my_results.json
 
 ## Expert: Extending the Benchmark
 
-To extend the benchmark suite you have to install nix. One way to do that is to use 
-use the [determinate system](https://docs.determinate.systems/) installer.
+To extend the benchmark suite you have to add new cases to the 
+`src/main/java/jpamb/cases/` folder.
 
-After any changes to the source files you should run:
+After which you have to update the class files and the decompiled files. 
+You should only do that using the docker image. 
 
-```shell
-$ nix develop --command uv run build --test --decompile
 ```
-
-
-
-
+$ TODO 
+```

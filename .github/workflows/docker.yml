@@ -41,7 +41,7 @@ jobs:
     - name: Build Docker image with Nix
       run: |
         echo "Building Docker image using Nix flake..."
-        nix build .#packages.x86_64-linux.default --print-build-logs
+        nix build .#packages.x86_64-linux.docker_image --print-build-logs
     - name: Load and test image locally
       run: |
         # Load the image
