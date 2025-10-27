@@ -13,7 +13,7 @@ from jpamb import jvm
 class PC:
     method: jvm.AbsMethodID
     offset: int
-
+    
     def __iadd__(self, delta: int) -> Self:
         self.offset += delta
         return self
