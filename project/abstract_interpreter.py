@@ -1,16 +1,27 @@
 
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import TypeVar
+from typing import TypeVar, Self
 from abstraction import Sign, SignSet
 
 import jpamb
 from jpamb import jvm
-from project.interpreter import PC, Stack, Bytecode
+from interpreter import Stack, Bytecode
 
 
 A = TypeVar("A")
 
+
+@dataclass(frozen=True)
+class PC:
+    method: jvm.AbsMethodID
+    offset: int
+
+    def __add__(self, delta: int) -> "PC":
+        return PC(self.method, self.offset + delta)
+
+    def __str__(self) -> str:
+        return f"{self.method}:{self.offset}"
 
 @dataclass
 class PerVarFrame[AV]:
@@ -62,26 +73,25 @@ class StateSet:
     needswork : set[PC]
 
     @classmethod
-    def initialstate_from_method(cls, methodid: jvm.AbsMethodID) -> "StateSet":
+    def initialstate_from_method(cls, methodid: jvm.AbsMethodID, input) -> "StateSet":
         frame = PerVarFrame.from_method(methodid)
+        for i, v in enumerate(input.values):
+            frame.locals[i] = v
         state = AState({}, Stack.empty().push(frame))
         return StateSet(per_inst={frame.pc: state}, needswork={frame.pc})
-        
-        pass
-
     def per_instruction(self):
         for pc in self.needswork:
             yield (pc, self.per_inst[pc])
 
     # sts |= astate
-    def __ior__(self, astate):
+    def __ior__(self, astate: AState):
         pc = astate.pc
         old = self.per_inst.get(pc)
         if old is None:
             self.per_inst[pc] = astate
             self.needswork.add(pc)
         else:
-            new = old | astate  # join in the lattice
+            new = astate
             if new != old:
                 self.per_inst[pc] = new
                 self.needswork.add(pc)
@@ -92,7 +102,7 @@ class StateSet:
         #     self.needswork.add(astate.pc)
 
 def step(state : AState) -> Iterable[AState | str]:
-    return []
+    return ["assertion error"]
 
 
 def manystep(sts : StateSet) -> Iterable[AState | str]:
@@ -108,21 +118,17 @@ def manystep(sts : StateSet) -> Iterable[AState | str]:
     return new_state.values()
 
 
-
-methodid = jpamb.getmethodid(
-    "Interpreter",
-    "1.0",
-    "Garbage Spillers",
-    ["random", "dynamic", "python"],
-    for_science=True,
-)
-
+methodid, input = jpamb.getcase()
 MAX_STEPS = 1000
 final = set()
-sts = StateSet.initialstate_from_method(methodid)
+sts = StateSet.initialstate_from_method(methodid, input)
 for i in range(MAX_STEPS):
     for s in manystep(sts):
         if isinstance(s, str):
             final.add(s)
         else:
             sts |= s
+
+print(len(final))
+for result in final:
+    print(result)
