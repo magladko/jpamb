@@ -533,6 +533,19 @@ def build(suite, compile, decompile, document, test):
             timeout=600,
         )
 
+        log.info("Building Stats")
+
+        res, x = run(
+            ["java", "-cp", "target/classes", "jpamb.Runtime"],
+            logout=log.info,
+            logerr=log.debug,
+            timeout=60,
+        )
+
+        Path("stats/cases.txt").write_text("\n".join(res.splitlines().sorted()))
+
+        # TODO: Compute distribution.csv
+
     if decompile:
         log.info("Decompiling")
         for cl in suite.classes():

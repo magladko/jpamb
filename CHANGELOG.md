@@ -2,7 +2,7 @@
 
 ## Version X.X.X
 
-- Add Docker Image 
+- Add Docker Image
 - Change official build version to be the one compiled through docker.
 
 ## Version 0.3.0
