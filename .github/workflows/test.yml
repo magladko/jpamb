@@ -41,17 +41,14 @@ jobs:
     - name: Compile Java code
       run: mvn compile
 
-    - name: Install jpamb tool
+    - name: Install jpamb and test dependencies
       run: |
-        uv tool install -e .
+        uv pip install --system -e .
+        uv pip install --system pytest hypothesis
 
     - name: Run checkhealth
       run: |
-        uvx jpamb -vv checkhealth
-
-    - name: Install pytest
-      run: |
-        uv pip install --system pytest hypothesis
+        jpamb -vv checkhealth
 
     - name: Run Python tests (fast only)
       run: |
@@ -111,18 +108,18 @@ jobs:
       run: mvn compile
 
     - name: Install jpamb
-      run: uv tool install -e .
+      run: uv pip install --system -e .
 
     - name: Test example solutions (Simple cases only)
       run: |
         for solution in solutions/apriori.py solutions/bytecoder.py solutions/cheater.py; do
           echo "Testing $solution..."
-          uvx jpamb test -f "Simple" "$solution"
+          jpamb test -f "Simple" "$solution"
         done
 
     - name: Run evaluate command
       run: |
-        uvx jpamb evaluate --timeout 5.0 --iterations 1 solutions/apriori.py > /dev/null
+        jpamb evaluate --timeout 5.0 --iterations 1 solutions/apriori.py > /dev/null
 
     - name: Verify decompiled files exist
       run: |
@@ -155,10 +152,10 @@ jobs:
     - name: Compile Java
       run: mvn compile
 
-    - name: Install jpamb and dependencies
+    - name: Install jpamb and test dependencies
       run: |
-        uv tool install -e .
-        uv pip install --system pytest hypothesis click
+        uv pip install --system -e .
+        uv pip install --system pytest hypothesis
 
     - name: Run reliability tests
       run: |
