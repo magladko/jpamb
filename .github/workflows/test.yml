@@ -52,12 +52,12 @@ jobs:
 
     - name: Run Python tests (fast only)
       run: |
-        cd test && python -m pytest -v -m "not slow" .
+        python -m pytest test/ -v -m "not slow"
 
     - name: Run Python tests (all tests)
       if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
       run: |
-        cd test && python -m pytest -v .
+        python -m pytest test/ -v
 
   java-tests:
     name: Java Tests
@@ -159,9 +159,9 @@ jobs:
 
     - name: Run reliability tests
       run: |
-        cd test && python -m pytest -v -m "not slow" test_cli_reliability.py
+        python -m pytest test/test_cli_reliability.py -v -m "not slow"
 
     - name: Run slow reliability tests
       if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
       run: |
-        cd test && python -m pytest -v test_cli_reliability.py
+        python -m pytest test/test_cli_reliability.py -v
