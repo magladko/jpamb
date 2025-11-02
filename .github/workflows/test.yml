@@ -1,0 +1,170 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [ main, docker_in_nix ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run daily at 2 AM UTC to catch regressions
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  python-tests:
+    name: Python Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.13"]
+      fail-fast: false
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '19'
+        cache: 'maven'
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+
+    - name: Compile Java code
+      run: mvn compile
+
+    - name: Install jpamb tool
+      run: |
+        uv tool install -e .
+
+    - name: Run checkhealth
+      run: |
+        uvx jpamb -vv checkhealth
+
+    - name: Install pytest
+      run: |
+        uv pip install --system pytest hypothesis
+
+    - name: Run Python tests (fast only)
+      run: |
+        cd test && python -m pytest -v -m "not slow" .
+
+    - name: Run Python tests (all tests)
+      if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+      run: |
+        cd test && python -m pytest -v .
+
+  java-tests:
+    name: Java Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '19'
+        cache: 'maven'
+
+    - name: Run Maven tests
+      run: mvn test
+
+    - name: Build package
+      run: mvn package
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [python-tests, java-tests]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.13"
+
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '19'
+        cache: 'maven'
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+
+    - name: Full build
+      run: mvn compile
+
+    - name: Install jpamb
+      run: uv tool install -e .
+
+    - name: Test example solutions (Simple cases only)
+      run: |
+        for solution in solutions/apriori.py solutions/bytecoder.py solutions/cheater.py; do
+          echo "Testing $solution..."
+          uvx jpamb test -f "Simple" "$solution"
+        done
+
+    - name: Run evaluate command
+      run: |
+        uvx jpamb evaluate --timeout 5.0 --iterations 1 solutions/apriori.py > /dev/null
+
+    - name: Verify decompiled files exist
+      run: |
+        test -d decompiled/jpamb || exit 1
+        find decompiled/jpamb -name "*.json" | grep -q . || exit 1
+
+  reliability-tests:
+    name: Reliability & Error Handling
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.13"
+
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '19'
+        cache: 'maven'
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+
+    - name: Compile Java
+      run: mvn compile
+
+    - name: Install jpamb and dependencies
+      run: |
+        uv tool install -e .
+        uv pip install --system pytest hypothesis click
+
+    - name: Run reliability tests
+      run: |
+        cd test && python -m pytest -v -m "not slow" test_cli_reliability.py
+
+    - name: Run slow reliability tests
+      if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+      run: |
+        cd test && python -m pytest -v test_cli_reliability.py
