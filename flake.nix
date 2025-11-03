@@ -157,8 +157,10 @@
                 pkgs.coreutils
                 pkgs.maven
                 pkgs.jdk
+                pkgs.python313
                 pkgs.python313Packages.pytest
                 pkgs.python313Packages.hypothesis
+                pkgs.uv
               ];
             };
 
