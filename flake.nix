@@ -144,7 +144,20 @@
       }
       // perSystem {
         systems = ["x86_64-linux"];
-        do = {pkgs, ...}: {
+        do = {pkgs, ...}: let
+          pythonWithPackages = pkgs.python313.withPackages (ps: with ps; [
+            pytest
+            hypothesis
+            click
+            pyyaml
+            loguru
+            matplotlib
+            tree-sitter
+            tree-sitter-grammars.tree-sitter-java
+            z3-solver
+            z3
+          ]);
+        in {
           docker_image = pkgs.dockerTools.buildImage {
             name = "jpamb";
             tag = "latest";
@@ -157,9 +170,7 @@
                 pkgs.coreutils
                 pkgs.maven
                 pkgs.jdk
-                pkgs.python313
-                pkgs.python313Packages.pytest
-                pkgs.python313Packages.hypothesis
+                pythonWithPackages
                 pkgs.uv
               ];
             };
