@@ -100,7 +100,7 @@
                 -v "$(pwd):/workspace" \
                 -w /workspace \
                 "$IMAGE_NAME" \
-                bash -c "mvn compile && python -m pytest test/ -v -m 'not slow'"
+                bash -c "mvn compile && python setup.py build_ext --inplace && python -m pytest test/ -v -m 'not slow'"
           '';
 
           test-all = makeApp "test-all" ''
@@ -110,7 +110,7 @@
                 -v "$(pwd):/workspace" \
                 -w /workspace \
                 "$IMAGE_NAME" \
-                bash -c "mvn compile && mvn test && python -m pytest test/ -v"
+                bash -c "python setup.py build_ext --inplace && mvn compile && mvn test && python -m pytest test/ -v"
           '';
 
           test-java = makeApp "test-java" ''
@@ -130,7 +130,7 @@
                 -v "$(pwd):/workspace" \
                 -w /workspace \
                 "$IMAGE_NAME" \
-                bash -c "python -m pytest test/ -v -m 'not slow'"
+                bash -c "python setup.py build_ext --inplace && python -m pytest test/ -v -m 'not slow'"
           '';
         };
       };
