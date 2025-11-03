@@ -156,6 +156,7 @@
             tree-sitter-grammars.tree-sitter-java
             z3-solver
             z3
+            setuptools
           ]);
         in {
           docker_image = pkgs.dockerTools.buildImage {
@@ -172,6 +173,7 @@
                 pkgs.jdk
                 pythonWithPackages
                 pkgs.uv
+                pkgs.gcc
               ];
             };
 
