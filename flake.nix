@@ -92,6 +92,46 @@
                 "$IMAGE_NAME" \
                 jpamb $@
           '';
+
+          test = makeApp "test" ''
+            ${get_image_name}
+            echo "Running jpamb test suite in Docker..."
+            $CONTAINER_CMD run --rm \
+                -v "$(pwd):/workspace" \
+                -w /workspace \
+                "$IMAGE_NAME" \
+                bash -c "mvn compile && python -m pytest test/ -v -m 'not slow'"
+          '';
+
+          test-all = makeApp "test-all" ''
+            ${get_image_name}
+            echo "Running full jpamb test suite (including slow tests) in Docker..."
+            $CONTAINER_CMD run --rm \
+                -v "$(pwd):/workspace" \
+                -w /workspace \
+                "$IMAGE_NAME" \
+                bash -c "mvn compile && mvn test && python -m pytest test/ -v"
+          '';
+
+          test-java = makeApp "test-java" ''
+            ${get_image_name}
+            echo "Running Java tests in Docker..."
+            $CONTAINER_CMD run --rm \
+                -v "$(pwd):/workspace" \
+                -w /workspace \
+                "$IMAGE_NAME" \
+                bash -c "mvn test"
+          '';
+
+          test-python = makeApp "test-python" ''
+            ${get_image_name}
+            echo "Running Python tests in Docker..."
+            $CONTAINER_CMD run --rm \
+                -v "$(pwd):/workspace" \
+                -w /workspace \
+                "$IMAGE_NAME" \
+                bash -c "python -m pytest test/ -v -m 'not slow'"
+          '';
         };
       };
     };
@@ -109,16 +149,25 @@
             name = "jpamb";
             tag = "latest";
 
-            copyToRoot = [
-              pkgs.jpamb
-              pkgs.bash
-              pkgs.coreutils
-            ];
+            copyToRoot = pkgs.buildEnv {
+              name = "jpamb-test-env";
+              paths = [
+                pkgs.jpamb
+                pkgs.bash
+                pkgs.coreutils
+                pkgs.maven
+                pkgs.jdk
+                pkgs.python313Packages.pytest
+                pkgs.python313Packages.hypothesis
+              ];
+            };
 
             config = {
               Cmd = ["/bin/jpamb"];
               WorkingDir = "/workspace";
-              Env = [];
+              Env = [
+                "JAVA_HOME=${pkgs.jdk}"
+              ];
             };
           };
         };
