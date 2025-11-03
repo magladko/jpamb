@@ -140,7 +140,14 @@
           pythonWithPackages = pkgs.python313.withPackages (ps: with ps; [
             pytest
             hypothesis
-            pkgs.jpamb  # Include jpamb in Python path with C extension built
+            click
+            pyyaml
+            loguru
+            matplotlib
+            tree-sitter
+            tree-sitter-grammars.tree-sitter-java
+            z3-solver
+            z3
           ]);
 
           # Bundle source files for testing
@@ -166,6 +173,7 @@
                 pkgs.maven
                 pkgs.jdk
                 pythonWithPackages
+                pkgs.jpamb
                 testBundle
               ];
             };
@@ -175,6 +183,7 @@
               WorkingDir = "/workspace";
               Env = [
                 "JAVA_HOME=${pkgs.jdk}"
+                "PYTHONPATH=${pkgs.jpamb}/${pkgs.python313.sitePackages}"
               ];
             };
           };
