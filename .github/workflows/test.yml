@@ -3,12 +3,15 @@ name: Test Suite
 on:
   push:
     branches: [ main, docker_in_nix ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ main ]
   schedule:
     # Run daily at 2 AM UTC to catch regressions
     - cron: '0 2 * * *'
   workflow_dispatch:
+  workflow_call:  # Allow this workflow to be called by other workflows
 
 jobs:
   python-tests:

@@ -18,8 +18,19 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  # Run tests first for tagged releases - only build and release if tests pass
+  run-tests:
+    name: Run Test Suite
+    if: startsWith(github.ref, 'refs/tags/')
+    uses: ./.github/workflows/test.yml
+
   build-nix-docker:
     runs-on: ubuntu-latest
+    # For tags: depend on tests passing. For main/PRs: run independently
+    needs: [run-tests]
+    if: |
+      always() &&
+      (needs.run-tests.result == 'success' || needs.run-tests.result == 'skipped')
     permissions:
       contents: read
       packages: write
@@ -83,25 +94,45 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: result
+        generate_release_notes: true
         body: |
-          Docker image for JPAMB ${{ github.ref_name }}
+          ## JPAMB ${{ github.ref_name }}
 
-          ## Usage
+          ✅ **All tests passed** - This release has been fully tested.
 
-          ### Load from tarball:
-          ```bash
-          docker load < jpamb-docker.tar.gz
-          ```
+          ### 🐳 Docker Image
 
-          ### Pull from registry:
+          **Pull from GitHub Container Registry:**
           ```bash
           docker pull ghcr.io/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
           ```
 
-          ### Run:
+          **Or use latest:**
           ```bash
-          docker run -it --rm -v $(pwd):/workspace ghcr.io/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+          docker pull ghcr.io/${{ env.IMAGE_NAME }}:latest
           ```
+
+          **Load from tarball:**
+          Download the `result` file and:
+          ```bash
+          docker load < result
+          ```
+
+          ### 🚀 Usage
+
+          **Run jpamb:**
+          ```bash
+          docker run -it --rm -v $(pwd):/workspace ghcr.io/${{ env.IMAGE_NAME }}:${{ github.ref_name }} jpamb checkhealth
+          ```
+
+          **Test your analysis script:**
+          ```bash
+          docker run -it --rm -v $(pwd):/workspace ghcr.io/${{ env.IMAGE_NAME }}:${{ github.ref_name }} jpamb test ./your_script.py
+          ```
+
+          ### 📚 Documentation
+
+          See the [README](https://github.com/${{ github.repository }}) for full documentation.
 
 #  build-multi-arch:
 #    runs-on: ubuntu-latest
