@@ -95,42 +95,34 @@
 
           test = makeApp "test" ''
             ${get_image_name}
-            echo "Running jpamb test suite in Docker..."
+            echo "Running jpamb test suite in Docker (using pre-built image)..."
             $CONTAINER_CMD run --rm \
-                -v "$(pwd):/workspace" \
-                -w /workspace \
                 "$IMAGE_NAME" \
-                bash -c "mvn compile && python setup.py build_ext --inplace && python -m pytest test/ -v -m 'not slow'"
+                bash -c "cd /workspace && mvn compile && python -m pytest test/ -v -m 'not slow'"
           '';
 
           test-all = makeApp "test-all" ''
             ${get_image_name}
-            echo "Running full jpamb test suite (including slow tests) in Docker..."
+            echo "Running full jpamb test suite in Docker (including slow tests)..."
             $CONTAINER_CMD run --rm \
-                -v "$(pwd):/workspace" \
-                -w /workspace \
                 "$IMAGE_NAME" \
-                bash -c "python setup.py build_ext --inplace && mvn compile && mvn test && python -m pytest test/ -v"
+                bash -c "cd /workspace && mvn compile && mvn test && python -m pytest test/ -v"
           '';
 
           test-java = makeApp "test-java" ''
             ${get_image_name}
             echo "Running Java tests in Docker..."
             $CONTAINER_CMD run --rm \
-                -v "$(pwd):/workspace" \
-                -w /workspace \
                 "$IMAGE_NAME" \
-                bash -c "mvn test"
+                bash -c "cd /workspace && mvn test"
           '';
 
           test-python = makeApp "test-python" ''
             ${get_image_name}
             echo "Running Python tests in Docker..."
             $CONTAINER_CMD run --rm \
-                -v "$(pwd):/workspace" \
-                -w /workspace \
                 "$IMAGE_NAME" \
-                bash -c "python setup.py build_ext --inplace && python -m pytest test/ -v -m 'not slow'"
+                bash -c "cd /workspace && python -m pytest test/ -v -m 'not slow'"
           '';
         };
       };
@@ -148,16 +140,19 @@
           pythonWithPackages = pkgs.python313.withPackages (ps: with ps; [
             pytest
             hypothesis
-            click
-            pyyaml
-            loguru
-            matplotlib
-            tree-sitter
-            tree-sitter-grammars.tree-sitter-java
-            z3-solver
-            z3
-            setuptools
+            pkgs.jpamb  # Include jpamb in Python path with C extension built
           ]);
+
+          # Bundle source files for testing
+          testBundle = pkgs.runCommand "jpamb-test-bundle" {} ''
+            mkdir -p $out/workspace
+            cp -r ${self}/test $out/workspace/
+            cp -r ${self}/src $out/workspace/
+            cp -r ${self}/stats $out/workspace/
+            cp -r ${self}/decompiled $out/workspace/
+            cp -r ${self}/solutions $out/workspace/
+            cp ${self}/pom.xml $out/workspace/
+          '';
         in {
           docker_image = pkgs.dockerTools.buildImage {
             name = "jpamb";
@@ -166,14 +161,12 @@
             copyToRoot = pkgs.buildEnv {
               name = "jpamb-test-env";
               paths = [
-                pkgs.jpamb
                 pkgs.bash
                 pkgs.coreutils
                 pkgs.maven
                 pkgs.jdk
                 pythonWithPackages
-                pkgs.uv
-                pkgs.gcc
+                testBundle
               ];
             };
 
