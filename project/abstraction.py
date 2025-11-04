@@ -1,74 +1,82 @@
-from collections.abc import Callable
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import ClassVar, Literal
+from typing import Literal, Self, TypeVar
 
 type Sign = Literal["+", "-", "0"]
+type Comparison = Literal["le", "eq", "lt", "gt", "ge", "ne"]
 
 
-class Arithmetic:
+class Abstraction(ABC):
+
+    @classmethod
+    @abstractmethod
+    def abstract(cls, items: set[int]) -> "SignSet":
+        pass
+
+    @abstractmethod
+    def compare(self, op: Comparison, other: Self) -> set[bool]:
+        pass
+
+    @abstractmethod
+    def le(self, other: Self) -> set[bool]:
+        pass
+
+    @abstractmethod
+    def eq(self, other: Self) -> set[bool]:
+        pass
+
+    @abstractmethod
+    def __contains__(self, member: int) -> bool:
+        pass
+
+    @abstractmethod
+    def __add__(self, other: Self) -> Self:
+        pass
+
+    @abstractmethod
+    def __sub__(self, other: Self) -> Self:
+        pass
+
+    @abstractmethod
+    def __mul__(self, other: Self) -> Self:
+        pass
+
+    @abstractmethod
+    def __le__(self, other: Self) -> bool:
+        """Return result of poset ordering (self ⊑ other)."""
+
+    @abstractmethod
+    def __eq__(self, other: Self) -> bool:
+        pass
+
+    @abstractmethod
+    def __and__(self, other: Self) -> Self:
+        """Return result of meet operator (self ⊓ other)."""
+
+    @abstractmethod
+    def __or__(self, other: Self) -> Self:
+        """Return result of join operator (self ⊔ other)."""
+
+
+AbstractionClass = TypeVar("AbstractionClass", bound=Abstraction)
+
+
+class Arithmetic[AbstractionClass: Abstraction]:
     """Abstract arithmetic operations for various abstract domains."""
-
-    # Map signs to representative values for comparison
-    _SIGN_VALUES: ClassVar[dict[str, int]] = {"+": 1, "-": -1, "0": 0}
-
-    # Comparison operators
-    _COMPARISONS: ClassVar[dict[str, Callable[[int, int], bool]]] = {
-        "le": lambda a, b: a <= b,
-        "lt": lambda a, b: a < b,
-        "ge": lambda a, b: a >= b,
-        "gt": lambda a, b: a > b,
-        "eq": lambda a, b: a == b,
-        "ne": lambda a, b: a != b,
-    }
 
     @classmethod
     def compare(
         cls,
-        op: Literal["le", "eq", "lt", "gt", "ge", "ne"],
-        s1: "SignSet",
-        s2: "SignSet",
+        op: Comparison,
+        s1: AbstractionClass,
+        s2: AbstractionClass,
     ) -> set[bool]:
-        """
-        Compare abstract values and return possible boolean results.
+        """Compare abstract values and return possible boolean results."""
+        return s1.compare(op, s2)
 
-        For sign abstraction: compares all possible concrete values
-        represented by the signs. We need to consider all possible
-        combinations within each sign category.
-        """
-        if op not in cls._COMPARISONS:
-            raise NotImplementedError(f"Op {op} not implemented")
-
-        results = set()
-        comp_fn = cls._COMPARISONS[op]
-
-        # For each pair of signs, we need to consider all possible outcomes
-        # For example: + compared with + can give both True and False
-        for sign1 in s1.signs:
-            for sign2 in s2.signs:
-                # Use representative extreme values to capture all possibilities
-                if sign1 == "+":
-                    vals1 = [1, 100]  # Different positive values
-                elif sign1 == "-":
-                    vals1 = [-1, -100]  # Different negative values
-                else:  # "0"
-                    vals1 = [0]
-
-                if sign2 == "+":
-                    vals2 = [1, 100]
-                elif sign2 == "-":
-                    vals2 = [-1, -100]
-                else:  # "0"
-                    vals2 = [0]
-
-                # Check all combinations
-                for val1 in vals1:
-                    for val2 in vals2:
-                        results.add(comp_fn(val1, val2))
-
-        return results
 
 @dataclass
-class SignSet:
+class SignSet(Abstraction):
     signs: set[Sign]
 
     @classmethod
@@ -81,6 +89,71 @@ class SignSet:
         if any(x for x in items if x < 0):
             signset.add("-")
         return cls(signset)
+
+    def compare(self, op: Comparison, other: "SignSet") -> set[bool]:
+        match op:
+            case "le":
+                return self.le(other)
+            case "eq":
+                return self.eq(other)
+            case _:
+                raise NotImplementedError(f"Op {op} not implemented")
+
+    def le(self, other: "SignSet") -> set[bool]:
+        # {0} <= {0} -> {True}
+        # {0} <= {+} -> {True}
+        # {0} <= {-} -> {False}
+        # {+} <= {0} -> {False}
+        # {+} <= {+} -> {True, False}
+        # {+} <= {-} -> {False}
+        # {-} <= {0} -> {True}
+        # {-} <= {+} -> {True}
+        # {-} <= {-} -> {True, False}
+        results = set()
+        for s1 in self.signs:
+            for s2 in other.signs:
+                match (s1, s2):
+                    case (("0", "0") | ("0", "+") | ("-", "0") | ("-", "+")):
+                        results.add(True)
+                    case ("0", "-") | ("+", "0") | ("+", "-"):
+                        results.add(False)
+                    case ("+", "+") | ("-", "-"):
+                        results.update({True, False})
+                    case _:
+                        raise ValueError(f"Invalid signs: {s1}, {s2}")
+        return results
+
+    def eq(self, other: "SignSet") -> set[bool]:
+        # {0} == {0} -> {True}
+        # {0} == {+} -> {False}
+        # {0} == {-} -> {False}
+        # {+} == {0} -> {False}
+        # {+} == {+} -> {True, False}
+        # {+} == {-} -> {False}
+        # {-} == {0} -> {False}
+        # {-} == {+} -> {False}
+        # {-} == {-} -> {True, False}
+        results = set()
+        for s1 in self.signs:
+            for s2 in other.signs:
+                match (s1, s2):
+                    case (("0", "0")):
+                        results.add(True)
+                    case (("0", "+") | ("0", "-") | ("+", "0") |
+                          ("-", "0") | ("+", "-") | ("-", "+")):
+                        results.add(False)
+                    case ("+", "+") | ("-", "-"):
+                        results.update({True, False})
+                    case _:
+                        raise ValueError(f"Invalid signs: {s1}, {s2}")
+        return results
+
+    def __contains__(self, member: int) -> bool:
+        if member == 0 and "0" in self.signs:
+            return True
+        if member > 0 and "+" in self.signs:
+            return True
+        return bool(member < 0 and "-" in self.signs)
 
     @staticmethod
     def _add_signs(s1: Sign, s2: Sign) -> set[Sign]:
@@ -102,13 +175,6 @@ class SignSet:
                 return {"+", "-", "0"}
             case _:
                 raise ValueError(f"Invalid signs: {s1}, {s2}")
-
-    def __contains__(self, member: int) -> bool:
-        if member == 0 and "0" in self.signs:
-            return True
-        if member > 0 and "+" in self.signs:
-            return True
-        return bool(member < 0 and "-" in self.signs)
 
     def __add__(self, other: "SignSet") -> "SignSet":
         """Abstract addition of two sign sets."""
