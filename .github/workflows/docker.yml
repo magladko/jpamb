@@ -66,6 +66,10 @@ jobs:
         # Login to GitHub Container Registry
         echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
+        # Get the loaded image name
+        LOCAL_IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep jpamb | head -1)
+        echo "Local image: $LOCAL_IMAGE"
+
         # Determine tags based on the trigger
         if [[ "${{ github.ref }}" == refs/tags/* ]]; then
           VERSION=${GITHUB_REF#refs/tags/}

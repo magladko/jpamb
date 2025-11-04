@@ -365,15 +365,52 @@ uv run jpamb evaluate -W my_analyzer.py > my_results.json
 
 **Still stuck?** Check the example solutions in `solutions/` directory or ask for help!
 
-## Expert: Extending the Benchmark
+## Using Docker
 
-To extend the benchmark suite you have to add new cases to the 
-`src/main/java/jpamb/cases/` folder. If you create a new class, also 
-add it to the `caseclasses` variable in `src/main/java/jpamb/Runtime.java`.
+**Pull the image:**
+```bash
+docker pull ghcr.io/wogyfikacja/jpamb:latest
+```
 
-After which you have to update the class files and the decompiled files. 
-You should only do that using the docker image. 
+**Run your analyzer:**
+```bash
+docker run --rm -v $(pwd):/workspace ghcr.io/wogyfikacja/jpamb:latest jpamb test my_analyzer.py
+```
+
+## Adding Your Own Java Test Cases
+
+Add test files to validate your understanding of benchmark behavior:
 
 ```
-$ TODO 
+jpamb/
+└── src/test/java/jpamb/
+    ├── RuntimeTest.java      ← Existing examples
+    ├── ArraysTest.java
+    └── MyCustomTest.java     ← Add HERE
+```
+
+**Example:** `src/test/java/jpamb/MyCustomTest.java`
+```java
+package jpamb;
+
+import jpamb.cases.*;
+import org.junit.Test;
+import static org.junit.Assert.*;
+
+public class MyCustomTest {
+    @Test
+    public void testMyUnderstanding() {
+        try {
+            Simple.divideByZero();
+            fail("Should throw ArithmeticException");
+        } catch (ArithmeticException e) {
+            // Expected
+        }
+    }
+}
+```
+
+**Run tests:**
+```bash
+docker run --rm -v $(pwd):/workspace ghcr.io/wogyfikacja/jpamb:latest bash -c "mvn test"
 ```
