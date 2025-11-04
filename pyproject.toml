@@ -90,6 +90,7 @@ ignore = [
   "D212",     # Multi-line docstring summary should start at the first line
   "EM",       # errmsg formatting
   "ERA001",   # Commented-out code
+  "FBT003",   # Pass boolean as function argument
   "FIX",      # Fix notes found
   "G004",     # Logging statement uses f-strings
   "PLW1641",  # Missing __hash__ method
