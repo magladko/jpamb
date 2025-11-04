@@ -1,16 +1,16 @@
 
+import sys
 from collections.abc import Iterable
-from dataclasses import dataclass
-from typing import TypeVar, Self
-from abstraction import Sign, SignSet
 from copy import deepcopy
+from dataclasses import dataclass
+from typing import TypeVar
 
+from interpreter import Stack
+from loguru import logger
 
 import jpamb
 from jpamb import jvm
-from interpreter import Stack
-from loguru import logger
-import sys
+
 logger.remove()
 logger.add(sys.stderr, format="[{level}] {message}", level="DEBUG")
 
@@ -24,7 +24,7 @@ class PC:
 
     def assign_target(self, target: int) -> "PC":
         return PC(self.method, target)
-    
+
     def __add__(self, delta: int) -> "PC":
         return PC(self.method, self.offset + delta)
 
@@ -86,7 +86,7 @@ class AState[AV]:
 
     def __or__(self, other: "AState[AV]") -> "AState[AV]":
         raise NotImplementedError
-    
+
     @property
     def pc(self) -> PC:
         """Convenience accessor for current program counter."""
@@ -94,11 +94,11 @@ class AState[AV]:
 
     def __str__(self) -> str:
         return f"{self.heap} {self.frames}"
-    
+
     def clone(self) -> "AState[AV]":
         return AState(
-            heap=self.heap.copy(),          # shallow copy of heap, adjust if AV is mutable
-            frames=Stack([deepcopy(f) for f in self.frames.items]),  # deep copy frames
+            heap=self.heap.copy(), # shallow copy of heap, adjust if AV is mutable
+            frames=Stack([deepcopy(f) for f in self.frames.items]), # deep copy frames
             heap_ptr=self.heap_ptr
         )
 
@@ -116,7 +116,7 @@ class StateSet:
             frame.locals[i] = v
         state = AState({}, Stack.empty().push(frame))
         return StateSet(per_inst={frame.pc: state}, needswork={frame.pc})
-    
+
     def per_instruction(self):
         for pc in self.needswork:
             yield (pc, self.per_inst[pc])
@@ -141,7 +141,7 @@ class StateSet:
 
 def step(state : AState) -> Iterable[AState | str]:
     assert isinstance(state, AState), f"expected frame but got {state}"
-    new_states = list()
+    new_states = []
     frame = state.frames.peek()
     opr = state.bc[frame.pc]
     logger.debug(f"STEP {opr}\n{state}")
@@ -166,7 +166,7 @@ def step(state : AState) -> Iterable[AState | str]:
             v2, v1 = frame.stack.pop(), frame.stack.pop()
         case a:
             raise NotImplementedError(f"Don't know how to handle: {a!r}")
-           
+
     return ["assertion error"]
 
 
@@ -185,7 +185,7 @@ methodid, input = jpamb.getcase()
 MAX_STEPS = 10
 final = set()
 sts = StateSet.initialstate_from_method(methodid, input)
-for i in range(MAX_STEPS):
+for _i in range(MAX_STEPS):
     for s in manystep(sts):
         if isinstance(s, str):
             final.add(s)
