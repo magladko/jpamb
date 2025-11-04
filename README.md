@@ -369,12 +369,12 @@ uv run jpamb evaluate -W my_analyzer.py > my_results.json
 
 **Pull the image:**
 ```bash
-docker pull ghcr.io/wogyfikacja/jpamb:latest
+docker pull ghcr.io/kalhauge/jpamb:latest
 ```
 
 **Run your analyzer:**
 ```bash
-docker run --rm -v $(pwd):/workspace ghcr.io/wogyfikacja/jpamb:latest jpamb test my_analyzer.py
+docker run --rm -v $(pwd):/workspace ghcr.io/kalhauge/jpamb:latest jpamb test my_analyzer.py
 ```
 
 ## Adding Your Own Java Test Cases
