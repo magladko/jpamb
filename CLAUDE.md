@@ -1,1 +1,2 @@
-- To run tests use the following exactly: `jpamb test -- {path_to_script}`
+- Project has uv handled venv under `.venv`
+- There are some pytests in the`project/test`
