@@ -412,5 +412,5 @@ public class MyCustomTest {
 
 **Run tests:**
 ```bash
-docker run --rm -v $(pwd):/workspace ghcr.io/wogyfikacja/jpamb:latest bash -c "mvn test"
+docker run --rm -v $(pwd):/workspace ghcr.io/kalhauge/jpamb:latest bash -c "mvn test"
 ```
