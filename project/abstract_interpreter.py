@@ -7,7 +7,10 @@ from abstraction import Sign, SignSet
 import jpamb
 from jpamb import jvm
 from interpreter import Stack, Bytecode
-
+from loguru import logger
+import sys
+logger.remove()
+logger.add(sys.stderr, format="[{level}] {message}", level="DEBUG")
 
 A = TypeVar("A")
 
@@ -76,9 +79,11 @@ class StateSet:
     def initialstate_from_method(cls, methodid: jvm.AbsMethodID, input) -> "StateSet":
         frame = PerVarFrame.from_method(methodid)
         for i, v in enumerate(input.values):
+            logger.debug(v)
             frame.locals[i] = v
         state = AState({}, Stack.empty().push(frame))
         return StateSet(per_inst={frame.pc: state}, needswork={frame.pc})
+    
     def per_instruction(self):
         for pc in self.needswork:
             yield (pc, self.per_inst[pc])
@@ -106,16 +111,11 @@ def step(state : AState) -> Iterable[AState | str]:
 
 
 def manystep(sts : StateSet) -> Iterable[AState | str]:
-    new_state = dict(sts.per_inst)
+    new_states = list()
     for pc, state in sts.per_instruction():
         for s in step(state):
-            if isinstance(s, AState):
-                new_pc = s.pc
-                if new_pc in new_state:
-                    new_state[new_pc] |= s
-                else:
-                    new_state[new_pc] = s
-    return new_state.values()
+            new_states.append(s)
+    return new_states
 
 
 methodid, input = jpamb.getcase()
@@ -129,6 +129,6 @@ for i in range(MAX_STEPS):
         else:
             sts |= s
 
-print(len(final))
+logger.debug(len(final))
 for result in final:
     print(result)
