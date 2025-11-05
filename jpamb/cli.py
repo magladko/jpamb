@@ -2,8 +2,6 @@ import click
 from pathlib import Path
 import shlex
 import math
-import os
-import shutil
 import sys
 import json
 from inspect import getsourcelines, getsourcefile
@@ -196,13 +194,6 @@ def resolve_cmd(program, with_python=None):
     help="sets the verbosity of the program, more means more information",
 )
 @click.option(
-    "-D",
-    "--docker",
-    type=str,
-    default=None,
-    help="run the command in a docker container",
-)
-@click.option(
     "--workdir",
     type=click.Path(
         exists=True,
@@ -214,49 +205,10 @@ def resolve_cmd(program, with_python=None):
     help="the base of the jpamb folder.",
 )
 @click.pass_context
-def cli(ctx, workdir: Path, verbose, docker):
+def cli(ctx, workdir: Path, verbose):
     """This is the jpamb main entry point."""
     logger.initialize(verbose)
     log.debug(f"Setup suite in {workdir}")
-
-    if docker is not None:
-        if docker == "-":
-            docker = "latest"
-        if ":" not in docker:
-            docker = f"ghcr.io/kalhauge/jpamb:{docker}"
-
-        xargs = list(sys.argv[1:])
-        args = []
-        while xargs:
-            x = xargs.pop(0)
-            if x == "-D" or x == "--docker":
-                xargs.pop(0)
-                continue
-            args.append(x)
-
-        dockerbin = shutil.which("docker")
-        if not dockerbin:
-            raise click.UsageError("Could not find docker on path.")
-
-        cmd = [
-            dockerbin,
-            "run",
-            "--rm",
-            "-v",
-            f"{workdir}:/workspace",
-            docker,
-            "python",
-            "-m",
-            "jpamb.cli",
-        ] + args
-
-        log.success(f"Running script in docker container {cmd}")
-        try:
-            os.execv(dockerbin, cmd)
-        except OSError as e:
-            print(f"Failed to execute script: {e}")
-            sys.exit(1)
-
     ctx.obj = model.Suite(workdir)
 
 
@@ -589,8 +541,8 @@ def build(suite, compile, decompile, document, test):
             logerr=log.debug,
             timeout=60,
         )
-
-        Path("stats/cases.txt").write_text("\n".join(sorted(res.splitlines())))
+        suite.case_file.parent.mkdir(exist_ok=True, parents=True)
+        suite.case_file.write_text("\n".join(sorted(res.splitlines())))
 
         # TODO: Compute distribution.csv
 

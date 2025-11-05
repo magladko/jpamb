@@ -246,7 +246,7 @@ class Suite:
     @property
     def stats_folder(self) -> Path:
         """The folder to place the statistics about the repository"""
-        return self.workfolder / "stats"
+        return self.workfolder / "target" / "stats"
 
     @property
     def classfiles_folder(self) -> Path:
@@ -276,7 +276,7 @@ class Suite:
 
     @property
     def decompiled_folder(self) -> Path:
-        return self.workfolder / "decompiled"
+        return self.workfolder / "target" / "decompiled"
 
     def decompiledfiles(self) -> Iterable[Path]:
         yield from self.decompiled_folder.glob("**/*.json")
