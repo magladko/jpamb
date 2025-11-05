@@ -19,7 +19,6 @@ import subprocess
 from typing import Iterable
 
 from jpamb import jvm
-from jpamb import timer
 
 
 @dataclass(frozen=True, order=True)
@@ -108,7 +107,6 @@ def _check(reason, failfast=False):
 
 @dataclass(frozen=True)
 class AnalysisInfo:
-
     name: str
     version: str
     group: str
@@ -303,7 +301,7 @@ class Suite:
 
             assert params == methodid.extension.params, (
                 f"Mulitple methods with same name {method['name']!r}, "
-                f"but different params {params} from {method["params"]} and {methodid.extension.params}"
+                f"but different params {params} from {method['params']} and {methodid.extension.params}"
             )
             break
         else:
@@ -352,6 +350,7 @@ class Suite:
 
     def checkhealth(self, failfast=False):
         """Checks the health of the repository through a sequence of tests"""
+        from jpamb import timer
 
         def check(msg):
             return _check(msg, failfast)
@@ -365,9 +364,9 @@ class Suite:
                 )
                 logger.debug(f"java --version\n{res}")
                 assert res.returncode == 0, "java --version failed"
-                assert re.search(
-                    r"21\.0\.\d*", res.stdout
-                ), f"java wrong version\n{res.stdout}"
+                assert re.search(r"21\.0\.\d*", res.stdout), (
+                    f"java wrong version\n{res.stdout}"
+                )
             with check("JAVA_HOME"):
                 assert os.getenv("JAVA_HOME") is not None, "JAVA_HOME not set."
                 home = Path(os.getenv("JAVA_HOME"))

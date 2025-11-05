@@ -27,7 +27,7 @@
               inherit system;
               overlays = [
                 (final: prev: {
-                  jvm2json = jvm2json.packages.${system}.default;
+                  jvm2json = final.haskell.lib.justStaticExecutables (jvm2json.packages.${system}.default);
                   needed = with final; [
                     jdt-language-server
                     jdk
@@ -131,35 +131,24 @@
       perSystem {
         do = {pkgs, ...}: {
           default = pkgs.jpamb;
-          inherit (pkgs) jpamb jvm2json;
+          jvm2json = pkgs.jvm2json;
         };
       }
       // perSystem {
         systems = ["x86_64-linux"];
         do = {pkgs, ...}: let
-          pythonWithPackages = pkgs.python313.withPackages (ps: with ps; [
-            pytest
-            hypothesis
-            click
-            pyyaml
-            loguru
-            matplotlib
-            tree-sitter
-            tree-sitter-grammars.tree-sitter-java
-            z3-solver
-            z3
-          ]);
-
-          # Bundle source files for testing
-          testBundle = pkgs.runCommand "jpamb-test-bundle" {} ''
-            mkdir -p $out/workspace
-            cp -r ${self}/test $out/workspace/
-            cp -r ${self}/src $out/workspace/
-            cp -r ${self}/stats $out/workspace/
-            cp -r ${self}/decompiled $out/workspace/
-            cp -r ${self}/solutions $out/workspace/
-            cp ${self}/pom.xml $out/workspace/
-          '';
+          pythonWithPackages = pkgs.python313.withPackages (ps:
+            with ps; [
+              pytest
+              hypothesis
+              click
+              loguru
+              matplotlib
+              tree-sitter
+              tree-sitter-grammars.tree-sitter-java
+              z3-solver
+              z3
+            ]);
         in {
           docker_image = pkgs.dockerTools.buildImage {
             name = "jpamb";
@@ -170,11 +159,9 @@
               paths = [
                 pkgs.bash
                 pkgs.coreutils
-                pkgs.maven
                 pkgs.jdk
                 pythonWithPackages
-                pkgs.jpamb
-                testBundle
+                pkgs.jvm2json
               ];
             };
 
