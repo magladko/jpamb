@@ -166,7 +166,7 @@ class AState[AV: Abstraction]:
         """Deep copy of the entire state."""
         return AState(
             heap=self.heap.copy(),  # shallow copy of heap dict
-            frames=Stack([deepcopy(f) for f in self.frames.items]),  # deep copy frames
+            frames=Stack([f.clone() for f in self.frames.items]),  # deep copy frames
             heap_ptr=self.heap_ptr
         )
 
@@ -433,6 +433,18 @@ def step[AV: Abstraction](state: AState[AV],
             logger.debug("Creating AssertionError object")
             return ["assertion error"]
         
+        case jvm.InvokeStatic(method=m):
+            new_state = state.clone()
+            cur_frame = new_state.frames.peek()
+            nargs = len(m.extension.params)
+            args = [cur_frame.stack.pop() for _ in range(nargs)][::-1]
+            new_frame = PerVarFrame.from_method(m)
+            for i, v in enumerate(args):
+                new_frame.locals[i] = v
+            new_state.frames.push(new_frame)
+            cur_frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
+            return [new_state]
+
         case a:
             raise NotImplementedError(f"Don't know how to handle: {a!r}")
 
