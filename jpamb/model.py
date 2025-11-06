@@ -356,33 +356,17 @@ class Suite:
             return _check(msg, failfast)
 
         with check("The path"):
-            with check("java"):
-                java = shutil.which("java")
-                assert java is not None, "java not on path"
+            with check("docker"):
+                dockerbin = shutil.which("podman") or shutil.which("docker")
+                assert dockerbin is not None, "java not on path"
                 res = subprocess.run(
-                    [java, "--version"], check=True, stdout=subprocess.PIPE, text=True
+                    [dockerbin, "--version"],
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    text=True,
                 )
-                logger.debug(f"java --version\n{res}")
-                assert res.returncode == 0, "java --version failed"
-                assert re.search(r"21\.0\.\d*", res.stdout), (
-                    f"java wrong version\n{res.stdout}"
-                )
-            with check("JAVA_HOME"):
-                assert os.getenv("JAVA_HOME") is not None, "JAVA_HOME not set."
-                home = Path(os.getenv("JAVA_HOME"))
-                assert home.exists(), f"JAVA_HOME=${home} does not exist"
-            with check("mvn"):
-                mvn = shutil.which("mvn")
-                assert mvn is not None, "mvn not on path"
-                res = subprocess.run(
-                    [mvn, "--version"], check=True, stdout=subprocess.PIPE, text=True
-                )
-                logger.debug(f"mvn --version\n{res}")
-                assert res.returncode == 0, "mvn --version failed"
-                assert "3.9.11" in res.stdout, f"mvn wrong version\n{res}"
-            with check("jvm2json"):
-                jvm2json = shutil.which("jvm2json")
-                assert jvm2json is not None, "jvm2json not on path"
+                logger.debug(f"{dockerbin} --version\n{res}")
+                assert res.returncode == 0, "dockerbin --version failed"
 
         with check("The timer"):
             x = timer.sieve(1000)

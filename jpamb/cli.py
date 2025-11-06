@@ -539,7 +539,7 @@ def build(suite, compile, decompile, document, test, docker):
     log.info(f"Using docker: {dockerbin}")
 
     cmd = [
-        "docker",
+        dockerbin,
         "run",
         "--rm",
         "-v",

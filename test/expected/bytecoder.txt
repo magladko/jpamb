@@ -214,6 +214,42 @@
 │└ Results
 │ Score 0.60
 └ Case jpamb.cases.Simple.earlyReturn:()I
+┌ Case jpamb.cases.Simple.justAdd:(II)I
+│┌ Run .venv/bin/python3 solutions/bytecoder.py 'jpamb.cases.Simple.justAdd:(II)I'
+││┌ Stderr
+│││ DEBUG:root:check assertion
+│││ DEBUG:root:read the method name
+│││ DEBUG:root:looking up method
+│││ DEBUG:root:trying to find an assertion error being created
+│││ DEBUG:root:did not find it
+││└ Stderr
+││┌ Stdout
+│││ assertion error;20%
+││└ Stdout
+│└ Run .venv/bin/python3 solutions/bytecoder.py 'jpamb.cases.Simple.justAdd:(II)I'
+│┌ Results
+││ - assertion error: 20.00% -1.50
+│└ Results
+│ Score 0.60
+└ Case jpamb.cases.Simple.justAdd:(II)I
+┌ Case jpamb.cases.Simple.justMulitply:(II)I
+│┌ Run .venv/bin/python3 solutions/bytecoder.py 'jpamb.cases.Simple.justMulitply:(II)I'
+││┌ Stderr
+│││ DEBUG:root:check assertion
+│││ DEBUG:root:read the method name
+│││ DEBUG:root:looking up method
+│││ DEBUG:root:trying to find an assertion error being created
+│││ DEBUG:root:did not find it
+││└ Stderr
+││┌ Stdout
+│││ assertion error;20%
+││└ Stdout
+│└ Run .venv/bin/python3 solutions/bytecoder.py 'jpamb.cases.Simple.justMulitply:(II)I'
+│┌ Results
+││ - assertion error: 20.00% -1.50
+│└ Results
+│ Score 0.60
+└ Case jpamb.cases.Simple.justMulitply:(II)I
 ┌ Case jpamb.cases.Simple.justReturn:()I
 │┌ Run .venv/bin/python3 solutions/bytecoder.py 'jpamb.cases.Simple.justReturn:()I'
 ││┌ Stderr
@@ -268,4 +304,4 @@
 │└ Results
 │ Score 0.60
 └ Case jpamb.cases.Simple.multiError:(Z)I
-Total 6.90
+Total 8.10

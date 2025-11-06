@@ -274,6 +274,52 @@
 │└ Results
 │ Score 5.50
 └ Case jpamb.cases.Simple.earlyReturn:()I
+┌ Case jpamb.cases.Simple.justAdd:(II)I
+│┌ Run .venv/bin/python3 solutions/my_analyzer.py 'jpamb.cases.Simple.justAdd:(II)I'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run .venv/bin/python3 solutions/my_analyzer.py 'jpamb.cases.Simple.justAdd:(II)I'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score 5.50
+└ Case jpamb.cases.Simple.justAdd:(II)I
+┌ Case jpamb.cases.Simple.justMulitply:(II)I
+│┌ Run .venv/bin/python3 solutions/my_analyzer.py 'jpamb.cases.Simple.justMulitply:(II)I'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run .venv/bin/python3 solutions/my_analyzer.py 'jpamb.cases.Simple.justMulitply:(II)I'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score 5.50
+└ Case jpamb.cases.Simple.justMulitply:(II)I
 ┌ Case jpamb.cases.Simple.justReturn:()I
 │┌ Run .venv/bin/python3 solutions/my_analyzer.py 'jpamb.cases.Simple.justReturn:()I'
 ││┌ Stderr
@@ -343,4 +389,4 @@
 │└ Results
 │ Score -14.00
 └ Case jpamb.cases.Simple.multiError:(Z)I
-Total -25.20
+Total -14.20

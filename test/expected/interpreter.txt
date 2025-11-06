@@ -4,9 +4,9 @@
 │││ [DEBUG] STEP get static jpamb/cases/Simple.$assertionsDisabled:Z
 │││ {} <{0:(bool False)}, ϵ, jpamb.cases.Simple.assertBoolean:(Z)V:0>
 │││ Traceback (most recent call last):
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 144, in <module>
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
 │││     state = step(state)
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 134, in step
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
 │││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
 │││ NotImplementedError: Don't know how to handle: Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean())))
 ││└ Stderr
@@ -19,9 +19,9 @@
 │││ [DEBUG] STEP get static jpamb/cases/Simple.$assertionsDisabled:Z
 │││ {} <{0:(bool True)}, ϵ, jpamb.cases.Simple.assertBoolean:(Z)V:0>
 │││ Traceback (most recent call last):
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 144, in <module>
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
 │││     state = step(state)
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 134, in step
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
 │││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
 │││ NotImplementedError: Don't know how to handle: Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean())))
 ││└ Stderr
@@ -34,9 +34,9 @@
 │││ [DEBUG] STEP get static jpamb/cases/Simple.$assertionsDisabled:Z
 │││ {} <{}, ϵ, jpamb.cases.Simple.assertFalse:()V:0>
 │││ Traceback (most recent call last):
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 144, in <module>
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
 │││     state = step(state)
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 134, in step
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
 │││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
 │││ NotImplementedError: Don't know how to handle: Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean())))
 ││└ Stderr
@@ -49,9 +49,9 @@
 │││ [DEBUG] STEP get static jpamb/cases/Simple.$assertionsDisabled:Z
 │││ {} <{0:(int 0)}, ϵ, jpamb.cases.Simple.assertInteger:(I)V:0>
 │││ Traceback (most recent call last):
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 144, in <module>
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
 │││     state = step(state)
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 134, in step
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
 │││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
 │││ NotImplementedError: Don't know how to handle: Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean())))
 ││└ Stderr
@@ -64,9 +64,9 @@
 │││ [DEBUG] STEP get static jpamb/cases/Simple.$assertionsDisabled:Z
 │││ {} <{0:(int 1)}, ϵ, jpamb.cases.Simple.assertInteger:(I)V:0>
 │││ Traceback (most recent call last):
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 144, in <module>
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
 │││     state = step(state)
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 134, in step
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
 │││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
 │││ NotImplementedError: Don't know how to handle: Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean())))
 ││└ Stderr
@@ -79,9 +79,9 @@
 │││ [DEBUG] STEP get static jpamb/cases/Simple.$assertionsDisabled:Z
 │││ {} <{0:(int -1)}, ϵ, jpamb.cases.Simple.assertPositive:(I)V:0>
 │││ Traceback (most recent call last):
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 144, in <module>
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
 │││     state = step(state)
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 134, in step
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
 │││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
 │││ NotImplementedError: Don't know how to handle: Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean())))
 ││└ Stderr
@@ -94,9 +94,9 @@
 │││ [DEBUG] STEP get static jpamb/cases/Simple.$assertionsDisabled:Z
 │││ {} <{0:(int 1)}, ϵ, jpamb.cases.Simple.assertPositive:(I)V:0>
 │││ Traceback (most recent call last):
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 144, in <module>
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
 │││     state = step(state)
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 134, in step
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
 │││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
 │││ NotImplementedError: Don't know how to handle: Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean())))
 ││└ Stderr
@@ -111,9 +111,9 @@
 │││ [DEBUG] STEP ifz ne 3
 │││ {} <{0:(int -1)}, (int -1), jpamb.cases.Simple.checkBeforeAssert:(I)V:1>
 │││ Traceback (most recent call last):
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 144, in <module>
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
 │││     state = step(state)
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 134, in step
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
 │││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
 │││ NotImplementedError: Don't know how to handle: Ifz(offset=1, condition='ne', target=3)
 ││└ Stderr
@@ -128,9 +128,9 @@
 │││ [DEBUG] STEP ifz ne 3
 │││ {} <{0:(int 0)}, (int 0), jpamb.cases.Simple.checkBeforeAssert:(I)V:1>
 │││ Traceback (most recent call last):
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 144, in <module>
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
 │││     state = step(state)
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 134, in step
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
 │││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
 │││ NotImplementedError: Don't know how to handle: Ifz(offset=1, condition='ne', target=3)
 ││└ Stderr
@@ -145,9 +145,9 @@
 │││ [DEBUG] STEP ifz eq 6
 │││ {} <{0:(int 0)}, (int 0), jpamb.cases.Simple.checkBeforeDivideByN2:(I)I:1>
 │││ Traceback (most recent call last):
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 144, in <module>
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
 │││     state = step(state)
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 134, in step
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
 │││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
 │││ NotImplementedError: Don't know how to handle: Ifz(offset=1, condition='eq', target=6)
 ││└ Stderr
@@ -162,9 +162,9 @@
 │││ [DEBUG] STEP ifz eq 6
 │││ {} <{0:(int 1)}, (int 1), jpamb.cases.Simple.checkBeforeDivideByN2:(I)I:1>
 │││ Traceback (most recent call last):
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 144, in <module>
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
 │││     state = step(state)
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 134, in step
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
 │││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
 │││ NotImplementedError: Don't know how to handle: Ifz(offset=1, condition='eq', target=6)
 ││└ Stderr
@@ -177,9 +177,9 @@
 │││ [DEBUG] STEP get static jpamb/cases/Simple.$assertionsDisabled:Z
 │││ {} <{0:(int 0)}, ϵ, jpamb.cases.Simple.checkBeforeDivideByN:(I)I:0>
 │││ Traceback (most recent call last):
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 144, in <module>
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
 │││     state = step(state)
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 134, in step
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
 │││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
 │││ NotImplementedError: Don't know how to handle: Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean())))
 ││└ Stderr
@@ -192,9 +192,9 @@
 │││ [DEBUG] STEP get static jpamb/cases/Simple.$assertionsDisabled:Z
 │││ {} <{0:(int 1)}, ϵ, jpamb.cases.Simple.checkBeforeDivideByN:(I)I:0>
 │││ Traceback (most recent call last):
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 144, in <module>
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
 │││     state = step(state)
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 134, in step
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
 │││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
 │││ NotImplementedError: Don't know how to handle: Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean())))
 ││└ Stderr
@@ -247,9 +247,9 @@
 │││ [DEBUG] STEP binary:I sub
 │││ {} <{0:(int 0)}, (int 1)(int 0)(int 10054203), jpamb.cases.Simple.divideByNMinus10054203:(I)I:3>
 │││ Traceback (most recent call last):
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 144, in <module>
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
 │││     state = step(state)
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 134, in step
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
 │││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
 │││ NotImplementedError: Don't know how to handle: Binary(offset=4, type=Int(), operant=<BinaryOpr.Sub: 2>)
 ││└ Stderr
@@ -268,9 +268,9 @@
 │││ [DEBUG] STEP binary:I sub
 │││ {} <{0:(int 10054203)}, (int 1)(int 10054203)(int 10054203), jpamb.cases.Simple.divideByNMinus10054203:(I)I:3>
 │││ Traceback (most recent call last):
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 144, in <module>
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
 │││     state = step(state)
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 134, in step
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
 │││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
 │││ NotImplementedError: Don't know how to handle: Binary(offset=4, type=Int(), operant=<BinaryOpr.Sub: 2>)
 ││└ Stderr
@@ -341,6 +341,44 @@
 │└ Run .venv/bin/python3 solutions/interpreter.py 'jpamb.cases.Simple.earlyReturn:()I' '()'
 │ Expected 'ok' and got 'ok'
 └ Case jpamb.cases.Simple.earlyReturn:() -> ok
+┌ Case jpamb.cases.Simple.justAdd:(1, 2) -> ok
+│┌ Run .venv/bin/python3 solutions/interpreter.py 'jpamb.cases.Simple.justAdd:(II)I' '(1, 2)'
+││┌ Stderr
+│││ [DEBUG] STEP load:I 0
+│││ {} <{0:(int 1), 1:(int 2)}, ϵ, jpamb.cases.Simple.justAdd:(II)I:0>
+│││ [DEBUG] STEP load:I 1
+│││ {} <{0:(int 1), 1:(int 2)}, (int 1), jpamb.cases.Simple.justAdd:(II)I:1>
+│││ [DEBUG] STEP binary:I add
+│││ {} <{0:(int 1), 1:(int 2)}, (int 1)(int 2), jpamb.cases.Simple.justAdd:(II)I:2>
+│││ Traceback (most recent call last):
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
+│││     state = step(state)
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
+│││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
+│││ NotImplementedError: Don't know how to handle: Binary(offset=2, type=Int(), operant=<BinaryOpr.Add: 1>)
+││└ Stderr
+│└ Run .venv/bin/python3 solutions/interpreter.py 'jpamb.cases.Simple.justAdd:(II)I' '(1, 2)'
+│ Expected 'ok' and got 'failure'
+└ Case jpamb.cases.Simple.justAdd:(1, 2) -> ok
+┌ Case jpamb.cases.Simple.justMulitply:(1, 2) -> ok
+│┌ Run .venv/bin/python3 solutions/interpreter.py 'jpamb.cases.Simple.justMulitply:(II)I' '(1, 2)'
+││┌ Stderr
+│││ [DEBUG] STEP load:I 0
+│││ {} <{0:(int 1), 1:(int 2)}, ϵ, jpamb.cases.Simple.justMulitply:(II)I:0>
+│││ [DEBUG] STEP load:I 1
+│││ {} <{0:(int 1), 1:(int 2)}, (int 1), jpamb.cases.Simple.justMulitply:(II)I:1>
+│││ [DEBUG] STEP binary:I mul
+│││ {} <{0:(int 1), 1:(int 2)}, (int 1)(int 2), jpamb.cases.Simple.justMulitply:(II)I:2>
+│││ Traceback (most recent call last):
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
+│││     state = step(state)
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
+│││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
+│││ NotImplementedError: Don't know how to handle: Binary(offset=2, type=Int(), operant=<BinaryOpr.Mul: 3>)
+││└ Stderr
+│└ Run .venv/bin/python3 solutions/interpreter.py 'jpamb.cases.Simple.justMulitply:(II)I' '(1, 2)'
+│ Expected 'ok' and got 'failure'
+└ Case jpamb.cases.Simple.justMulitply:(1, 2) -> ok
 ┌ Case jpamb.cases.Simple.justReturn:() -> ok
 │┌ Run .venv/bin/python3 solutions/interpreter.py 'jpamb.cases.Simple.justReturn:()I' '()'
 ││┌ Stderr
@@ -361,9 +399,9 @@
 │││ [DEBUG] STEP return:V
 │││ {} <{}, ϵ, jpamb.cases.Simple.justReturnNothing:()V:0>
 │││ Traceback (most recent call last):
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 144, in <module>
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
 │││     state = step(state)
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 134, in step
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
 │││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
 │││ NotImplementedError: Don't know how to handle: Return(offset=0, type=None)
 ││└ Stderr
@@ -376,9 +414,9 @@
 │││ [DEBUG] STEP get static jpamb/cases/Simple.$assertionsDisabled:Z
 │││ {} <{0:(bool False)}, ϵ, jpamb.cases.Simple.multiError:(Z)I:0>
 │││ Traceback (most recent call last):
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 144, in <module>
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
 │││     state = step(state)
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 134, in step
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
 │││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
 │││ NotImplementedError: Don't know how to handle: Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean())))
 ││└ Stderr
@@ -391,13 +429,13 @@
 │││ [DEBUG] STEP get static jpamb/cases/Simple.$assertionsDisabled:Z
 │││ {} <{0:(bool True)}, ϵ, jpamb.cases.Simple.multiError:(Z)I:0>
 │││ Traceback (most recent call last):
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 144, in <module>
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 144, in <module>
 │││     state = step(state)
-│││   File "/Users/chrg/Develop/repos/jpamb/solutions/interpreter.py", line 134, in step
+│││   File "/home/chrg/Develop/jpamb/solutions/interpreter.py", line 134, in step
 │││     raise NotImplementedError(f"Don't know how to handle: {a!r}")
 │││ NotImplementedError: Don't know how to handle: Get(offset=0, static=True, field=AbsFieldID(classname=ClassName('jpamb/cases/Simple'), extension=FieldID(name='$assertionsDisabled', type=Boolean())))
 ││└ Stderr
 │└ Run .venv/bin/python3 solutions/interpreter.py 'jpamb.cases.Simple.multiError:(Z)I' '(true)'
 │ Expected 'divide by zero' and got 'failure'
 └ Case jpamb.cases.Simple.multiError:(true) -> divide by zero
-Total 7/25
+Total 7/27
