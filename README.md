@@ -389,56 +389,31 @@ uv run jpamb evaluate -W my_analyzer.py > my_results.json
 
 **Still stuck?** Check the example solutions in `solutions/` directory or ask for help!
 
-## Using Docker
+## Adding Your Own Cases
 
-**Pull the image:**
+To get started with adding your own cases, please make sure to download
+either `docker` or `podman` (recommended).
 
-```bash
-docker pull ghcr.io/kalhauge/jpamb:latest
-```
-
-**Run your analyzer:**
-
-```bash
-docker run --rm -v $(pwd):/workspace ghcr.io/kalhauge/jpamb:latest jpamb test my_analyzer.py
-```
-
-## Adding Your Own Java Test Cases
-
-Add test files to validate your understanding of benchmark behavior:
+You can add your own cases to the benchmark suite by adding
+them in the source folder:
 
 ```
-jpamb/
-└── src/test/java/jpamb/
-    ├── RuntimeTest.java      ← Existing examples
-    ├── ArraysTest.java
-    └── MyCustomTest.java     ← Add HERE
+src/main/java/jpamb/cases
+    ├── Arrays.java
+    ├── Calls.java
+    ├── Loops.java
+    ├── Simple.java
+    └── Tricky.java
 ```
 
-**Example:** `src/test/java/jpamb/MyCustomTest.java`
+and then running the following command:
 
-```java
-package jpamb;
-
-import jpamb.cases.*;
-import org.junit.Test;
-import static org.junit.Assert.*;
-
-public class MyCustomTest {
-    @Test
-    public void testMyUnderstanding() {
-        try {
-            Simple.divideByZero();
-            fail("Should throw ArithmeticException");
-        } catch (ArithmeticException e) {
-            // Expected
-        }
-    }
-}
+```
+$ uv run jpamb build
 ```
 
-**Run tests:**
+This will download a docker container and run the build in that. This ensures
+consistent builds across systems.
 
-```bash
-docker run --rm -v $(pwd):/workspace ghcr.io/kalhauge/jpamb:latest bash -c "mvn test"
-```
+**Warning:** If you create new folders and use docker, it might create them as root. To fix
+this either use podman or change the permissions after.
