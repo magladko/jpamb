@@ -23,13 +23,6 @@ jobs:
     - name: Run checkhealth
       run: |
         uv run jpamb -vv checkhealth
-
-    - name: Run Python tests 
-      run: |
-        uv run pytest test/
-
-        # Check if something was changed
-        git diff --exit-code
     
     - name: Run build
       run: |
@@ -37,4 +30,9 @@ jobs:
         
         # Check if something was changed
         git diff --exit-code
+
+    - name: Run Python tests 
+      run: |
+        uv run pytest test/
+    
 
