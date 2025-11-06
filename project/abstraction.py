@@ -1,16 +1,40 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Literal, Self, TypeVar
+from types import get_original_bases
+from typing import Literal, Self, get_args, get_origin
 
 type Sign = Literal["+", "-", "0"]
 type Comparison = Literal["le", "eq", "lt", "gt", "ge", "ne"]
 
 
-class Abstraction(ABC):
+class Abstraction[T](ABC):
+
+    concrete_type: type[T]
+
+    def __init_subclass__(cls, **kwargs) -> None:  # noqa: ANN003
+        super().__init_subclass__(**kwargs)
+        # Extract T from the generic base
+        for base in get_original_bases(cls):
+            origin = get_origin(base)
+            if origin is Abstraction:
+                args = get_args(base)
+                if args:
+                    cls.concrete_type = args[0]
+                break
 
     @classmethod
     @abstractmethod
-    def abstract(cls, items: set[int]) -> "SignSet":
+    def abstract(cls, items: set[T]) -> Self:
+        pass
+
+    @classmethod
+    @abstractmethod
+    def bot(cls) -> Self:
+        pass
+
+    @classmethod
+    @abstractmethod
+    def top(cls) -> Self:
         pass
 
     @abstractmethod
@@ -26,7 +50,7 @@ class Abstraction(ABC):
         pass
 
     @abstractmethod
-    def __contains__(self, member: int) -> bool:
+    def __contains__(self, member: T) -> bool:
         pass
 
     @abstractmethod
@@ -39,6 +63,18 @@ class Abstraction(ABC):
 
     @abstractmethod
     def __mul__(self, other: Self) -> Self:
+        pass
+
+    @abstractmethod
+    def __div__(self, other: Self) -> Self:
+        pass
+
+    @abstractmethod
+    def __floordiv__(self, other: Self) -> Self:
+        pass
+
+    @abstractmethod
+    def __mod__(self, other: Self) -> Self:
         pass
 
     @abstractmethod
@@ -57,9 +93,9 @@ class Abstraction(ABC):
     def __or__(self, other: Self) -> Self:
         """Return result of join operator (self ⊔ other)."""
 
-
-AbstractionClass = TypeVar("AbstractionClass", bound=Abstraction)
-
+    @abstractmethod
+    def __str__(self) -> str:
+        pass
 
 class Arithmetic[AbstractionClass: Abstraction]:
     """Abstract arithmetic operations for various abstract domains."""
@@ -76,7 +112,7 @@ class Arithmetic[AbstractionClass: Abstraction]:
 
 
 @dataclass
-class SignSet(Abstraction):
+class SignSet(Abstraction[int]):
     signs: set[Sign]
 
     @classmethod
@@ -89,6 +125,14 @@ class SignSet(Abstraction):
         if any(x for x in items if x < 0):
             signset.add("-")
         return cls(signset)
+
+    @classmethod
+    def bot(cls) -> "SignSet":
+        return cls(set())
+
+    @classmethod
+    def top(cls) -> "SignSet":
+        return cls({"+", "-", "0"})
 
     def compare(self, op: Comparison, other: "SignSet") -> set[bool]:
         match op:
@@ -247,6 +291,38 @@ class SignSet(Abstraction):
                 new_signs.update(self._mul_signs(s1, s2))
         return SignSet(new_signs)
 
+    def __div__(self, other: "SignSet") -> "SignSet":
+        """Abstract division of two sign sets."""
+        assert isinstance(other, SignSet)
+        new_signs = set()
+        for s1 in self.signs:
+            for s2 in other.signs:
+                if s2 == "0":
+                    raise ValueError("divide by zero")
+                new_signs.update(self._mul_signs(s1, s2))
+        return SignSet(new_signs)
+
+    def __floordiv__(self, other: Self) -> "SignSet":
+        """Abstract integer division of two sign sets."""
+        return self.__div__(other)
+
+    def __mod__(self, other: Self) -> "SignSet":
+        """Abstract modulus of two sign sets."""
+        assert isinstance(other, SignSet)
+        new_signs = set()
+        for s1 in self.signs:
+            for s2 in other.signs:
+                if s2 == "0":
+                    raise ValueError("divide by zero")
+                # Modulus sign rules:
+                # x % + = {0, +, -} depending on x
+                # x % - = {0, +, -} depending on x
+                if s1 == "0":
+                    new_signs.add("0")
+                else:
+                    new_signs.update({"+", "-", "0"})
+        return SignSet(new_signs)
+
     def __le__(self, other: "SignSet") -> bool:
         assert isinstance(other, SignSet)
         return self.signs <= other.signs
@@ -262,3 +338,6 @@ class SignSet(Abstraction):
     def __or__(self, other: "SignSet") -> "SignSet":
         assert isinstance(other, SignSet)
         return SignSet(self.signs | other.signs)
+
+    def __str__(self) -> str:
+        return "{" + ",".join(sorted(self.signs)) + "}"

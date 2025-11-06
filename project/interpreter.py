@@ -24,6 +24,9 @@ class PC:
     def __str__(self) -> str:
         return f"{self.method}:{self.offset}"
 
+    def __hash__(self) -> int:
+        return hash((self.method, self.offset))
+
 
 @dataclass
 class Bytecode:
