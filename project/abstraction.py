@@ -138,8 +138,16 @@ class SignSet(Abstraction[int]):
         match op:
             case "le":
                 return self.le(other)
+            case "lt":
+                return self.lt(other)
             case "eq":
                 return self.eq(other)
+            case "ne":
+                return self.ne(other)
+            case "ge":
+                return self.ge(other)
+            case "gt":
+                return self.gt(other)
             case _:
                 raise NotImplementedError(f"Op {op} not implemented")
 
@@ -185,6 +193,81 @@ class SignSet(Abstraction[int]):
                         results.add(True)
                     case (("0", "+") | ("0", "-") | ("+", "0") |
                           ("-", "0") | ("+", "-") | ("-", "+")):
+                        results.add(False)
+                    case ("+", "+") | ("-", "-"):
+                        results.update({True, False})
+                    case _:
+                        raise ValueError(f"Invalid signs: {s1}, {s2}")
+        return results
+    
+    def ne(self, other: "SignSet") -> set[bool]:
+        return {not r for r in self.eq(other)}
+    
+    def lt(self, other: "SignSet") -> set[bool]:
+        # {0} < {0} -> {False}
+        # {0} < {+} -> {True}
+        # {0} < {-} -> {False}
+        # {+} < {0} -> {False}
+        # {+} < {+} -> {True, False}
+        # {+} < {-} -> {False}
+        # {-} < {0} -> {True}
+        # {-} < {+} -> {True}
+        # {-} < {-} -> {True, False}
+        results = set()
+        for s1 in self.signs:
+            for s2 in other.signs:
+                match (s1, s2):
+                    case ("0", "+") | ("-", "0") | ("-", "+"):
+                        results.add(True)
+                    case ("0", "0") | ("0", "-") | ("+", "0") | ("+", "-"):
+                        results.add(False)
+                    case ("+", "+") | ("-", "-"):
+                        results.update({True, False})
+                    case _:
+                        raise ValueError(f"Invalid signs: {s1}, {s2}")
+        return results
+
+    def ge(self, other: "SignSet") -> set[bool]:
+        # {0} >= {0} -> {True}
+        # {0} >= {+} -> {False}
+        # {0} >= {-} -> {True}
+        # {+} >= {0} -> {True}
+        # {+} >= {+} -> {True, False}
+        # {+} >= {-} -> {True}
+        # {-} >= {0} -> {False}
+        # {-} >= {+} -> {False}
+        # {-} >= {-} -> {True, False}
+        results = set()
+        for s1 in self.signs:
+            for s2 in other.signs:
+                match (s1, s2):
+                    case ("0", "0") | ("0", "-") | ("+", "0") | ("+", "-"):
+                        results.add(True)
+                    case ("0", "+") | ("-", "0") | ("-", "+"):
+                        results.add(False)
+                    case ("+", "+") | ("-", "-"):
+                        results.update({True, False})
+                    case _:
+                        raise ValueError(f"Invalid signs: {s1}, {s2}")
+        return results
+    
+    def gt(self, other: "SignSet") -> set[bool]:
+        # {0} > {0} -> {False}
+        # {0} > {+} -> {False}
+        # {0} > {-} -> {True}
+        # {+} > {0} -> {True}
+        # {+} > {+} -> {True, False}
+        # {+} > {-} -> {True}
+        # {-} > {0} -> {False}
+        # {-} > {+} -> {False}
+        # {-} > {-} -> {True, False}
+        results = set()
+        for s1 in self.signs:
+            for s2 in other.signs:
+                match (s1, s2):
+                    case ("0", "-") | ("+", "0") | ("+", "-"):
+                        results.add(True)
+                    case ("0", "0") | ("0", "+") | ("-", "0") | ("-", "+"):
                         results.add(False)
                     case ("+", "+") | ("-", "-"):
                         results.update({True, False})
@@ -297,8 +380,8 @@ class SignSet(Abstraction[int]):
         new_signs = set()
         for s1 in self.signs:
             for s2 in other.signs:
-                if s2 == "0":
-                    raise ValueError("divide by zero")
+                # if s2 == "0":
+                #     raise ValueError("divide by zero")
                 new_signs.update(self._mul_signs(s1, s2))
         return SignSet(new_signs)
 
@@ -338,6 +421,11 @@ class SignSet(Abstraction[int]):
     def __or__(self, other: "SignSet") -> "SignSet":
         assert isinstance(other, SignSet)
         return SignSet(self.signs | other.signs)
+    
+    def __isub__(self, other: "SignSet") -> "SignSet":
+        assert isinstance(other, SignSet)
+        self.signs -= other.signs
+        return self
 
     def __str__(self) -> str:
         return "{" + ",".join(sorted(self.signs)) + "}"

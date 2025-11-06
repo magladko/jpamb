@@ -2,9 +2,9 @@ import sys
 from collections.abc import Iterable
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Self
+from typing import Self, cast
 
-from abstraction import Abstraction, SignSet
+from abstraction import Abstraction, SignSet, Comparison
 from interpreter import PC, Bytecode, Stack
 from loguru import logger
 
@@ -287,41 +287,81 @@ def step[AV: Abstraction](state: AState[AV],
             new_frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
             return [new_state]
         
-        case jvm.Ifz(condition=_, target=t):
+        case jvm.Ifz(condition=c, target=t):
             # Compare ONE value to zero
             # Stack: [..., value] → [...]
             
-            # Fall-through branch
-            state1 = state.clone()
-            state1.frames.peek().stack.pop()  # Pop the value
-            state1.frames.peek().pc = PC(frame.pc.method, frame.pc.offset + 1)
+            # # Fall-through branch
+            # state1 = state.clone()
+            # state1.frames.peek().stack.pop()  # Pop the value
+            # state1.frames.peek().pc = PC(frame.pc.method, frame.pc.offset + 1)
             
-            # Jump branch
-            state2 = state.clone()
-            state2.frames.peek().stack.pop()  # Pop the value
-            state2.frames.peek().pc = PC(frame.pc.method, t)
+            # # Jump branch
+            # state2 = state.clone()
+            # state2.frames.peek().stack.pop()  # Pop the value
+            # state2.frames.peek().pc = PC(frame.pc.method, t)
             
-            return [state1, state2]
+            # return [state1, state2]
+            
+            
+            # Pop the value being tested
+            v1 = frame.stack.pop()
+            v2 = abstraction_cls.abstract({0})
+            assert isinstance(v1, Abstraction)
+            # Clone state before modifying PC
+            other = state.clone()
+            # One path: continue to next instruction
+            frame.pc += 1
+            # Other path: jump to target
+            other.frames.peek().pc.offset = t
+
+            res = v1.compare(cast(Comparison, c), v2)
+            logger.debug(f"res: {res}")
+            computed_states = []
+            if True in res:
+                    computed_states.append(other)
+            if False in res:
+                    computed_states.append(state)
+            return computed_states
         
-        case jvm.If(condition=_, target=t):
+        case jvm.If(condition=c, target=t):
             # Compare TWO values
             # Stack: [..., value1, value2] → [...]
             
-            # Fall-through branch
-            state1 = state.clone()
-            frame1 = state1.frames.peek()
-            frame1.stack.pop()  # Pop value2
-            frame1.stack.pop()  # Pop value1
-            frame1.pc = PC(frame.pc.method, frame.pc.offset + 1)
+            # # Fall-through branch
+            # state1 = state.clone()
+            # frame1 = state1.frames.peek()
+            # frame1.stack.pop()  # Pop value2
+            # frame1.stack.pop()  # Pop value1
+            # frame1.pc = PC(frame.pc.method, frame.pc.offset + 1)
             
-            # Jump branch
-            state2 = state.clone()
-            frame2 = state2.frames.peek()
-            frame2.stack.pop()  # Pop value2
-            frame2.stack.pop()  # Pop value1
-            frame2.pc = PC(frame.pc.method, t)
+            # # Jump branch
+            # state2 = state.clone()
+            # frame2 = state2.frames.peek()
+            # frame2.stack.pop()  # Pop value2
+            # frame2.stack.pop()  # Pop value1
+            # frame2.pc = PC(frame.pc.method, t)
             
-            return [state1, state2]
+            # return [state1, state2]
+            
+            # Compare TWO values
+            # Stack: [..., value1, value2] → [...]
+            v2, v1 = frame.stack.pop(), frame.stack.pop()
+            assert isinstance(v1, Abstraction)
+            assert isinstance(v2, Abstraction)
+            # Clone state before modifying PC
+            other = state.clone()
+            # One path: continue to next instruction
+            frame.pc += 1
+            # Other path: jump to target
+            other.frames.peek().pc.offset = t
+            res = v1.compare(cast(Comparison, c), v2)
+            computed_states = []
+            if True in res:
+                    computed_states.append(other)
+            if False in res:
+                    computed_states.append(state)
+            return computed_states
         
         case jvm.Return(type=type):
             new_state = state.clone()
@@ -343,6 +383,14 @@ def step[AV: Abstraction](state: AState[AV],
             v2, v1 = new_frame.stack.pop(), new_frame.stack.pop()
             assert isinstance(v1, Abstraction), f"expected Abstraction, but got {v1}"
             assert isinstance(v2, Abstraction), f"expected Abstraction, but got {v2}"
+            computed_states = []
+            if v2.__contains__(0):
+                v2 -= abstraction_cls.abstract({0})
+                logger.debug("Division by zero found!")
+                computed_states.append("divide by zero")
+                if v2 == abstraction_cls.bot():
+                    # No more options left
+                    return computed_states
 
             try:
                 match operant:
@@ -363,7 +411,10 @@ def step[AV: Abstraction](state: AState[AV],
                 return [str(e)]
             
             new_frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
-            return [new_state]
+            computed_states.append(new_state)
+            return computed_states
+            
+            # return [new_state]
         
         case jvm.Get(
             static=True,
@@ -419,10 +470,19 @@ if methodid is None:
     methodid, case_input = jpamb.getcase()
 else:
     params = methodid.extension.params
+    
+results: dict[str, int] = {
+    "ok": 0,
+    "assertion error": 0,
+    "divide by zero": 0,
+    "out of bounds": 0,
+    "null pointer": 0,
+    "*": 0,
+}
 
 AV = SignSet
 
-MAX_STEPS = 10
+MAX_STEPS = 1000
 final: set[str] = set()
 
 # Initialize with entry state
@@ -449,6 +509,9 @@ for iteration in range(MAX_STEPS):
         break
 
 # Output results
-for result in final:
-    print(f"{result};100%")
+for result in results:
+    if result in final:
+        print(f"{result};100%")
+    else:
+        print(f"{result};0%")
     
