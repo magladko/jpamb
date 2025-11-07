@@ -1,6 +1,5 @@
 import sys
 from collections.abc import Iterable
-from copy import deepcopy
 from dataclasses import dataclass
 from typing import Self, cast
 
@@ -14,16 +13,52 @@ from jpamb import jvm
 logger.remove()
 logger.add(sys.stderr, format="[{level}] {message}", level="DEBUG")
 
+
 @dataclass
-class PerVarFrame[AV: Abstraction]:
+class ConstraintStore[AV: Abstraction]:
+    """
+    Manages named values and their abstract value constraints.
+
+    Named values allow tracking relationships between variables:
+    - If local 0 is loaded to stack, they share the same name
+    - When branching, we can refine constraints for each path
+    """
+
+    constraints: dict[str, AV]
+    next_id: int = 0
+
+    def fresh_name(self) -> str:
+        """Generate unique name for a new value."""
+        name = f"v{self.next_id}"
+        self.next_id += 1
+        return name
+
+    def clone(self) -> "ConstraintStore[AV]":
+        """Deep copy of the constraint store."""
+        return ConstraintStore(
+            constraints=self.constraints.copy(),
+            next_id=self.next_id
+        )
+
+    def __eq__(self, other: object) -> bool:
+        """Check equality of constraint stores."""
+        if not isinstance(other, ConstraintStore):
+            return False
+        return (set(self.constraints.keys()) == set(other.constraints.keys()) and
+                all(self.constraints[k] == other.constraints[k]
+                    for k in self.constraints))
+
+@dataclass
+class PerVarFrame:
     """
     Abstract frame at a SINGLE program point.
 
     Represents the abstract state of locals and stack at one PC.
+    Now stores NAMES of values instead of values directly.
     """
 
-    locals: dict[int, AV]  # variable_index → abstract_value
-    stack: Stack[AV]       # operand stack of abstract values
+    locals: dict[int, str]  # variable_index → value_name
+    stack: Stack[str]       # operand stack of value names
     pc: PC
 
     def __str__(self) -> str:
@@ -35,7 +70,7 @@ class PerVarFrame[AV: Abstraction]:
         """Create initial frame for a method entry."""
         return cls({}, Stack.empty(), PC(method, 0))
 
-    def clone(self) -> "PerVarFrame[AV]":
+    def clone(self) -> "PerVarFrame":
         """Deep copy of the frame."""
         return PerVarFrame(
             locals=self.locals.copy(),
@@ -50,15 +85,17 @@ class AState[AV: Abstraction]:
     Complete abstract state of the program at ONE program point.
 
     Contains:
-    - heap: abstract values at heap addresses
+    - heap: named values at heap addresses
     - frames: call stack (multiple frames if methods are nested)
+    - constraints: mapping from names to abstract values
     - heap_ptr: next available heap address
 
     The "program point" is determined by the PC of the TOP frame.
     """
 
-    heap: dict[int, AV]
-    frames: Stack[PerVarFrame[AV]]
+    heap: dict[int, str]  # heap_addr → value_name
+    frames: Stack[PerVarFrame]
+    constraints: ConstraintStore[AV]
     heap_ptr: int = 0
     bc = Bytecode(jpamb.Suite(), {})
 
@@ -66,13 +103,10 @@ class AState[AV: Abstraction]:
         """
         In-place POINTWISE JOIN operation (⊔) for abstract states.
 
-        "Pointwise" means: for each position/key, join the values at that position.
-
-        We join:
-        1. Heap: for each address, join the abstract values
-        2. Frames: for each frame position in call stack, join the frame contents
-           a. Locals: for each variable index, join the abstract values
-           b. Stack: for each stack position, join the abstract values
+        With named values:
+        1. If both states have the same name, join their constraints
+        2. If names differ at same position, create fresh name with joined constraint
+        3. Merge constraint stores
         """
         assert isinstance(other, AState), f"expected AState but got {other}"
         assert (
@@ -82,32 +116,80 @@ class AState[AV: Abstraction]:
         # Join heap POINTWISE (by address)
         for addr in other.heap:
             if addr in self.heap:
-                self.heap[addr] = self.heap[addr] | other.heap[addr]
+                name1 = self.heap[addr]
+                name2 = other.heap[addr]
+                if name1 == name2:
+                    # Same name, join constraints
+                    self.constraints.constraints[name1] = (
+                        self.constraints.constraints[name1] |
+                        other.constraints.constraints[name2]
+                    )
+                else:
+                    # Different names, create fresh name
+                    fresh = self.constraints.fresh_name()
+                    self.constraints.constraints[fresh] = (
+                        self.constraints.constraints[name1] |
+                        other.constraints.constraints[name2]
+                    )
+                    self.heap[addr] = fresh
             else:
+                # New address
                 self.heap[addr] = other.heap[addr]
+                self.constraints.constraints[other.heap[addr]] = (
+                    other.constraints.constraints[other.heap[addr]]
+                )
 
         # Join frames POINTWISE (by call stack position)
         for f1, f2 in zip(self.frames.items, other.frames.items, strict=True):
-            # Frames at same stack position must be at same PC
-            # (otherwise program is malformed - different control flow paths
-            # reached here with different call stacks)
             assert f1.pc == f2.pc, f"Program counters differ: {f1.pc} != {f2.pc}"
 
             # Join locals POINTWISE (by variable index)
             for var_idx in f2.locals:
                 if var_idx in f1.locals:
-                    f1.locals[var_idx] = f1.locals[var_idx] | f2.locals[var_idx]
+                    name1 = f1.locals[var_idx]
+                    name2 = f2.locals[var_idx]
+                    if name1 == name2:
+                        # Same name, join constraints
+                        self.constraints.constraints[name1] = (
+                            self.constraints.constraints[name1] |
+                            other.constraints.constraints[name2]
+                        )
+                    else:
+                        # Different names, create fresh name
+                        fresh = self.constraints.fresh_name()
+                        self.constraints.constraints[fresh] = (
+                            self.constraints.constraints[name1] |
+                            other.constraints.constraints[name2]
+                        )
+                        f1.locals[var_idx] = fresh
                 else:
                     f1.locals[var_idx] = f2.locals[var_idx]
+                    self.constraints.constraints[f2.locals[var_idx]] = (
+                        other.constraints.constraints[f2.locals[var_idx]]
+                    )
 
             # Join stacks POINTWISE (by stack depth)
-            # Stacks must have same length at same PC (type safety)
             assert len(f1.stack.items) == len(f2.stack.items), (
                 f"Stack sizes differ at {f1.pc}: "
                 f"{len(f1.stack.items)} != {len(f2.stack.items)}"
             )
             for i in range(len(f1.stack.items)):
-                f1.stack.items[i] = f1.stack.items[i] | f2.stack.items[i]
+                name1 = f1.stack.items[i]
+                name2 = f2.stack.items[i]
+                if name1 == name2:
+                    # Same name, join constraints
+                    self.constraints.constraints[name1] = (
+                        self.constraints.constraints[name1] |
+                        other.constraints.constraints[name2]
+                    )
+                else:
+                    # Different names, create fresh name
+                    fresh = self.constraints.fresh_name()
+                    self.constraints.constraints[fresh] = (
+                        self.constraints.constraints[name1] |
+                        other.constraints.constraints[name2]
+                    )
+                    f1.stack.items[i] = fresh
 
         return self
 
@@ -116,7 +198,11 @@ class AState[AV: Abstraction]:
         if not isinstance(other, AState):
             return False
 
-        # Check heap equality
+        # Check constraints equality
+        if self.constraints != other.constraints:
+            return False
+
+        # Check heap equality (names should match)
         if set(self.heap.keys()) != set(other.heap.keys()):
             return False
         for addr in self.heap:
@@ -131,14 +217,14 @@ class AState[AV: Abstraction]:
             if f1.pc != f2.pc:
                 return False
 
-            # Check locals equality
+            # Check locals equality (names should match)
             if set(f1.locals.keys()) != set(f2.locals.keys()):
                 return False
             for var_idx in f1.locals:
                 if f1.locals[var_idx] != f2.locals[var_idx]:
                     return False
 
-            # Check stack equality
+            # Check stack equality (names should match)
             if len(f1.stack.items) != len(f2.stack.items):
                 return False
             for i in range(len(f1.stack.items)):
@@ -163,8 +249,9 @@ class AState[AV: Abstraction]:
     def clone(self) -> "AState[AV]":
         """Deep copy of the entire state."""
         return AState(
-            heap=self.heap.copy(), # shallow copy of heap dict
-            frames=Stack([deepcopy(f) for f in self.frames.items]),  # deep copy frames
+            heap=self.heap.copy(),  # shallow copy of heap dict (names are immutable)
+            frames=Stack([f.clone() for f in self.frames.items]),  # deep copy frames
+            constraints=self.constraints.clone(),  # deep copy constraints
             heap_ptr=self.heap_ptr
         )
 
@@ -193,20 +280,24 @@ class StateSet[AV: Abstraction]:
 
         Sets up:
         1. Initial frame at method entry (PC = 0)
-        2. Parameters initialized to TOP (unknown values)
+        2. Parameters initialized to TOP (unknown values) with named values
         3. Initial state added to per_inst
         4. Entry PC added to needswork
         """
-        frame = PerVarFrame[AV].from_method(methodid)
+        frame = PerVarFrame.from_method(methodid)
         params = methodid.extension.params
+        constraints = ConstraintStore[AV]({}, 0)
 
         # Initialize parameters to TOP (⊤ = any possible value)  # noqa: RUF003
         for i, p in enumerate(params):
             if isinstance(p, (jvm.Float, jvm.Double)):
                 raise NotImplementedError("Only integer parameters supported")
-            frame.locals[i] = abstraction_cls.top()
+            # Create named value for parameter
+            name = constraints.fresh_name()
+            constraints.constraints[name] = abstraction_cls.top()
+            frame.locals[i] = name
 
-        state = AState[AV]({}, Stack.empty().push(frame))
+        state = AState[AV]({}, Stack.empty().push(frame), constraints)
         return cls(
             per_inst={frame.pc: state},
             needswork={frame.pc}
@@ -259,6 +350,113 @@ class StateSet[AV: Abstraction]:
         return "\n".join(f"{pc}: {state}" for pc, state in self.per_inst.items())
 
 
+def constrain_for_true[AV: Abstraction](
+    value: AV, comparison: Comparison, other: AV
+) -> AV:
+    """
+    Refine constraint when comparison is TRUE.
+
+    For example:
+    - If (n != 0) is true, remove 0 from n's constraint
+    - If (n == 0) is true, keep only 0 in n's constraint
+    """
+    match comparison:
+        case "eq":
+            # value == other is true → value must be in intersection
+            return value & other
+        case "ne":
+            # value != other is true
+            # Special case: if other is {0}, remove 0 from value
+            if isinstance(value, SignSet) and isinstance(other, SignSet):
+                if other.signs == {"0"}:
+                    # Remove zero sign
+                    return SignSet(value.signs - {"0"})
+            return value  # Can't constrain much otherwise
+        case "lt":
+            # value < other is true
+            if isinstance(value, SignSet) and isinstance(other, SignSet):
+                if other.signs == {"0"}:
+                    # value < 0 → value must be negative
+                    return SignSet(value.signs & {"-"})
+            return value
+        case "le":
+            # value <= other is true
+            if isinstance(value, SignSet) and isinstance(other, SignSet):
+                if other.signs == {"0"}:
+                    # value <= 0 → value must be negative or zero
+                    return SignSet(value.signs & {"-", "0"})
+            return value
+        case "gt":
+            # value > other is true
+            if isinstance(value, SignSet) and isinstance(other, SignSet):
+                if other.signs == {"0"}:
+                    # value > 0 → value must be positive
+                    return SignSet(value.signs & {"+"})
+            return value
+        case "ge":
+            # value >= other is true
+            if isinstance(value, SignSet) and isinstance(other, SignSet):
+                if other.signs == {"0"}:
+                    # value >= 0 → value must be positive or zero
+                    return SignSet(value.signs & {"+", "0"})
+            return value
+        case _:
+            return value
+
+
+def constrain_for_false[AV: Abstraction](
+    value: AV, comparison: Comparison, other: AV
+) -> AV:
+    """
+    Refine constraint when comparison is FALSE.
+
+    For example:
+    - If (n != 0) is false, keep only 0 in n's constraint
+    - If (n == 0) is false, remove 0 from n's constraint
+    """
+    match comparison:
+        case "eq":
+            # value == other is false → negate the equality
+            if isinstance(value, SignSet) and isinstance(other, SignSet):
+                if other.signs == {"0"}:
+                    # value == 0 is false → remove 0
+                    return SignSet(value.signs - {"0"})
+            return value
+        case "ne":
+            # value != other is false → value == other
+            return value & other
+        case "lt":
+            # value < other is false → value >= other
+            if isinstance(value, SignSet) and isinstance(other, SignSet):
+                if other.signs == {"0"}:
+                    # value < 0 is false → value >= 0
+                    return SignSet(value.signs & {"+", "0"})
+            return value
+        case "le":
+            # value <= other is false → value > other
+            if isinstance(value, SignSet) and isinstance(other, SignSet):
+                if other.signs == {"0"}:
+                    # value <= 0 is false → value > 0
+                    return SignSet(value.signs & {"+"})
+            return value
+        case "gt":
+            # value > other is false → value <= other
+            if isinstance(value, SignSet) and isinstance(other, SignSet):
+                if other.signs == {"0"}:
+                    # value > 0 is false → value <= 0
+                    return SignSet(value.signs & {"-", "0"})
+            return value
+        case "ge":
+            # value >= other is false → value < other
+            if isinstance(value, SignSet) and isinstance(other, SignSet):
+                if other.signs == {"0"}:
+                    # value >= 0 is false → value < 0
+                    return SignSet(value.signs & {"-"})
+            return value
+        case _:
+            return value
+
+
 def step[AV: Abstraction](state: AState[AV],
                           abstraction_cls: type[AV]) -> Iterable[AState[AV] | str]:
     """Execute ONE instruction in the abstract domain."""
@@ -270,12 +468,16 @@ def step[AV: Abstraction](state: AState[AV],
     match opr:
         case jvm.Push(value=v):
             assert isinstance(v.value, int), f"Unsupported value type: {v.value!r}"
-            frame.stack.push(abstraction_cls.abstract({v.value}))
+            # Create fresh named value for constant
+            name = state.constraints.fresh_name()
+            state.constraints.constraints[name] = abstraction_cls.abstract({v.value})
+            frame.stack.push(name)
             frame.pc = frame.pc + 1
             return [state]
 
         case jvm.Load(type=_type, index=i):
             assert i in frame.locals, f"Local variable {i} not initialized"
+            # Push the NAME to create dependency
             frame.stack.push(frame.locals[i])
             frame.pc = frame.pc + 1
             return [state]
@@ -284,60 +486,86 @@ def step[AV: Abstraction](state: AState[AV],
             # Compare ONE value to zero
             # Stack: [..., value] → [...]
 
-            # Pop the value being tested
-            v1 = frame.stack.pop()
-            assert isinstance(v1, abstraction_cls), f"Unexpected type: {v1}"
+            # Pop the NAME being tested
+            value_name = frame.stack.pop()
+            # Look up the constraint
+            v1 = state.constraints.constraints[value_name]
             v2 = abstraction_cls.abstract({0})
-            # Clone state before modifying PC
-            other = state.clone()
-            # One path: continue to next instruction
-            frame.pc = frame.pc + 1
-            # Other path: jump to target
-            other.frames.peek().pc = PC(frame.pc.method, t)
 
+            # Evaluate comparison with current constraints
             res = v1.compare(cast("Comparison", c), v2)
             logger.debug(f"res: {res}")
+
             computed_states = []
             if True in res:
-                computed_states.append(other)
+                # True branch: jump to target
+                true_state = state.clone()
+                true_state.frames.peek().pc = PC(frame.pc.method, t)
+                # REFINE constraint: condition is TRUE
+                constrained = constrain_for_true(v1, cast("Comparison", c), v2)
+                true_state.constraints.constraints[value_name] = constrained
+                computed_states.append(true_state)
+
             if False in res:
-                computed_states.append(state)
+                # False branch: continue to next instruction
+                false_state = state.clone()
+                false_state.frames.peek().pc = frame.pc + 1
+                # REFINE constraint: condition is FALSE
+                constrained = constrain_for_false(v1, cast("Comparison", c), v2)
+                false_state.constraints.constraints[value_name] = constrained
+                computed_states.append(false_state)
+
             assert len(computed_states) > 0, "At least one path must be possible"
             return computed_states
 
         case jvm.If(condition=c, target=t):
             # Compare TWO values
             # Stack: [..., value1, value2] → [...]
-            v2, v1 = frame.stack.pop(), frame.stack.pop()
-            assert isinstance(v1, abstraction_cls), f"Unexpected type: {v1}"
-            assert isinstance(v2, abstraction_cls), f"Unexpected type: {v2}"
-            # Clone state before modifying PC
-            other = state.clone()
-            # One path: continue to next instruction
-            frame.pc = frame.pc + 1
-            # Other path: jump to target
-            other.frames.peek().pc = PC(frame.pc.method, t)
+            name2, name1 = frame.stack.pop(), frame.stack.pop()
+            # Look up constraints
+            v1 = state.constraints.constraints[name1]
+            v2 = state.constraints.constraints[name2]
+
+            # Evaluate comparison with current constraints
             res = v1.compare(cast("Comparison", c), v2)
+
             computed_states = []
             if True in res:
-                    computed_states.append(other)
+                # True branch: jump to target
+                true_state = state.clone()
+                true_state.frames.peek().pc = PC(frame.pc.method, t)
+                # REFINE constraint: condition is TRUE
+                # For two-value comparison, constrain the first value
+                constrained = constrain_for_true(v1, cast("Comparison", c), v2)
+                true_state.constraints.constraints[name1] = constrained
+                computed_states.append(true_state)
+
             if False in res:
-                    computed_states.append(state)
+                # False branch: continue to next instruction
+                false_state = state.clone()
+                false_state.frames.peek().pc = frame.pc + 1
+                # REFINE constraint: condition is FALSE
+                constrained = constrain_for_false(v1, cast("Comparison", c), v2)
+                false_state.constraints.constraints[name1] = constrained
+                computed_states.append(false_state)
+
             return computed_states
 
         case jvm.Return(type=tp):
-            return_value = frame.stack.pop() if tp is not None else None
+            return_value_name = frame.stack.pop() if tp is not None else None
             state.frames.pop()
             if state.frames:
-                if return_value is not None:
-                    state.frames.peek().stack.push(return_value)
+                if return_value_name is not None:
+                    state.frames.peek().stack.push(return_value_name)
                 return [state]
             return ["ok"]
 
         case jvm.Binary(type=jvm.Int(), operant=operant):
-            v2, v1 = frame.stack.pop(), frame.stack.pop()
-            assert isinstance(v1, abstraction_cls), f"Unexpected type: {v1}"
-            assert isinstance(v2, abstraction_cls), f"Unexpected type: {v2}"
+            # Pop names and look up constraints
+            name2, name1 = frame.stack.pop(), frame.stack.pop()
+            v1 = state.constraints.constraints[name1]
+            v2 = state.constraints.constraints[name2]
+
             computed_states = []
             if (operant in (jvm.BinaryOpr.Div, jvm.BinaryOpr.Rem) and
                 0 in v2):
@@ -347,21 +575,26 @@ def step[AV: Abstraction](state: AState[AV],
                     # No more options left
                     return computed_states
 
+            # Compute result with abstract values
             match operant:
                 case jvm.BinaryOpr.Div:
-                    v = v1 // v2
+                    result_value = v1 // v2
                 case jvm.BinaryOpr.Rem:
-                    v = v1 % v2
+                    result_value = v1 % v2
                 case jvm.BinaryOpr.Sub:
-                    v = v1 - v2
+                    result_value = v1 - v2
                 case jvm.BinaryOpr.Mul:
-                    v = v1 * v2
+                    result_value = v1 * v2
                 case jvm.BinaryOpr.Add:
-                    v = v1 + v2
+                    result_value = v1 + v2
                 case _:
                     raise NotImplementedError(
                         f"Operand '{operant!r}' not implemented.")
-            frame.stack.push(v)
+
+            # Create fresh named value for result
+            result_name = state.constraints.fresh_name()
+            state.constraints.constraints[result_name] = result_value
+            frame.stack.push(result_name)
 
             frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
             computed_states.append(state)
@@ -374,7 +607,10 @@ def step[AV: Abstraction](state: AState[AV],
                 extension=jvm.FieldID(name="$assertionsDisabled", type=jvm.Boolean()),
             ),
         ):
-            frame.stack.push(abstraction_cls.abstract({0}))
+            # Create named value for assertions disabled flag (always 0/false)
+            name = state.constraints.fresh_name()
+            state.constraints.constraints[name] = abstraction_cls.abstract({0})
+            frame.stack.push(name)
             frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
             return [state]
 
