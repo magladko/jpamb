@@ -291,7 +291,6 @@ def step[AV: Abstraction](state: AState[AV],
             # Pop the value being tested
             v1 = frame.stack.pop()
             v2 = abstraction_cls.abstract({0})
-            assert isinstance(v1, Abstraction)
             # Clone state before modifying PC
             other = state.clone()
             # One path: continue to next instruction
@@ -312,8 +311,8 @@ def step[AV: Abstraction](state: AState[AV],
             # Compare TWO values
             # Stack: [..., value1, value2] → [...]
             v2, v1 = frame.stack.pop(), frame.stack.pop()
-            assert isinstance(v1, Abstraction)
-            assert isinstance(v2, Abstraction)
+            assert isinstance(v1, abstraction_cls), f"Unexpected type: {v1}"
+            assert isinstance(v2, abstraction_cls), f"Unexpected type: {v2}"
             # Clone state before modifying PC
             other = state.clone()
             # One path: continue to next instruction
@@ -345,8 +344,8 @@ def step[AV: Abstraction](state: AState[AV],
             new_frame = new_state.frames.peek()
 
             v2, v1 = new_frame.stack.pop(), new_frame.stack.pop()
-            assert isinstance(v1, Abstraction), f"expected Abstraction, but got {v1}"
-            assert isinstance(v2, Abstraction), f"expected Abstraction, but got {v2}"
+            assert isinstance(v1, abstraction_cls), f"Unexpected type: {v1}"
+            assert isinstance(v2, abstraction_cls), f"Unexpected type: {v2}"
             computed_states = []
             if v2.__contains__(0):
                 v2 -= abstraction_cls.abstract({0})
