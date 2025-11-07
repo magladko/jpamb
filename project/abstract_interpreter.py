@@ -347,11 +347,11 @@ def step[AV: Abstraction](state: AState[AV],
             assert isinstance(v1, abstraction_cls), f"Unexpected type: {v1}"
             assert isinstance(v2, abstraction_cls), f"Unexpected type: {v2}"
             computed_states = []
-            if v2.__contains__(0):
-                v2 -= abstraction_cls.abstract({0})
+            if (operant in (jvm.BinaryOpr.Div, jvm.BinaryOpr.Rem) and
+                0 in v2):
                 logger.debug("Division by zero found!")
                 computed_states.append("divide by zero")
-                if v2 == abstraction_cls.bot():
+                if isinstance(v2, SignSet) and len(v2) == 1:
                     # No more options left
                     return computed_states
 
