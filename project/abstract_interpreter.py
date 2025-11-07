@@ -274,20 +274,15 @@ def step[AV: Abstraction](state: AState[AV],
     match opr:
         case jvm.Push(value=v):
             assert isinstance(v.value, int), f"Unsupported value type: {v.value!r}"
-            new_state = state.clone()
-            new_frame = new_state.frames.peek()
-            new_frame.stack.push(abstraction_cls.abstract({v.value}))
-            new_frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
-            return [new_state]
+            frame.stack.push(abstraction_cls.abstract({v.value}))
+            frame.pc = frame.pc + 1
+            return [state]
 
-        case jvm.Load(type=type, index=i):
+        case jvm.Load(type=_type, index=i):
             assert i in frame.locals, f"Local variable {i} not initialized"
-            new_state = state.clone()
-            new_frame = new_state.frames.peek()
-            v = new_frame.locals[i]
-            new_frame.stack.push(v)
-            new_frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
-            return [new_state]
+            frame.stack.push(frame.locals[i])
+            frame.pc = frame.pc + 1
+            return [state]
 
         case jvm.Ifz(condition=c, target=t):
             # Compare ONE value to zero
@@ -300,9 +295,9 @@ def step[AV: Abstraction](state: AState[AV],
             # Clone state before modifying PC
             other = state.clone()
             # One path: continue to next instruction
-            frame.pc += 1
+            frame.pc = frame.pc + 1
             # Other path: jump to target
-            other.frames.peek().pc.offset = t
+            other.frames.peek().pc = PC(frame.pc.method, t)
 
             res = v1.compare(cast("Comparison", c), v2)
             logger.debug(f"res: {res}")
@@ -322,9 +317,9 @@ def step[AV: Abstraction](state: AState[AV],
             # Clone state before modifying PC
             other = state.clone()
             # One path: continue to next instruction
-            frame.pc += 1
+            frame.pc = frame.pc + 1
             # Other path: jump to target
-            other.frames.peek().pc.offset = t
+            other.frames.peek().pc = PC(frame.pc.method, t)
             res = v1.compare(cast("Comparison", c), v2)
             computed_states = []
             if True in res:
