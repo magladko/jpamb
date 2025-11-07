@@ -4,7 +4,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from typing import Self, cast
 
-from abstraction import Abstraction, SignSet, Comparison
+from abstraction import Abstraction, Comparison, SignSet
 from interpreter import PC, Bytecode, Stack
 from loguru import logger
 
@@ -18,13 +18,14 @@ logger.add(sys.stderr, format="[{level}] {message}", level="DEBUG")
 class PerVarFrame[AV: Abstraction]:
     """
     Abstract frame at a SINGLE program point.
+
     Represents the abstract state of locals and stack at one PC.
-    
     IMPORTANT: PC is stored here because we have a CALL STACK!
     When method A calls method B, we have:
       frames = [FrameA@PC_a, FrameB@PC_b]
     Each frame needs to track where it is in its own method.
     """
+
     locals: dict[int, AV]  # variable_index → abstract_value
     stack: Stack[AV]        # operand stack of abstract values
     pc: PC                  # ← CRITICAL: Must be uncommented!
@@ -51,14 +52,15 @@ class PerVarFrame[AV: Abstraction]:
 class AState[AV: Abstraction]:
     """
     Complete abstract state of the program at ONE program point.
-    
+
     Contains:
     - heap: abstract values at heap addresses
     - frames: call stack (multiple frames if methods are nested)
     - heap_ptr: next available heap address
-    
+
     The "program point" is determined by the PC of the TOP frame.
     """
+
     heap: dict[int, AV]
     frames: Stack[PerVarFrame[AV]]
     heap_ptr: int = 0
@@ -67,9 +69,9 @@ class AState[AV: Abstraction]:
     def __ior__(self, other: "AState[AV]") -> Self:
         """
         In-place POINTWISE JOIN operation (⊔) for abstract states.
-        
+
         "Pointwise" means: for each position/key, join the values at that position.
-        
+
         We join:
         1. Heap: for each address, join the abstract values
         2. Frames: for each frame position in call stack, join the frame contents
@@ -113,7 +115,7 @@ class AState[AV: Abstraction]:
 
         return self
 
-    def __eq__(self, other: object) -> bool:  # noqa: C901, PLR0911, PLR0912
+    def __eq__(self, other: object) -> bool:
         """Check equality of abstract states."""
         if not isinstance(other, AState):
             return False
@@ -153,7 +155,7 @@ class AState[AV: Abstraction]:
     def pc(self) -> PC:
         """
         Current program counter = PC of the TOP frame.
-        
+
         This is the "program point" where this state exists.
         Used as the key in StateSet.per_inst.
         """
@@ -175,23 +177,24 @@ class AState[AV: Abstraction]:
 class StateSet[AV: Abstraction]:
     """
     Container for the worklist algorithm.
-    
+
     Maps each program point (PC) to the abstract state at that PC.
     Tracks which PCs need processing (needswork = worklist).
-    
+
     This is the "Per-Instruction Abstraction" from theory:
       Pc = PC → 2^State
     But we only keep ONE abstract state per PC (the join of all states).
     """
+
     per_inst: dict[PC, AState[AV]]  # PC → AState
     needswork: set[PC]               # PCs that need reprocessing
 
     @classmethod
-    def initialstate_from_method(cls, methodid: jvm.AbsMethodID, 
+    def initialstate_from_method(cls, methodid: jvm.AbsMethodID,
                                  abstraction_cls: type[AV]) -> Self:
         """
         Create initial state set for analyzing a method.
-        
+
         Sets up:
         1. Initial frame at method entry (PC = 0)
         2. Parameters initialized to TOP (unknown values)
@@ -200,13 +203,13 @@ class StateSet[AV: Abstraction]:
         """
         frame = PerVarFrame[AV].from_method(methodid)
         params = methodid.extension.params
-        
-        # Initialize parameters to TOP (⊤ = any possible value)
+
+        # Initialize parameters to TOP (⊤ = any possible value)  # noqa: RUF003
         for i, p in enumerate(params):
             if isinstance(p, (jvm.Float, jvm.Double)):
                 raise NotImplementedError("Only integer parameters supported")
             frame.locals[i] = abstraction_cls.top()
-        
+
         state = AState[AV]({}, Stack.empty().push(frame))
         return cls(
             per_inst={frame.pc: state},
@@ -216,7 +219,7 @@ class StateSet[AV: Abstraction]:
     def per_instruction(self) -> Iterable[tuple[PC, AState[AV]]]:
         """
         Iterate over states that need processing.
-        
+
         Pops from needswork and yields (pc, state) pairs.
         This implements the worklist algorithm's "pick next item" step.
         """
@@ -227,16 +230,16 @@ class StateSet[AV: Abstraction]:
     def __ior__(self, astate: AState[AV]) -> Self:
         """
         Join an abstract state into the state set.
-        
+
         This is the KEY operation for the worklist algorithm!
-        
+
         If PC doesn't exist: add the state
         If PC exists: JOIN (⊔) with existing state
-        
+
         Add to needswork if the state CHANGED (not at fixed point yet).
         """
         pc = astate.pc
-        
+
         if pc not in self.per_inst:
             # New PC: add state and mark for processing
             self.per_inst[pc] = astate.clone()
@@ -244,17 +247,17 @@ class StateSet[AV: Abstraction]:
         else:
             # Existing PC: must JOIN states!
             old = self.per_inst[pc]
-            
+
             # Create new state by joining
             new_state = old.clone()
             new_state |= astate  # ← THIS IS THE JOIN OPERATION
-            
+
             # Only update if state actually changed
             if new_state != old:
                 self.per_inst[pc] = new_state
                 self.needswork.add(pc)  # ← Must reprocess this PC
             # else: fixed point reached at this PC, don't add to needswork
-        
+
         return self
 
     def __str__(self) -> str:
@@ -268,7 +271,7 @@ def step[AV: Abstraction](state: AState[AV],
     frame = state.frames.peek()
     opr = state.bc[frame.pc]
     logger.debug(f"STEP {opr}\n{state}")
-    
+
     match opr:
         case jvm.Push(value=v):
             assert isinstance(v.value, int), f"Unsupported value type: {v.value!r}"
@@ -277,7 +280,7 @@ def step[AV: Abstraction](state: AState[AV],
             new_frame.stack.push(abstraction_cls.abstract({v.value}))
             new_frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
             return [new_state]
-        
+
         case jvm.Load(type=type, index=i):
             assert i in frame.locals, f"Local variable {i} not initialized"
             new_state = state.clone()
@@ -286,24 +289,24 @@ def step[AV: Abstraction](state: AState[AV],
             new_frame.stack.push(v)
             new_frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
             return [new_state]
-        
+
         case jvm.Ifz(condition=c, target=t):
             # Compare ONE value to zero
             # Stack: [..., value] → [...]
-            
+
             # # Fall-through branch
             # state1 = state.clone()
             # state1.frames.peek().stack.pop()  # Pop the value
             # state1.frames.peek().pc = PC(frame.pc.method, frame.pc.offset + 1)
-            
+
             # # Jump branch
             # state2 = state.clone()
             # state2.frames.peek().stack.pop()  # Pop the value
             # state2.frames.peek().pc = PC(frame.pc.method, t)
-            
+
             # return [state1, state2]
-            
-            
+
+
             # Pop the value being tested
             v1 = frame.stack.pop()
             v2 = abstraction_cls.abstract({0})
@@ -315,7 +318,7 @@ def step[AV: Abstraction](state: AState[AV],
             # Other path: jump to target
             other.frames.peek().pc.offset = t
 
-            res = v1.compare(cast(Comparison, c), v2)
+            res = v1.compare(cast("Comparison", c), v2)
             logger.debug(f"res: {res}")
             computed_states = []
             if True in res:
@@ -323,27 +326,27 @@ def step[AV: Abstraction](state: AState[AV],
             if False in res:
                     computed_states.append(state)
             return computed_states
-        
+
         case jvm.If(condition=c, target=t):
             # Compare TWO values
             # Stack: [..., value1, value2] → [...]
-            
+
             # # Fall-through branch
             # state1 = state.clone()
             # frame1 = state1.frames.peek()
             # frame1.stack.pop()  # Pop value2
             # frame1.stack.pop()  # Pop value1
             # frame1.pc = PC(frame.pc.method, frame.pc.offset + 1)
-            
+
             # # Jump branch
             # state2 = state.clone()
             # frame2 = state2.frames.peek()
             # frame2.stack.pop()  # Pop value2
             # frame2.stack.pop()  # Pop value1
             # frame2.pc = PC(frame.pc.method, t)
-            
+
             # return [state1, state2]
-            
+
             # Compare TWO values
             # Stack: [..., value1, value2] → [...]
             v2, v1 = frame.stack.pop(), frame.stack.pop()
@@ -355,31 +358,30 @@ def step[AV: Abstraction](state: AState[AV],
             frame.pc += 1
             # Other path: jump to target
             other.frames.peek().pc.offset = t
-            res = v1.compare(cast(Comparison, c), v2)
+            res = v1.compare(cast("Comparison", c), v2)
             computed_states = []
             if True in res:
                     computed_states.append(other)
             if False in res:
                     computed_states.append(state)
             return computed_states
-        
+
         case jvm.Return(type=type):
             new_state = state.clone()
             new_frame = new_state.frames.pop()
-            
+
             if new_state.frames:
                 caller_frame = new_state.frames.peek()
                 if type is not None:
                     v1 = new_frame.stack.pop()
                     caller_frame.stack.push(v1)
                 return [new_state]
-            else:
-                return ["ok"]
-        
+            return ["ok"]
+
         case jvm.Binary(type=jvm.Int(), operant=operant):
             new_state = state.clone()
             new_frame = new_state.frames.peek()
-            
+
             v2, v1 = new_frame.stack.pop(), new_frame.stack.pop()
             assert isinstance(v1, Abstraction), f"expected Abstraction, but got {v1}"
             assert isinstance(v2, Abstraction), f"expected Abstraction, but got {v2}"
@@ -405,17 +407,18 @@ def step[AV: Abstraction](state: AState[AV],
                     case jvm.BinaryOpr.Add:
                         v = v1 + v2
                     case _:
-                        raise NotImplementedError(f"Operand '{operant!r}' not implemented.")
+                        raise NotImplementedError(
+                            f"Operand '{operant!r}' not implemented.")
                 new_frame.stack.push(v)
             except ValueError as e:
                 return [str(e)]
-            
+
             new_frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
             computed_states.append(new_state)
             return computed_states
-            
+
             # return [new_state]
-        
+
         case jvm.Get(
             static=True,
             field=jvm.AbsFieldID(
@@ -428,11 +431,11 @@ def step[AV: Abstraction](state: AState[AV],
             new_frame.stack.push(abstraction_cls.abstract({0}))
             new_frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
             return [new_state]
-        
+
         case jvm.New(classname=jvm.ClassName(_as_string="java/lang/AssertionError")):
             logger.debug("Creating AssertionError object")
             return ["assertion error"]
-        
+
         case a:
             raise NotImplementedError(f"Don't know how to handle: {a!r}")
 
@@ -440,15 +443,15 @@ def manystep[AV: Abstraction](sts: StateSet[AV],
                               abstraction_cls: type[AV]) -> Iterable[AState[AV] | str]:
     """
     Process all states in the worklist.
-    
+
     For each state that needs work:
     1. Step it (execute one instruction)
     2. Collect all successor states
-    
+
     Returns all successor states (to be joined back into StateSet).
     """
     states = []
-    for pc, state in sts.per_instruction():
+    for _pc, state in sts.per_instruction():
         states.extend(step(state, abstraction_cls))
     return states
 
@@ -470,7 +473,7 @@ if methodid is None:
     methodid, case_input = jpamb.getcase()
 else:
     params = methodid.extension.params
-    
+
 results: dict[str, int] = {
     "ok": 0,
     "assertion error": 0,
@@ -499,10 +502,10 @@ for iteration in range(MAX_STEPS):
         else:
             # Successor state: join into per_inst
             sts |= s  # ← This is where the JOIN happens!
-    
+
     logger.debug(f"Iteration {iteration}: {len(sts.needswork)} PCs need work")
     logger.debug(f"Final states: {final}")
-    
+
     # If needswork is empty, we've reached fixed point
     if not sts.needswork:
         logger.debug("Fixed point reached!")
@@ -514,4 +517,3 @@ for result in results:
         print(f"{result};100%")
     else:
         print(f"{result};0%")
-    
