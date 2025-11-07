@@ -290,6 +290,7 @@ def step[AV: Abstraction](state: AState[AV],
 
             # Pop the value being tested
             v1 = frame.stack.pop()
+            assert isinstance(v1, abstraction_cls), f"Unexpected type: {v1}"
             v2 = abstraction_cls.abstract({0})
             # Clone state before modifying PC
             other = state.clone()
@@ -305,6 +306,7 @@ def step[AV: Abstraction](state: AState[AV],
                 computed_states.append(other)
             if False in res:
                 computed_states.append(state)
+            assert len(computed_states) > 0, "At least one path must be possible"
             return computed_states
 
         case jvm.If(condition=c, target=t):
