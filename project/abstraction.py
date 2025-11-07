@@ -199,10 +199,10 @@ class SignSet(Abstraction[int]):
                     case _:
                         raise ValueError(f"Invalid signs: {s1}, {s2}")
         return results
-    
+
     def ne(self, other: "SignSet") -> set[bool]:
         return {not r for r in self.eq(other)}
-    
+
     def lt(self, other: "SignSet") -> set[bool]:
         # {0} < {0} -> {False}
         # {0} < {+} -> {True}
@@ -250,7 +250,7 @@ class SignSet(Abstraction[int]):
                     case _:
                         raise ValueError(f"Invalid signs: {s1}, {s2}")
         return results
-    
+
     def gt(self, other: "SignSet") -> set[bool]:
         # {0} > {0} -> {False}
         # {0} > {+} -> {False}
@@ -377,6 +377,10 @@ class SignSet(Abstraction[int]):
     def __div__(self, other: "SignSet") -> "SignSet":
         """Abstract division of two sign sets."""
         assert isinstance(other, SignSet)
+        if "0" in other.signs and len(other) == 1:
+            # Error: divide by zero
+            return SignSet.bot()
+
         new_signs = set()
         for s1 in self.signs:
             for s2 in other.signs:
@@ -392,18 +396,19 @@ class SignSet(Abstraction[int]):
     def __mod__(self, other: Self) -> "SignSet":
         """Abstract modulus of two sign sets."""
         assert isinstance(other, SignSet)
-        new_signs = set()
-        for s1 in self.signs:
-            for s2 in other.signs:
-                if s2 == "0":
-                    raise ValueError("divide by zero")
-                # Modulus sign rules:
-                # x % + = {0, +, -} depending on x
-                # x % - = {0, +, -} depending on x
-                if s1 == "0":
-                    new_signs.add("0")
-                else:
-                    new_signs.update({"+", "-", "0"})
+        if "0" in other.signs and len(other) == 1:
+            # Error: modulus by zero
+            return SignSet.bot()
+
+        new_signs: set[Sign] = {"0"}
+        # JVM DOCS:
+        # the result of the remainder operation
+        # can be negative only if the dividend is negative and
+        # can be positive only if the dividend is positive
+        if "-" in other.signs:
+            new_signs.add("-")
+        if "+" in other.signs:
+            new_signs.add("+")
         return SignSet(new_signs)
 
     def __le__(self, other: "SignSet") -> bool:
@@ -421,11 +426,9 @@ class SignSet(Abstraction[int]):
     def __or__(self, other: "SignSet") -> "SignSet":
         assert isinstance(other, SignSet)
         return SignSet(self.signs | other.signs)
-    
-    def __isub__(self, other: "SignSet") -> "SignSet":
-        assert isinstance(other, SignSet)
-        self.signs -= other.signs
-        return self
 
     def __str__(self) -> str:
         return "{" + ",".join(sorted(self.signs)) + "}"
+
+    def __len__(self) -> int:
+        return len(self.signs)
