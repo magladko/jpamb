@@ -329,16 +329,13 @@ def step[AV: Abstraction](state: AState[AV],
                     computed_states.append(state)
             return computed_states
 
-        case jvm.Return(type=type):
-            new_state = state.clone()
-            new_frame = new_state.frames.pop()
-
-            if new_state.frames:
-                caller_frame = new_state.frames.peek()
-                if type is not None:
-                    v1 = new_frame.stack.pop()
-                    caller_frame.stack.push(v1)
-                return [new_state]
+        case jvm.Return(type=tp):
+            return_value = frame.stack.pop() if tp is not None else None
+            state.frames.pop()
+            if state.frames:
+                if return_value is not None:
+                    state.frames.peek().stack.push(return_value)
+                return [state]
             return ["ok"]
 
         case jvm.Binary(type=jvm.Int(), operant=operant):
