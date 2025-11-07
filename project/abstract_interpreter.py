@@ -335,10 +335,7 @@ def step[AV: Abstraction](state: AState[AV],
             return ["ok"]
 
         case jvm.Binary(type=jvm.Int(), operant=operant):
-            new_state = state.clone()
-            new_frame = new_state.frames.peek()
-
-            v2, v1 = new_frame.stack.pop(), new_frame.stack.pop()
+            v2, v1 = frame.stack.pop(), frame.stack.pop()
             assert isinstance(v1, abstraction_cls), f"Unexpected type: {v1}"
             assert isinstance(v2, abstraction_cls), f"Unexpected type: {v2}"
             computed_states = []
@@ -364,10 +361,10 @@ def step[AV: Abstraction](state: AState[AV],
                 case _:
                     raise NotImplementedError(
                         f"Operand '{operant!r}' not implemented.")
-            new_frame.stack.push(v)
+            frame.stack.push(v)
 
-            new_frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
-            computed_states.append(new_state)
+            frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
+            computed_states.append(state)
             return computed_states
 
         case jvm.Get(
@@ -377,11 +374,9 @@ def step[AV: Abstraction](state: AState[AV],
                 extension=jvm.FieldID(name="$assertionsDisabled", type=jvm.Boolean()),
             ),
         ):
-            new_state = state.clone()
-            new_frame = new_state.frames.peek()
-            new_frame.stack.push(abstraction_cls.abstract({0}))
-            new_frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
-            return [new_state]
+            frame.stack.push(abstraction_cls.abstract({0}))
+            frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
+            return [state]
 
         case jvm.New(classname=jvm.ClassName(_as_string="java/lang/AssertionError")):
             logger.debug("Creating AssertionError object")
