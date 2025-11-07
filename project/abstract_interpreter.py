@@ -23,7 +23,7 @@ class PerVarFrame[AV: Abstraction]:
     """
 
     locals: dict[int, AV]  # variable_index → abstract_value
-    stack: Stack[AV]        # operand stack of abstract values
+    stack: Stack[AV]       # operand stack of abstract values
     pc: PC
 
     def __str__(self) -> str:
