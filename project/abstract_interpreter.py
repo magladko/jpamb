@@ -1,11 +1,10 @@
-
 import sys
 from collections.abc import Iterable
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Self
+from typing import Self, cast
 
-from abstraction import Abstraction, SignSet
+from abstraction import Abstraction, Comparison, SignSet
 from interpreter import PC, Bytecode, Stack
 from loguru import logger
 
@@ -17,9 +16,19 @@ logger.add(sys.stderr, format="[{level}] {message}", level="DEBUG")
 
 @dataclass
 class PerVarFrame[AV: Abstraction]:
-    locals: dict[int, AV]
-    stack: Stack[AV]
-    pc: PC
+    """
+    Abstract frame at a SINGLE program point.
+
+    Represents the abstract state of locals and stack at one PC.
+    IMPORTANT: PC is stored here because we have a CALL STACK!
+    When method A calls method B, we have:
+      frames = [FrameA@PC_a, FrameB@PC_b]
+    Each frame needs to track where it is in its own method.
+    """
+
+    locals: dict[int, AV]  # variable_index → abstract_value
+    stack: Stack[AV]        # operand stack of abstract values
+    pc: PC                  # ← CRITICAL: Must be uncommented!
 
     def __str__(self) -> str:
         locals_str = ", ".join(f"{k}:{v}" for k, v in sorted(self.locals.items()))
@@ -27,69 +36,76 @@ class PerVarFrame[AV: Abstraction]:
 
     @classmethod
     def from_method(cls, method: jvm.AbsMethodID) -> Self:
+        """Create initial frame for a method entry."""
         return cls({}, Stack.empty(), PC(method, 0))
 
     def clone(self) -> "PerVarFrame[AV]":
+        """Deep copy of the frame."""
         return PerVarFrame(
             locals=self.locals.copy(),
             stack=Stack(self.stack.items.copy()),
-            pc=self.pc
+            pc=self.pc  # PC is immutable, safe to share
         )
 
 
 @dataclass
 class AState[AV: Abstraction]:
+    """
+    Complete abstract state of the program at ONE program point.
+
+    Contains:
+    - heap: abstract values at heap addresses
+    - frames: call stack (multiple frames if methods are nested)
+    - heap_ptr: next available heap address
+
+    The "program point" is determined by the PC of the TOP frame.
+    """
+
     heap: dict[int, AV]
     frames: Stack[PerVarFrame[AV]]
-
     heap_ptr: int = 0
     bc = Bytecode(jpamb.Suite(), {})
 
-    # def abstract(self) -> "AState[AV]":
-    #     raise NotImplementedError
-
-    # def __le__(self, other: "AState[AV]") -> bool:
-    #     raise NotImplementedError
-
-    # def __and__(self, other: "AState[AV]") -> "AState[AV]":
-    #     raise NotImplementedError
-
-    # def __or__(self, other: "AState[AV]") -> "AState[AV]":
-    #     raise NotImplementedError
-
     def __ior__(self, other: "AState[AV]") -> Self:
         """
-        In-place join operation (⊔) for abstract states.
+        In-place POINTWISE JOIN operation (⊔) for abstract states.
 
-        Performs pointwise join of:
-        - Heap locations (join abstract values at same addresses)
-        - Frame locals (join abstract values for same variable indices)
-        - Frame stacks (join corresponding stack positions)
+        "Pointwise" means: for each position/key, join the values at that position.
+
+        We join:
+        1. Heap: for each address, join the abstract values
+        2. Frames: for each frame position in call stack, join the frame contents
+           a. Locals: for each variable index, join the abstract values
+           b. Stack: for each stack position, join the abstract values
         """
         assert isinstance(other, AState), f"expected AState but got {other}"
         assert (
             len(self.frames.items) == len(other.frames.items)
         ), f"frame stack sizes differ {self} != {other}"
 
-        # Join heap pointwise
+        # Join heap POINTWISE (by address)
         for addr in other.heap:
             if addr in self.heap:
                 self.heap[addr] = self.heap[addr] | other.heap[addr]
             else:
                 self.heap[addr] = other.heap[addr]
 
-        # Join frames pointwise
+        # Join frames POINTWISE (by call stack position)
         for f1, f2 in zip(self.frames.items, other.frames.items, strict=True):
+            # Frames at same stack position must be at same PC
+            # (otherwise program is malformed - different control flow paths
+            # reached here with different call stacks)
             assert f1.pc == f2.pc, f"Program counters differ: {f1.pc} != {f2.pc}"
 
-            # Join locals pointwise
+            # Join locals POINTWISE (by variable index)
             for var_idx in f2.locals:
                 if var_idx in f1.locals:
                     f1.locals[var_idx] = f1.locals[var_idx] | f2.locals[var_idx]
                 else:
                     f1.locals[var_idx] = f2.locals[var_idx]
 
-            # Join stacks pointwise (must have same length at same PC)
+            # Join stacks POINTWISE (by stack depth)
+            # Stacks must have same length at same PC (type safety)
             assert len(f1.stack.items) == len(f2.stack.items), (
                 f"Stack sizes differ at {f1.pc}: "
                 f"{len(f1.stack.items)} != {len(f2.stack.items)}"
@@ -137,85 +153,112 @@ class AState[AV: Abstraction]:
 
     @property
     def pc(self) -> PC:
-        """Convenience accessor for current program counter."""
+        """
+        Current program counter = PC of the TOP frame.
+
+        This is the "program point" where this state exists.
+        Used as the key in StateSet.per_inst.
+        """
         return self.frames.peek().pc
 
     def __str__(self) -> str:
         return f"{self.heap} {self.frames}"
 
     def clone(self) -> "AState[AV]":
+        """Deep copy of the entire state."""
         return AState(
-            heap=self.heap.copy(), # shallow copy of heap, adjust if AV is mutable
-            frames=Stack([deepcopy(f) for f in self.frames.items]), # deep copy frames
+            heap=self.heap.copy(),  # shallow copy of heap dict
+            frames=Stack([deepcopy(f) for f in self.frames.items]),  # deep copy frames
             heap_ptr=self.heap_ptr
         )
 
 
 @dataclass
 class StateSet[AV: Abstraction]:
-    per_inst : dict[PC, AState[AV]]
-    needswork : set[PC]
+    """
+    Container for the worklist algorithm.
+
+    Maps each program point (PC) to the abstract state at that PC.
+    Tracks which PCs need processing (needswork = worklist).
+
+    This is the "Per-Instruction Abstraction" from theory:
+      Pc = PC → 2^State
+    But we only keep ONE abstract state per PC (the join of all states).
+    """
+
+    per_inst: dict[PC, AState[AV]]  # PC → AState
+    needswork: set[PC]               # PCs that need reprocessing
 
     @classmethod
     def initialstate_from_method(cls, methodid: jvm.AbsMethodID,
                                  abstraction_cls: type[AV]) -> Self:
+        """
+        Create initial state set for analyzing a method.
+
+        Sets up:
+        1. Initial frame at method entry (PC = 0)
+        2. Parameters initialized to TOP (unknown values)
+        3. Initial state added to per_inst
+        4. Entry PC added to needswork
+        """
         frame = PerVarFrame[AV].from_method(methodid)
         params = methodid.extension.params
+
+        # Initialize parameters to TOP (⊤ = any possible value)  # noqa: RUF003
         for i, p in enumerate(params):
             if isinstance(p, (jvm.Float, jvm.Double)):
                 raise NotImplementedError("Only integer parameters supported")
             frame.locals[i] = abstraction_cls.top()
+
         state = AState[AV]({}, Stack.empty().push(frame))
-        return cls(per_inst={frame.pc: state}, needswork={frame.pc})
+        return cls(
+            per_inst={frame.pc: state},
+            needswork={frame.pc}
+        )
 
     def per_instruction(self) -> Iterable[tuple[PC, AState[AV]]]:
-        # for pc in self.needswork:
-        #     yield (pc, self.per_inst[pc])
+        """
+        Iterate over states that need processing.
 
+        Pops from needswork and yields (pc, state) pairs.
+        This implements the worklist algorithm's "pick next item" step.
+        """
         while self.needswork:
             pc = self.needswork.pop()
             yield (pc, self.per_inst[pc])
 
-    # sts |= astate
-    def __ior__(self, astate: AState) -> Self:
+    def __ior__(self, astate: AState[AV]) -> Self:
+        """
+        Join an abstract state into the state set.
+
+        This is the KEY operation for the worklist algorithm!
+
+        If PC doesn't exist: add the state
+        If PC exists: JOIN (⊔) with existing state
+
+        Add to needswork if the state CHANGED (not at fixed point yet).
+        """
         pc = astate.pc
-        old = self.per_inst.get(pc)
-        if old is None:
-            self.per_inst[pc] = astate
+
+        if pc not in self.per_inst:
+            # New PC: add state and mark for processing
+            self.per_inst[pc] = astate.clone()
             self.needswork.add(pc)
         else:
-            new = astate
-            if new != old:
-                self.per_inst[pc] = new
-                self.needswork.add(pc)
+            # Existing PC: must JOIN states!
+            old = self.per_inst[pc]
+
+            # Create new state by joining
+            new_state = old.clone()
+            new_state |= astate  # ← THIS IS THE JOIN OPERATION
+
+            # Only update if state actually changed
+            if new_state != old:
+                self.per_inst[pc] = new_state
+                self.needswork.add(pc)  # ← Must reprocess this PC
+            # else: fixed point reached at this PC, don't add to needswork
+
         return self
-        # old = self.per_inst[astate]
-        # self.per_inst[astate.pc] |= astate
-        # if old != self.per_inst[astate.pc]:
-        #     self.needswork.add(astate.pc)
-
-    # sts |= astate
-    # def __ior__(self, astate: AState[AV]) -> Self:
-    #     """
-    #     Join an abstract state into the state set.
-
-    #     If the PC doesn't exist, add it. Otherwise, join with existing state.
-    #     Add to needswork if the state changed.
-    #     """
-    #     pc = astate.pc
-    #     old = self.per_inst.get(pc)
-    #     if old is None:
-    #         # New PC: add state and mark for processing
-    #         self.per_inst[pc] = astate
-    #         self.needswork.add(pc)
-    #     else:
-    #         # Existing PC: join states and check if changed
-    #         old_copy = old.clone()
-    #         self.per_inst[pc] |= astate
-    #         # Only add to needswork if state actually changed
-    #         if self.per_inst[pc] != old_copy:
-    #             self.needswork.add(pc)
-    #     return self
 
     def __str__(self) -> str:
         return "\n".join(f"{pc}: {state}" for pc, state in self.per_inst.items())
@@ -223,47 +266,134 @@ class StateSet[AV: Abstraction]:
 
 def step[AV: Abstraction](state: AState[AV],
                           abstraction_cls: type[AV]) -> Iterable[AState[AV] | str]:
-    assert isinstance(state, AState), f"expected frame but got {state}"
+    """Execute ONE instruction in the abstract domain."""
+    assert isinstance(state, AState), f"expected AState but got {state}"
     frame = state.frames.peek()
     opr = state.bc[frame.pc]
     logger.debug(f"STEP {opr}\n{state}")
+
     match opr:
         case jvm.Push(value=v):
-            assert isinstance(v.value, int), F"Unsupported value type: {v.value!r}"
-            frame.stack.push(abstraction_cls.abstract({v.value}))
-            frame.pc += 1
-            return [state]
+            assert isinstance(v.value, int), f"Unsupported value type: {v.value!r}"
+            new_state = state.clone()
+            new_frame = new_state.frames.peek()
+            new_frame.stack.push(abstraction_cls.abstract({v.value}))
+            new_frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
+            return [new_state]
+
         case jvm.Load(type=type, index=i):
             assert i in frame.locals, f"Local variable {i} not initialized"
-            v = frame.locals[i]
-            frame.stack.push(frame.locals[i])
-            frame.pc += 1
-            return [state]
-        case jvm.Ifz(condition=_, target=t) | jvm.If(condition=_, target=t):
+            new_state = state.clone()
+            new_frame = new_state.frames.peek()
+            v = new_frame.locals[i]
+            new_frame.stack.push(v)
+            new_frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
+            return [new_state]
+
+        case jvm.Ifz(condition=c, target=t):
+            # Compare ONE value to zero
+            # Stack: [..., value] → [...]
+
+            # # Fall-through branch
+            # state1 = state.clone()
+            # state1.frames.peek().stack.pop()  # Pop the value
+            # state1.frames.peek().pc = PC(frame.pc.method, frame.pc.offset + 1)
+
+            # # Jump branch
+            # state2 = state.clone()
+            # state2.frames.peek().stack.pop()  # Pop the value
+            # state2.frames.peek().pc = PC(frame.pc.method, t)
+
+            # return [state1, state2]
+
+
             # Pop the value being tested
-            frame.stack.pop()
+            v1 = frame.stack.pop()
+            v2 = abstraction_cls.abstract({0})
+            assert isinstance(v1, Abstraction)
             # Clone state before modifying PC
             other = state.clone()
             # One path: continue to next instruction
             frame.pc += 1
             # Other path: jump to target
             other.frames.peek().pc.offset = t
-            return (state, other)
-        case jvm.Return(type=type):
-            state.frames.pop()
-            if state.frames:
-                caller_frame = state.frames.peek()
-                if type is not None:
-                    v1 = frame.stack.pop()
-                    caller_frame.stack.push(v1)
-                return [state]
-            return ["ok"]
-        case jvm.Binary(type=jvm.Int(), operant=operant):
+
+            res = v1.compare(cast("Comparison", c), v2)
+            logger.debug(f"res: {res}")
+            computed_states = []
+            if True in res:
+                    computed_states.append(other)
+            if False in res:
+                    computed_states.append(state)
+            return computed_states
+
+        case jvm.If(condition=c, target=t):
+            # Compare TWO values
+            # Stack: [..., value1, value2] → [...]
+
+            # # Fall-through branch
+            # state1 = state.clone()
+            # frame1 = state1.frames.peek()
+            # frame1.stack.pop()  # Pop value2
+            # frame1.stack.pop()  # Pop value1
+            # frame1.pc = PC(frame.pc.method, frame.pc.offset + 1)
+
+            # # Jump branch
+            # state2 = state.clone()
+            # frame2 = state2.frames.peek()
+            # frame2.stack.pop()  # Pop value2
+            # frame2.stack.pop()  # Pop value1
+            # frame2.pc = PC(frame.pc.method, t)
+
+            # return [state1, state2]
+
+            # Compare TWO values
+            # Stack: [..., value1, value2] → [...]
             v2, v1 = frame.stack.pop(), frame.stack.pop()
+            assert isinstance(v1, Abstraction)
+            assert isinstance(v2, Abstraction)
+            # Clone state before modifying PC
+            other = state.clone()
+            # One path: continue to next instruction
+            frame.pc += 1
+            # Other path: jump to target
+            other.frames.peek().pc.offset = t
+            res = v1.compare(cast("Comparison", c), v2)
+            computed_states = []
+            if True in res:
+                    computed_states.append(other)
+            if False in res:
+                    computed_states.append(state)
+            return computed_states
+
+        case jvm.Return(type=type):
+            new_state = state.clone()
+            new_frame = new_state.frames.pop()
+
+            if new_state.frames:
+                caller_frame = new_state.frames.peek()
+                if type is not None:
+                    v1 = new_frame.stack.pop()
+                    caller_frame.stack.push(v1)
+                return [new_state]
+            return ["ok"]
+
+        case jvm.Binary(type=jvm.Int(), operant=operant):
+            new_state = state.clone()
+            new_frame = new_state.frames.peek()
+
+            v2, v1 = new_frame.stack.pop(), new_frame.stack.pop()
             assert isinstance(v1, Abstraction), f"expected Abstraction, but got {v1}"
             assert isinstance(v2, Abstraction), f"expected Abstraction, but got {v2}"
+            computed_states = []
+            if v2.__contains__(0):
+                v2 -= abstraction_cls.abstract({0})
+                logger.debug("Division by zero found!")
+                computed_states.append("divide by zero")
+                if v2 == abstraction_cls.bot():
+                    # No more options left
+                    return computed_states
 
-            v = None
             try:
                 match operant:
                     case jvm.BinaryOpr.Div:
@@ -279,11 +409,16 @@ def step[AV: Abstraction](state: AState[AV],
                     case _:
                         raise NotImplementedError(
                             f"Operand '{operant!r}' not implemented.")
-                frame.stack.push(v)
+                new_frame.stack.push(v)
             except ValueError as e:
                 return [str(e)]
-            frame.pc += 1
-            return [state]
+
+            new_frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
+            computed_states.append(new_state)
+            return computed_states
+
+            # return [new_state]
+
         case jvm.Get(
             static=True,
             field=jvm.AbsFieldID(
@@ -291,44 +426,39 @@ def step[AV: Abstraction](state: AState[AV],
                 extension=jvm.FieldID(name="$assertionsDisabled", type=jvm.Boolean()),
             ),
         ):
-            frame.stack.push(abstraction_cls.abstract({0}))
-            frame.pc += 1
-            return [state]
+            new_state = state.clone()
+            new_frame = new_state.frames.peek()
+            new_frame.stack.push(abstraction_cls.abstract({0}))
+            new_frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
+            return [new_state]
+
         case jvm.New(classname=jvm.ClassName(_as_string="java/lang/AssertionError")):
             logger.debug("Creating AssertionError object")
             return ["assertion error"]
+
         case a:
             raise NotImplementedError(f"Don't know how to handle: {a!r}")
 
-
 def manystep[AV: Abstraction](sts: StateSet[AV],
                               abstraction_cls: type[AV]) -> Iterable[AState[AV] | str]:
+    """
+    Process all states in the worklist.
+
+    For each state that needs work:
+    1. Step it (execute one instruction)
+    2. Collect all successor states
+
+    Returns all successor states (to be joined back into StateSet).
+    """
     states = []
     for _pc, state in sts.per_instruction():
-        # for ([va1, va2], after) in state.group(pop=[jvm.Int(), jvm.Int()]):
-        #     pass
-        # bc = state.bc
-        # match bc[pc]:
-        #     case jvm.Binary(type=jvm.Int(), operant=opr):
-        #         pass
-        # logger.debug(f"Many step at {pc}")
         states.extend(step(state, abstraction_cls))
-        # yield from step(state, abstraction_cls)
-        # if isinstance(state, AState):
-        #     logger.debug(f"{state.frames.peek().pc}")
-        # else:
-        #     logger.debug(state)
     return states
-# def many_step[AV: Abstraction](state: dict[PC, AState[AV] | str],
-#                                abstraction_cls: type[AV]) -> dict[PC, AState[AV] | str]:
-#     new_state = dict(state)
-#     for pc, astate in state.items():
-#         if isinstance(astate, str):
-#             new_state[pc] = astate
-#         else:
-#             for s in step(astate, abstraction_cls):
-#                 new_state[s.pc] |= s
-#     return new_state
+
+
+# ============================================================================
+# Main Analysis
+# ============================================================================
 
 methodid = jpamb.getmethodid(
     "Abstract Interpreter",
@@ -338,31 +468,52 @@ methodid = jpamb.getmethodid(
     for_science=True,
 )
 
-# import debugpy
-# debugpy.listen(5678)
-# logger.debug("Waiting for debugger attach")
-# debugpy.wait_for_client()
-
 if methodid is None:
     logger.error("Method ID not found")
     methodid, case_input = jpamb.getcase()
 else:
     params = methodid.extension.params
 
+results: dict[str, int] = {
+    "ok": 0,
+    "assertion error": 0,
+    "divide by zero": 0,
+    "out of bounds": 0,
+    "null pointer": 0,
+    "*": 0,
+}
+
 AV = SignSet
 
-MAX_STEPS = 10
+MAX_STEPS = 1000
 final: set[str] = set()
+
+# Initialize with entry state
 sts = StateSet[AV].initialstate_from_method(methodid, AV)
 logger.debug(f"Initial state:\n{sts}")
-for _ in range(MAX_STEPS):
+
+# Worklist algorithm: iterate until fixed point (or max steps)
+for iteration in range(MAX_STEPS):
+    # Step all states that need processing
     for s in manystep(sts, AV):
         if isinstance(s, str):
+            # Terminal state (ok/error)
             final.add(s)
         else:
-            sts |= s
-    logger.debug(f"manysteps length: {len(sts.needswork)}")
-    logger.debug(f"Final: {final}")
+            # Successor state: join into per_inst
+            sts |= s  # ← This is where the JOIN happens!
 
-for result in final:
-    print(f"{result};100%")
+    logger.debug(f"Iteration {iteration}: {len(sts.needswork)} PCs need work")
+    logger.debug(f"Final states: {final}")
+
+    # If needswork is empty, we've reached fixed point
+    if not sts.needswork:
+        logger.debug("Fixed point reached!")
+        break
+
+# Output results
+for result in results:
+    if result in final:
+        print(f"{result};100%")
+    else:
+        print(f"{result};0%")
