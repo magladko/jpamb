@@ -28,7 +28,7 @@ class PerVarFrame[AV: Abstraction]:
 
     locals: dict[int, AV]  # variable_index → abstract_value
     stack: Stack[AV]        # operand stack of abstract values
-    pc: PC                  # ← CRITICAL: Must be uncommented!
+    pc: PC
 
     def __str__(self) -> str:
         locals_str = ", ".join(f"{k}:{v}" for k, v in sorted(self.locals.items()))
@@ -167,7 +167,7 @@ class AState[AV: Abstraction]:
     def clone(self) -> "AState[AV]":
         """Deep copy of the entire state."""
         return AState(
-            heap=self.heap.copy(),  # shallow copy of heap dict
+            heap=self.heap.copy(), # shallow copy of heap dict
             frames=Stack([deepcopy(f) for f in self.frames.items]),  # deep copy frames
             heap_ptr=self.heap_ptr
         )
@@ -187,7 +187,7 @@ class StateSet[AV: Abstraction]:
     """
 
     per_inst: dict[PC, AState[AV]]  # PC → AState
-    needswork: set[PC]               # PCs that need reprocessing
+    needswork: set[PC]              # PCs that need reprocessing
 
     @classmethod
     def initialstate_from_method(cls, methodid: jvm.AbsMethodID,
@@ -250,14 +250,13 @@ class StateSet[AV: Abstraction]:
 
             # Create new state by joining
             new_state = old.clone()
-            new_state |= astate  # ← THIS IS THE JOIN OPERATION
+            new_state |= astate
 
             # Only update if state actually changed
             if new_state != old:
                 self.per_inst[pc] = new_state
                 self.needswork.add(pc)  # ← Must reprocess this PC
             # else: fixed point reached at this PC, don't add to needswork
-
         return self
 
     def __str__(self) -> str:
@@ -294,19 +293,6 @@ def step[AV: Abstraction](state: AState[AV],
             # Compare ONE value to zero
             # Stack: [..., value] → [...]
 
-            # # Fall-through branch
-            # state1 = state.clone()
-            # state1.frames.peek().stack.pop()  # Pop the value
-            # state1.frames.peek().pc = PC(frame.pc.method, frame.pc.offset + 1)
-
-            # # Jump branch
-            # state2 = state.clone()
-            # state2.frames.peek().stack.pop()  # Pop the value
-            # state2.frames.peek().pc = PC(frame.pc.method, t)
-
-            # return [state1, state2]
-
-
             # Pop the value being tested
             v1 = frame.stack.pop()
             v2 = abstraction_cls.abstract({0})
@@ -322,31 +308,12 @@ def step[AV: Abstraction](state: AState[AV],
             logger.debug(f"res: {res}")
             computed_states = []
             if True in res:
-                    computed_states.append(other)
+                computed_states.append(other)
             if False in res:
-                    computed_states.append(state)
+                computed_states.append(state)
             return computed_states
 
         case jvm.If(condition=c, target=t):
-            # Compare TWO values
-            # Stack: [..., value1, value2] → [...]
-
-            # # Fall-through branch
-            # state1 = state.clone()
-            # frame1 = state1.frames.peek()
-            # frame1.stack.pop()  # Pop value2
-            # frame1.stack.pop()  # Pop value1
-            # frame1.pc = PC(frame.pc.method, frame.pc.offset + 1)
-
-            # # Jump branch
-            # state2 = state.clone()
-            # frame2 = state2.frames.peek()
-            # frame2.stack.pop()  # Pop value2
-            # frame2.stack.pop()  # Pop value1
-            # frame2.pc = PC(frame.pc.method, t)
-
-            # return [state1, state2]
-
             # Compare TWO values
             # Stack: [..., value1, value2] → [...]
             v2, v1 = frame.stack.pop(), frame.stack.pop()
@@ -416,8 +383,6 @@ def step[AV: Abstraction](state: AState[AV],
             new_frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
             computed_states.append(new_state)
             return computed_states
-
-            # return [new_state]
 
         case jvm.Get(
             static=True,
@@ -501,7 +466,7 @@ for iteration in range(MAX_STEPS):
             final.add(s)
         else:
             # Successor state: join into per_inst
-            sts |= s  # ← This is where the JOIN happens!
+            sts |= s
 
     logger.debug(f"Iteration {iteration}: {len(sts.needswork)} PCs need work")
     logger.debug(f"Final states: {final}")
