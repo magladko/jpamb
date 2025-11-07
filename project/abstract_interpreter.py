@@ -355,24 +355,21 @@ def step[AV: Abstraction](state: AState[AV],
                     # No more options left
                     return computed_states
 
-            try:
-                match operant:
-                    case jvm.BinaryOpr.Div:
-                        v = v1 // v2
-                    case jvm.BinaryOpr.Rem:
-                        v = v1 % v2
-                    case jvm.BinaryOpr.Sub:
-                        v = v1 - v2
-                    case jvm.BinaryOpr.Mul:
-                        v = v1 * v2
-                    case jvm.BinaryOpr.Add:
-                        v = v1 + v2
-                    case _:
-                        raise NotImplementedError(
-                            f"Operand '{operant!r}' not implemented.")
-                new_frame.stack.push(v)
-            except ValueError as e:
-                return [str(e)]
+            match operant:
+                case jvm.BinaryOpr.Div:
+                    v = v1 // v2
+                case jvm.BinaryOpr.Rem:
+                    v = v1 % v2
+                case jvm.BinaryOpr.Sub:
+                    v = v1 - v2
+                case jvm.BinaryOpr.Mul:
+                    v = v1 * v2
+                case jvm.BinaryOpr.Add:
+                    v = v1 + v2
+                case _:
+                    raise NotImplementedError(
+                        f"Operand '{operant!r}' not implemented.")
+            new_frame.stack.push(v)
 
             new_frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
             computed_states.append(new_state)
