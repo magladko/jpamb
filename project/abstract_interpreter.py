@@ -99,7 +99,7 @@ class AState[AV: Abstraction]:
 
         return self
 
-    def __eq__(self, other: object) -> bool:  # noqa: C901, PLR0911, PLR0912
+    def __eq__(self, other: object) -> bool:
         """Check equality of abstract states."""
         if not isinstance(other, AState):
             return False
@@ -157,7 +157,7 @@ class StateSet[AV: Abstraction]:
     needswork : set[PC]
 
     @classmethod
-    def initialstate_from_method(cls, methodid: jvm.AbsMethodID, 
+    def initialstate_from_method(cls, methodid: jvm.AbsMethodID,
                                  abstraction_cls: type[AV]) -> Self:
         frame = PerVarFrame[AV].from_method(methodid)
         params = methodid.extension.params
@@ -221,7 +221,7 @@ class StateSet[AV: Abstraction]:
         return "\n".join(f"{pc}: {state}" for pc, state in self.per_inst.items())
 
 
-def step[AV: Abstraction](state: AState[AV],  # noqa: C901, PLR0911, PLR0912, PLR0915
+def step[AV: Abstraction](state: AState[AV],
                           abstraction_cls: type[AV]) -> Iterable[AState[AV] | str]:
     assert isinstance(state, AState), f"expected frame but got {state}"
     frame = state.frames.peek()
@@ -304,7 +304,7 @@ def step[AV: Abstraction](state: AState[AV],  # noqa: C901, PLR0911, PLR0912, PL
 def manystep[AV: Abstraction](sts: StateSet[AV],
                               abstraction_cls: type[AV]) -> Iterable[AState[AV] | str]:
     states = []
-    for pc, state in sts.per_instruction():
+    for _pc, state in sts.per_instruction():
         # for ([va1, va2], after) in state.group(pop=[jvm.Int(), jvm.Int()]):
         #     pass
         # bc = state.bc
@@ -319,7 +319,7 @@ def manystep[AV: Abstraction](sts: StateSet[AV],
         # else:
         #     logger.debug(state)
     return states
-# def many_step[AV: Abstraction](state: dict[PC, AState[AV] | str], 
+# def many_step[AV: Abstraction](state: dict[PC, AState[AV] | str],
 #                                abstraction_cls: type[AV]) -> dict[PC, AState[AV] | str]:
 #     new_state = dict(state)
 #     for pc, astate in state.items():
@@ -338,10 +338,10 @@ methodid = jpamb.getmethodid(
     for_science=True,
 )
 
-# import debugpy  # noqa: E402, I001, T100
-# debugpy.listen(5678)  # noqa: T100
+# import debugpy
+# debugpy.listen(5678)
 # logger.debug("Waiting for debugger attach")
-# debugpy.wait_for_client()  # noqa: T100
+# debugpy.wait_for_client()
 
 if methodid is None:
     logger.error("Method ID not found")
