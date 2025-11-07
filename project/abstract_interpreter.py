@@ -20,10 +20,6 @@ class PerVarFrame[AV: Abstraction]:
     Abstract frame at a SINGLE program point.
 
     Represents the abstract state of locals and stack at one PC.
-    IMPORTANT: PC is stored here because we have a CALL STACK!
-    When method A calls method B, we have:
-      frames = [FrameA@PC_a, FrameB@PC_b]
-    Each frame needs to track where it is in its own method.
     """
 
     locals: dict[int, AV]  # variable_index → abstract_value
