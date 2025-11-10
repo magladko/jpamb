@@ -2,6 +2,9 @@ name: Ruff
 on: [ push, pull_request ]
 jobs:
   ruff:
-    - uses: astral-sh/ruff-action@v3
-    - run: ruff check --fix
-    - run: ruff format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/ruff-action@v3
+        with:
+          check --fix
