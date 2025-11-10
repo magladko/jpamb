@@ -1,10 +1,25 @@
-name: Ruff
-on: [ push, pull_request ]
+name: CI
+on: push
 jobs:
-  ruff:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/ruff-action@v3
+      - name: Install Python
+        uses: actions/setup-python@v5
         with:
-          check --fix
+          python-version: "3.13"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff
+      # Run ruff linting and formatting
+      - name: Run Ruff Linting
+        run: ruff check --fix .
+      - name: Run Ruff Formatting
+        run: ruff format .
+      # Verify no issues remain after auto-fix
+      - name: Verify Ruff Check
+        run: ruff check .
+      - name: Verify Ruff Format
+        run: ruff format --check .
