@@ -349,114 +349,6 @@ class StateSet[AV: Abstraction]:
     def __str__(self) -> str:
         return "\n".join(f"{pc}: {state}" for pc, state in self.per_inst.items())
 
-
-def constrain_for_true[AV: Abstraction](
-    value: AV, comparison: Comparison, other: AV
-) -> AV:
-    """
-    Refine constraint when comparison is TRUE.
-
-    For example:
-    - If (n != 0) is true, remove 0 from n's constraint
-    - If (n == 0) is true, keep only 0 in n's constraint
-    """
-    match comparison:
-        case "eq":
-            # value == other is true → value must be in intersection
-            return value & other
-        case "ne":
-            # value != other is true
-            # Special case: if other is {0}, remove 0 from value
-            if isinstance(value, SignSet) and isinstance(other, SignSet):
-                if other.signs == {"0"}:
-                    # Remove zero sign
-                    return SignSet(value.signs - {"0"})
-            return value  # Can't constrain much otherwise
-        case "lt":
-            # value < other is true
-            if isinstance(value, SignSet) and isinstance(other, SignSet):
-                if other.signs == {"0"}:
-                    # value < 0 → value must be negative
-                    return SignSet(value.signs & {"-"})
-            return value
-        case "le":
-            # value <= other is true
-            if isinstance(value, SignSet) and isinstance(other, SignSet):
-                if other.signs == {"0"}:
-                    # value <= 0 → value must be negative or zero
-                    return SignSet(value.signs & {"-", "0"})
-            return value
-        case "gt":
-            # value > other is true
-            if isinstance(value, SignSet) and isinstance(other, SignSet):
-                if other.signs == {"0"}:
-                    # value > 0 → value must be positive
-                    return SignSet(value.signs & {"+"})
-            return value
-        case "ge":
-            # value >= other is true
-            if isinstance(value, SignSet) and isinstance(other, SignSet):
-                if other.signs == {"0"}:
-                    # value >= 0 → value must be positive or zero
-                    return SignSet(value.signs & {"+", "0"})
-            return value
-        case _:
-            return value
-
-
-def constrain_for_false[AV: Abstraction](
-    value: AV, comparison: Comparison, other: AV
-) -> AV:
-    """
-    Refine constraint when comparison is FALSE.
-
-    For example:
-    - If (n != 0) is false, keep only 0 in n's constraint
-    - If (n == 0) is false, remove 0 from n's constraint
-    """
-    match comparison:
-        case "eq":
-            # value == other is false → negate the equality
-            if isinstance(value, SignSet) and isinstance(other, SignSet):
-                if other.signs == {"0"}:
-                    # value == 0 is false → remove 0
-                    return SignSet(value.signs - {"0"})
-            return value
-        case "ne":
-            # value != other is false → value == other
-            return value & other
-        case "lt":
-            # value < other is false → value >= other
-            if isinstance(value, SignSet) and isinstance(other, SignSet):
-                if other.signs == {"0"}:
-                    # value < 0 is false → value >= 0
-                    return SignSet(value.signs & {"+", "0"})
-            return value
-        case "le":
-            # value <= other is false → value > other
-            if isinstance(value, SignSet) and isinstance(other, SignSet):
-                if other.signs == {"0"}:
-                    # value <= 0 is false → value > 0
-                    return SignSet(value.signs & {"+"})
-            return value
-        case "gt":
-            # value > other is false → value <= other
-            if isinstance(value, SignSet) and isinstance(other, SignSet):
-                if other.signs == {"0"}:
-                    # value > 0 is false → value <= 0
-                    return SignSet(value.signs & {"-", "0"})
-            return value
-        case "ge":
-            # value >= other is false → value < other
-            if isinstance(value, SignSet) and isinstance(other, SignSet):
-                if other.signs == {"0"}:
-                    # value >= 0 is false → value < 0
-                    return SignSet(value.signs & {"-"})
-            return value
-        case _:
-            return value
-
-
 def step[AV: Abstraction](state: AState[AV],
                           abstraction_cls: type[AV]) -> Iterable[AState[AV] | str]:
     """Execute ONE instruction in the abstract domain."""
@@ -492,7 +384,6 @@ def step[AV: Abstraction](state: AState[AV],
             v1 = state.constraints.constraints[value_name]
             v2 = abstraction_cls.abstract({0})
 
-            # Evaluate comparison with current constraints
             res = v1.compare(cast("Comparison", c), v2)
             logger.debug(f"res: {res}")
 
@@ -502,7 +393,7 @@ def step[AV: Abstraction](state: AState[AV],
                 true_state = state.clone()
                 true_state.frames.peek().pc = PC(frame.pc.method, t)
                 # REFINE constraint: condition is TRUE
-                constrained = constrain_for_true(v1, cast("Comparison", c), v2)
+                constrained = res[True][0]
                 true_state.constraints.constraints[value_name] = constrained
                 computed_states.append(true_state)
 
@@ -511,7 +402,7 @@ def step[AV: Abstraction](state: AState[AV],
                 false_state = state.clone()
                 false_state.frames.peek().pc = frame.pc + 1
                 # REFINE constraint: condition is FALSE
-                constrained = constrain_for_false(v1, cast("Comparison", c), v2)
+                constrained = res[False][0]
                 false_state.constraints.constraints[value_name] = constrained
                 computed_states.append(false_state)
 
@@ -519,6 +410,18 @@ def step[AV: Abstraction](state: AState[AV],
             return computed_states
 
         case jvm.If(condition=c, target=t):
+            # {0} < {0, +}
+            # True: {0} ... {0, +}
+            # False: {0}
+
+            # x = {0}
+            # y = {0, +}
+            # If x < y
+            #   x: {0}, y: {+}
+            #   if y == 0:
+                    # assert false # unreachable
+
+
             # Compare TWO values
             # Stack: [..., value1, value2] → [...]
             name2, name1 = frame.stack.pop(), frame.stack.pop()
@@ -536,8 +439,10 @@ def step[AV: Abstraction](state: AState[AV],
                 true_state.frames.peek().pc = PC(frame.pc.method, t)
                 # REFINE constraint: condition is TRUE
                 # For two-value comparison, constrain the first value
-                constrained = constrain_for_true(v1, cast("Comparison", c), v2)
-                true_state.constraints.constraints[name1] = constrained
+                self_constrained = res[True][0]
+                other_constrained = res[True][1]
+                true_state.constraints.constraints[name1] = self_constrained
+                true_state.constraints.constraints[name2] = other_constrained
                 computed_states.append(true_state)
 
             if False in res:
@@ -545,8 +450,10 @@ def step[AV: Abstraction](state: AState[AV],
                 false_state = state.clone()
                 false_state.frames.peek().pc = frame.pc + 1
                 # REFINE constraint: condition is FALSE
-                constrained = constrain_for_false(v1, cast("Comparison", c), v2)
-                false_state.constraints.constraints[name1] = constrained
+                self_constrained = res[False][0]
+                other_constrained = res[False][0]
+                false_state.constraints.constraints[name1] = self_constrained
+                false_state.constraints.constraints[name2] = other_constrained
                 computed_states.append(false_state)
 
             return computed_states

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from types import get_original_bases
-from typing import Literal, Self, get_args, get_origin
+from typing import Callable, Literal, Self, get_args, get_origin
 
 type Sign = Literal["+", "-", "0"]
 type Comparison = Literal["le", "eq", "lt", "gt", "ge", "ne"]
@@ -37,16 +37,45 @@ class Abstraction[T](ABC):
     def top(cls) -> Self:
         pass
 
+    def compare(self, op: Comparison, other: Self) -> dict[bool, tuple[Self,Self]]:
+        match op:
+            case "le":
+                return self.le(other)
+            case "lt":
+                return self.lt(other)
+            case "eq":
+                return self.eq(other)
+            case "ne":
+                return self.ne(other)
+            case "ge":
+                return self.ge(other)
+            case "gt":
+                return self.gt(other)
+            case _:
+                raise NotImplementedError(f"Op {op} not implemented")
+
     @abstractmethod
-    def compare(self, op: Comparison, other: Self) -> set[bool]:
+    def le(self, other: Self) -> dict[bool, tuple[Self, Self]]:
         pass
 
     @abstractmethod
-    def le(self, other: Self) -> set[bool]:
+    def lt(self, other: Self) -> dict[bool, tuple[Self, Self]]:
         pass
 
     @abstractmethod
-    def eq(self, other: Self) -> set[bool]:
+    def eq(self, other: Self) -> dict[bool, tuple[Self, Self]]:
+        pass
+
+    @abstractmethod
+    def ne(self, other: Self) -> dict[bool, tuple[Self, Self]]:
+        pass
+
+    @abstractmethod
+    def ge(self, other: Self) -> dict[bool, tuple[Self, Self]]:
+        pass
+
+    @abstractmethod
+    def gt(self, other: Self) -> dict[bool, tuple[Self, Self]]:
         pass
 
     @abstractmethod
@@ -97,19 +126,6 @@ class Abstraction[T](ABC):
     def __str__(self) -> str:
         pass
 
-class Arithmetic[AbstractionClass: Abstraction]:
-    """Abstract arithmetic operations for various abstract domains."""
-
-    @classmethod
-    def compare(
-        cls,
-        op: Comparison,
-        s1: AbstractionClass,
-        s2: AbstractionClass,
-    ) -> set[bool]:
-        """Compare abstract values and return possible boolean results."""
-        return s1.compare(op, s2)
-
 
 @dataclass
 class SignSet(Abstraction[int]):
@@ -134,24 +150,37 @@ class SignSet(Abstraction[int]):
     def top(cls) -> "SignSet":
         return cls({"+", "-", "0"})
 
-    def compare(self, op: Comparison, other: "SignSet") -> set[bool]:
-        match op:
-            case "le":
-                return self.le(other)
-            case "lt":
-                return self.lt(other)
-            case "eq":
-                return self.eq(other)
-            case "ne":
-                return self.ne(other)
-            case "ge":
-                return self.ge(other)
-            case "gt":
-                return self.gt(other)
-            case _:
-                raise NotImplementedError(f"Op {op} not implemented")
+    def _binary_comparison(
+            self: "SignSet",
+            other: "SignSet",
+            outcome_fn: Callable[[str, str], set[bool]]
+        ) -> dict[bool, tuple["SignSet", "SignSet"]]:
 
-    def le(self, other: "SignSet") -> set[bool]:
+        results: dict[bool, tuple[SignSet, SignSet]] = {}
+        self_true_set = SignSet.bot()
+        self_false_set = SignSet.bot()
+        other_true_set = SignSet.bot()
+        other_false_set = SignSet.bot()
+
+        for s1 in self.signs:
+            for s2 in other.signs:
+                outcomes = outcome_fn(s1, s2)
+
+                if True in outcomes:
+                    self_true_set.signs.add(s1)
+                    other_true_set.signs.add(s2)
+                if False in outcomes:
+                    other_false_set.signs.add(s2)
+                    self_false_set.signs.add(s1)
+
+        if len(self_true_set) > 0:
+            results[True] = (self_true_set, other_true_set)
+        if len(self_false_set) > 0:
+            results[False] = (self_false_set, other_false_set)
+
+        return results
+
+    def le(self, other: "SignSet") -> dict[bool, tuple["SignSet", "SignSet"]]:
         # {0} <= {0} -> {True}
         # {0} <= {+} -> {True}
         # {0} <= {-} -> {False}
@@ -161,21 +190,20 @@ class SignSet(Abstraction[int]):
         # {-} <= {0} -> {True}
         # {-} <= {+} -> {True}
         # {-} <= {-} -> {True, False}
-        results = set()
-        for s1 in self.signs:
-            for s2 in other.signs:
-                match (s1, s2):
-                    case (("0", "0") | ("0", "+") | ("-", "0") | ("-", "+")):
-                        results.add(True)
-                    case ("0", "-") | ("+", "0") | ("+", "-"):
-                        results.add(False)
-                    case ("+", "+") | ("-", "-"):
-                        results.update({True, False})
-                    case _:
-                        raise ValueError(f"Invalid signs: {s1}, {s2}")
-        return results
+        def le_outcome(s1: str, s2: str) -> set[bool]:
+            match (s1, s2):
+                case ("0", "0") | ("0", "+") | ("-", "0") | ("-", "+"):
+                    return {True}
+                case ("0", "-") | ("+", "0") | ("+", "-"):
+                    return {False}
+                case ("+", "+") | ("-", "-"):
+                    return {True, False}
+                case _:
+                    raise ValueError(f"Invalid signs: {s1}, {s2}")
 
-    def eq(self, other: "SignSet") -> set[bool]:
+        return self._binary_comparison(other, le_outcome)
+
+    def eq(self, other: "SignSet") -> dict[bool, tuple["SignSet", "SignSet"]]:
         # {0} == {0} -> {True}
         # {0} == {+} -> {False}
         # {0} == {-} -> {False}
@@ -185,25 +213,45 @@ class SignSet(Abstraction[int]):
         # {-} == {0} -> {False}
         # {-} == {+} -> {False}
         # {-} == {-} -> {True, False}
-        results = set()
-        for s1 in self.signs:
-            for s2 in other.signs:
-                match (s1, s2):
-                    case (("0", "0")):
-                        results.add(True)
-                    case (("0", "+") | ("0", "-") | ("+", "0") |
-                          ("-", "0") | ("+", "-") | ("-", "+")):
-                        results.add(False)
-                    case ("+", "+") | ("-", "-"):
-                        results.update({True, False})
-                    case _:
-                        raise ValueError(f"Invalid signs: {s1}, {s2}")
-        return results
+        def eq_outcome(s1: str, s2: str) -> set[bool]:
+            match (s1, s2):
+                case ("0", "0"):
+                    return {True}
+                case (("0", "+") | ("0", "-") | ("+", "0") |
+                      ("-", "0") | ("+", "-") | ("-", "+")):
+                    return {False}
+                case ("+", "+") | ("-", "-"):
+                    return {True, False}
+                case _:
+                    raise ValueError(f"Invalid signs: {s1}, {s2}")
 
-    def ne(self, other: "SignSet") -> set[bool]:
-        return {not r for r in self.eq(other)}
+        return self._binary_comparison(other, eq_outcome)
 
-    def lt(self, other: "SignSet") -> set[bool]:
+    def ne(self, other: "SignSet") -> dict[bool, tuple["SignSet", "SignSet"]]:
+        # {0} != {0} -> {False}
+        # {0} != {+} -> {True}
+        # {0} != {-} -> {True}
+        # {+} != {0} -> {True}
+        # {+} != {+} -> {True, False}
+        # {+} != {-} -> {True}
+        # {-} != {0} -> {True}
+        # {-} != {+} -> {True}
+        # {-} != {-} -> {True, False}
+        def ne_outcome(s1: str, s2: str) -> set[bool]:
+            match (s1, s2):
+                case ("0", "0"):
+                    return {False}
+                case (("0", "+") | ("0", "-") | ("+", "0") |
+                      ("-", "0") | ("+", "-") | ("-", "+")):
+                    return {True}
+                case ("+", "+") | ("-", "-"):
+                    return {True, False}
+                case _:
+                    raise ValueError(f"Invalid signs: {s1}, {s2}")
+
+        return self._binary_comparison(other, ne_outcome)
+
+    def lt(self, other: "SignSet") -> dict[bool, tuple["SignSet", "SignSet"]]:
         # {0} < {0} -> {False}
         # {0} < {+} -> {True}
         # {0} < {-} -> {False}
@@ -213,21 +261,20 @@ class SignSet(Abstraction[int]):
         # {-} < {0} -> {True}
         # {-} < {+} -> {True}
         # {-} < {-} -> {True, False}
-        results = set()
-        for s1 in self.signs:
-            for s2 in other.signs:
-                match (s1, s2):
-                    case ("0", "+") | ("-", "0") | ("-", "+"):
-                        results.add(True)
-                    case ("0", "0") | ("0", "-") | ("+", "0") | ("+", "-"):
-                        results.add(False)
-                    case ("+", "+") | ("-", "-"):
-                        results.update({True, False})
-                    case _:
-                        raise ValueError(f"Invalid signs: {s1}, {s2}")
-        return results
+        def lt_outcome(s1: str, s2: str) -> set[bool]:
+            match (s1, s2):
+                case ("0", "+") | ("-", "0") | ("-", "+"):
+                    return {True}
+                case ("0", "0") | ("0", "-") | ("+", "0") | ("+", "-"):
+                    return {False}
+                case ("+", "+") | ("-", "-"):
+                    return {True, False}
+                case _:
+                    raise ValueError(f"Invalid signs: {s1}, {s2}")
 
-    def ge(self, other: "SignSet") -> set[bool]:
+        return self._binary_comparison(other, lt_outcome)
+
+    def ge(self, other: "SignSet") -> dict[bool, tuple["SignSet", "SignSet"]]:
         # {0} >= {0} -> {True}
         # {0} >= {+} -> {False}
         # {0} >= {-} -> {True}
@@ -237,21 +284,20 @@ class SignSet(Abstraction[int]):
         # {-} >= {0} -> {False}
         # {-} >= {+} -> {False}
         # {-} >= {-} -> {True, False}
-        results = set()
-        for s1 in self.signs:
-            for s2 in other.signs:
-                match (s1, s2):
-                    case ("0", "0") | ("0", "-") | ("+", "0") | ("+", "-"):
-                        results.add(True)
-                    case ("0", "+") | ("-", "0") | ("-", "+"):
-                        results.add(False)
-                    case ("+", "+") | ("-", "-"):
-                        results.update({True, False})
-                    case _:
-                        raise ValueError(f"Invalid signs: {s1}, {s2}")
-        return results
+        def ge_outcome(s1: str, s2: str) -> set[bool]:
+            match (s1, s2):
+                case ("0", "0") | ("0", "-") | ("+", "0") | ("+", "-"):
+                    return {True}
+                case ("0", "+") | ("-", "0") | ("-", "+"):
+                    return {False}
+                case ("+", "+") | ("-", "-"):
+                    return {True, False}
+                case _:
+                    raise ValueError(f"Invalid signs: {s1}, {s2}")
 
-    def gt(self, other: "SignSet") -> set[bool]:
+        return self._binary_comparison(other, ge_outcome)
+
+    def gt(self, other: "SignSet") -> dict[bool, tuple["SignSet", "SignSet"]]:
         # {0} > {0} -> {False}
         # {0} > {+} -> {False}
         # {0} > {-} -> {True}
@@ -261,19 +307,18 @@ class SignSet(Abstraction[int]):
         # {-} > {0} -> {False}
         # {-} > {+} -> {False}
         # {-} > {-} -> {True, False}
-        results = set()
-        for s1 in self.signs:
-            for s2 in other.signs:
-                match (s1, s2):
-                    case ("0", "-") | ("+", "0") | ("+", "-"):
-                        results.add(True)
-                    case ("0", "0") | ("0", "+") | ("-", "0") | ("-", "+"):
-                        results.add(False)
-                    case ("+", "+") | ("-", "-"):
-                        results.update({True, False})
-                    case _:
-                        raise ValueError(f"Invalid signs: {s1}, {s2}")
-        return results
+        def gt_outcome(s1: str, s2: str) -> set[bool]:
+            match (s1, s2):
+                case ("0", "-") | ("+", "0") | ("+", "-"):
+                    return {True}
+                case ("0", "0") | ("0", "+") | ("-", "0") | ("-", "+"):
+                    return {False}
+                case ("+", "+") | ("-", "-"):
+                    return {True, False}
+                case _:
+                    raise ValueError(f"Invalid signs: {s1}, {s2}")
+
+        return self._binary_comparison(other, gt_outcome)
 
     def __contains__(self, member: int) -> bool:
         if member == 0 and "0" in self.signs:
