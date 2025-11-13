@@ -582,7 +582,7 @@ def build(suite, compile, decompile, document, test, docker):
                 + [
                     "jvm2json",
                     "-s",
-                    suite.classfile(cl).relative_to(suite.workfolder),
+                    suite.classfile(cl).relative_to(suite.workfolder).as_posix(),
                 ],
                 logerr=log.warning,
             )
@@ -665,7 +665,7 @@ def build(suite, compile, decompile, document, test, docker):
                     + [
                         "java",
                         "-cp",
-                        folder.relative_to(suite.workfolder),
+                        folder.relative_to(suite.workfolder).as_posix(),
                         "-ea",
                         "jpamb.Runtime",
                         case.methodid.encode(),
