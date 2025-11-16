@@ -26,6 +26,34 @@ jobs:
     - name: Verify Docker installation
       run: docker --version
 
+    - name: Set up WSL2 and Docker (Windows only)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        # Install WSL2 with Ubuntu
+        wsl --install Ubuntu-24.04 --no-launch
+
+        # Wait for installation
+        Start-Sleep -Seconds 10
+
+        # Set up Docker in WSL
+        wsl -d Ubuntu-24.04 -u root bash -c "apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y docker.io"
+
+        # Configure Docker to listen on TCP (for Windows Docker CLI)
+        wsl -d Ubuntu-24.04 -u root bash -c "mkdir -p /etc/docker && echo '{\"hosts\": [\"unix:///var/run/docker.sock\", \"tcp://0.0.0.0:2375\"]}' > /etc/docker/daemon.json"
+
+        # Start Docker daemon
+        wsl -d Ubuntu-24.04 -u root bash -c "dockerd > /dev/null 2>&1 &"
+
+        # Wait for Docker to be ready
+        Start-Sleep -Seconds 5
+
+        # Configure Windows Docker CLI to use WSL Docker
+        echo "DOCKER_HOST=tcp://localhost:2375" >> $env:GITHUB_ENV
+
+        # Keep WSL running in background
+        Start-Process wsl -ArgumentList "-d Ubuntu-24.04 --exec dbus-launch true" -WindowStyle Hidden
+
     - name: Run checkhealth
       run: |
         uv run jpamb -vv checkhealth
