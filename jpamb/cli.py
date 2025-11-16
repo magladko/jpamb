@@ -581,7 +581,7 @@ def build(suite, compile, decompile, document, test, docker):
         run(
             cmd
             + ["javac", "-d", "target/classes"]
-            + list(a.relative_to(suite.workfolder) for a in suite.sourcefiles()),
+            + [str(a.relative_to(suite.workfolder)) for a in suite.sourcefiles()],
             logerr=log.warning,
             logout=log.info,
             timeout=600,
@@ -609,7 +609,7 @@ def build(suite, compile, decompile, document, test, docker):
                 + [
                     "jvm2json",
                     "-s",
-                    suite.classfile(cl).relative_to(suite.workfolder),
+                    str(suite.classfile(cl).relative_to(suite.workfolder)),
                 ],
                 logerr=log.warning,
             )
@@ -692,7 +692,7 @@ def build(suite, compile, decompile, document, test, docker):
                     + [
                         "java",
                         "-cp",
-                        folder.relative_to(suite.workfolder),
+                        str(folder.relative_to(suite.workfolder)),
                         "-ea",
                         "jpamb.Runtime",
                         case.methodid.encode(),
