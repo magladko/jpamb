@@ -13,7 +13,7 @@ from . import suite
 def get_maxpoints():
     import csv
 
-    with open("stats/distribution.csv") as fp:
+    with open("stats/distribution.csv", encoding="utf-8") as fp:
         reader = list(csv.DictReader(fp))
         return (len(reader) - 1) * (len(reader[0]) - 1)
 

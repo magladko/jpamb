@@ -247,7 +247,7 @@ def checkhealth(suite):
     "--report",
     "-r",
     default="-",
-    type=click.File(mode="w"),
+    type=click.File(mode="w", encoding="utf-8"),
     help="A file to write the report to. (Good for golden testing)",
 )
 @click.argument("PROGRAM", nargs=-1)
@@ -313,7 +313,7 @@ def test(suite, program, report, filter, fail_fast, with_python, timeout):
     "--report",
     "-r",
     default="-",
-    type=click.File(mode="w"),
+    type=click.File(mode="w", encoding="utf-8"),
     help="A file to write the report to. (Good for golden testing)",
 )
 @click.argument("PROGRAM", nargs=-1)
@@ -327,7 +327,7 @@ def interpret(suite, program, report, filter, with_python, timeout, stepwise):
     last_case = None
     if stepwise:
         try:
-            with open(".jpamb-stepwise") as f:
+            with open(".jpamb-stepwise", encoding="utf-8") as f:
                 last_case = model.Case.decode(f.read())
         except ValueError as e:
             log.warning(e)
@@ -361,7 +361,7 @@ def interpret(suite, program, report, filter, with_python, timeout, stepwise):
             if case.result == ret:
                 total += 1
             elif stepwise:
-                with open(".jpamb-stepwise", "w") as f:
+                with open(".jpamb-stepwise", "w", encoding="utf-8") as f:
                     f.write(case.encode())
                 sys.exit(-1)
             count += 1
@@ -396,7 +396,7 @@ def interpret(suite, program, report, filter, with_python, timeout, stepwise):
     "--report",
     "-r",
     default="-",
-    type=click.File(mode="w"),
+    type=click.File(mode="w", encoding="utf-8"),
     help="A file to write the report to",
 )
 @click.argument("PROGRAM", nargs=-1)
@@ -586,7 +586,7 @@ def build(suite, compile, decompile, document, test, docker):
             )
             file = suite.decompiledfile(cl)
             file.parent.mkdir(exist_ok=True, parents=True)
-            with open(file, "w") as f:
+            with open(file, "w", encoding="utf-8") as f:
                 json.dump(json.loads(res), f, indent=2, sort_keys=True)
         log.success("Done decompiling")
 
@@ -613,7 +613,7 @@ def build(suite, compile, decompile, document, test, docker):
             for o in list_ops:
                 class_opcodes[str(case.methodid.classname).split(".")[-1]].add(o)
 
-        with open("OPCODES.md", "w") as document:
+        with open("OPCODES.md", "w", encoding="utf-8") as document:
             document.write("#Bytecode instructions\n")
             document.write("| Mnemonic | Opcode Name |  Exists in |  Count |\n")
             document.write("| :---- | :---- | :----- | -----: |\n")
@@ -747,7 +747,7 @@ def plot(ctx, report, directory):
     def parse_report(report):
         import json
 
-        with open(report, "r") as data:
+        with open(report, "r", encoding="utf-8") as data:
             try:
                 report = json.loads(data.read())
 
