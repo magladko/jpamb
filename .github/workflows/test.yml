@@ -26,17 +26,26 @@ jobs:
     - name: Verify Docker installation
       run: docker --version
 
-    - name: Set up WSL2 and Docker (Windows only)
+    - name: Check WSL status (Windows only)
+      if: runner.os == 'Windows'
+      run: |
+        wsl --version
+        wsl --status
+        wsl --list --verbose
+
+    - name: Install WSL Ubuntu (Windows only)
+      if: runner.os == 'Windows'
+      timeout-minutes: 10
+      run: wsl --install Ubuntu --no-launch
+
+    - name: Set up Docker in WSL (Windows only)
       if: runner.os == 'Windows'
       shell: pwsh
       run: |
-        # Install WSL2 with Ubuntu
-        wsl --install Ubuntu
-
         # Keep WSL alive
         wsl -d Ubuntu --exec dbus-launch true
 
-        # Set up Docker in WSL
+        # Install Docker
         wsl -d Ubuntu -u root bash -c "apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y docker.io"
 
         # Start Docker daemon
