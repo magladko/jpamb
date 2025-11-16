@@ -23,12 +23,8 @@ jobs:
     - name: Install uv
       uses: astral-sh/setup-uv@v6
 
-    - name: Set up Docker (macOS only)
-      if: runner.os == 'macOS'
-      uses: docker-practice/actions-setup-docker@master
-      timeout-minutes: 12
-
-    - name: Verify Docker installation
+    - name: Verify Docker installation (Ubuntu/Windows)
+      if: runner.os != 'macOS'
       run: docker --version
 
     - name: Run checkhealth
