@@ -28,9 +28,10 @@ jobs:
 
     - name: Check WSL status (Windows only)
       if: runner.os == 'Windows'
+      continue-on-error: true
       run: |
         wsl --version
-        wsl --status
+        wsl --list --online
         wsl --list --verbose
 
     - name: Install WSL Ubuntu (Windows only)
