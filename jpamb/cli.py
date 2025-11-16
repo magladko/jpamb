@@ -521,6 +521,37 @@ def evaluate(ctx, program, report, timeout, iterations, with_python):
     help="test that all cases are correct.",
     default=None,
 )
+def get_docker_command():
+    """Get the appropriate docker command for the current platform."""
+    import os
+
+    # If USE_WSL_DOCKER is set (in CI), use WSL
+    if os.environ.get("USE_WSL_DOCKER") == "1":
+        log.info("Using Docker in WSL (Ubuntu-24.04)")
+        return ["wsl", "-d", "Ubuntu-24.04", "sudo", "docker"]
+
+    # Otherwise use docker/podman from PATH (Docker Desktop, etc)
+    dockerbin = shutil.which("podman") or shutil.which("docker")
+    if not dockerbin:
+        raise click.UsageError("No docker or podman on PATH")
+
+    log.info(f"Using docker: {dockerbin}")
+    return [dockerbin]
+
+
+def to_wsl_path(path):
+    """Convert Windows path to WSL path when using WSL Docker."""
+    import os
+
+    if os.environ.get("USE_WSL_DOCKER") == "1":
+        path_str = str(path).replace("\\", "/")
+        if len(path_str) >= 2 and path_str[1] == ":":
+            drive = path_str[0].lower()
+            rest = path_str[2:]
+            return f"/mnt/{drive}{rest}"
+    return str(path)
+
+
 @click.pass_obj
 def build(suite, compile, decompile, document, test, docker):
     """Rebuild all benchmarks."""
@@ -531,21 +562,19 @@ def build(suite, compile, decompile, document, test, docker):
         document = document is None
         test = test is None
 
-    dockerbin = shutil.which("podman") or shutil.which("docker")
+    docker_cmd = get_docker_command()
+    workfolder = to_wsl_path(suite.workfolder)
 
-    if not dockerbin:
-        raise click.UsageError("No docker or podman on PATH")
-
-    log.info(f"Using docker: {dockerbin}")
-
-    cmd = [
-        dockerbin,
-        "run",
-        "--rm",
-        "-v",
-        f"{suite.workfolder}:/workspace",
-        docker,
-    ]
+    cmd = (
+        docker_cmd
+        + [
+            "run",
+            "--rm",
+            "-v",
+            f"{workfolder}:/workspace",
+            docker,
+        ]
+    )
 
     if compile:
         log.info("Compiling")

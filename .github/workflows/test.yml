@@ -31,25 +31,28 @@ jobs:
       shell: pwsh
       run: |
         # Install WSL2 with Ubuntu
-        wsl --install Ubuntu-24.04 --no-launch
+        wsl --install Ubuntu-24.04
 
         # Wait for installation
         Start-Sleep -Seconds 10
 
+        # Keep WSL alive
+        wsl -d Ubuntu-24.04 --exec dbus-launch true
+
         # Set up Docker in WSL
         wsl -d Ubuntu-24.04 -u root bash -c "apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y docker.io"
 
-        # Start Docker daemon in WSL (in background, persistent)
-        Start-Process wsl -ArgumentList "-d Ubuntu-24.04 -u root dockerd -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock" -WindowStyle Hidden
+        # Start Docker daemon
+        wsl -d Ubuntu-24.04 -u root service docker start
 
         # Wait for Docker to be ready
-        Start-Sleep -Seconds 10
+        Start-Sleep -Seconds 5
 
         # Test Docker connection
-        wsl -d Ubuntu-24.04 docker ps
+        wsl -d Ubuntu-24.04 sudo docker ps
 
-        # Configure Windows Docker CLI to use WSL Docker
-        echo "DOCKER_HOST=tcp://localhost:2375" >> $env:GITHUB_ENV
+        # Tell jpamb to use WSL Docker
+        echo "USE_WSL_DOCKER=1" >> $env:GITHUB_ENV
 
     - name: Run checkhealth
       run: |
