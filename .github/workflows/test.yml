@@ -23,44 +23,13 @@ jobs:
     - name: Install uv
       uses: astral-sh/setup-uv@v6
 
-    - name: Set up Docker (Ubuntu)
-      if: runner.os == 'Linux'
-      run: |
-        # Docker is pre-installed on ubuntu-latest
-        docker --version
-
-    - name: Set up Docker (macOS)
+    - name: Set up Docker (macOS only)
       if: runner.os == 'macOS'
-      run: |
-        # Install Docker Desktop for macOS
-        brew install --cask docker
-        # Start Docker Desktop
-        open -a Docker
-        # Wait for Docker to be ready
-        while ! docker system info > /dev/null 2>&1; do sleep 1; done
-        docker --version
+      uses: docker-practice/actions-setup-docker@master
+      timeout-minutes: 12
 
-    - name: Set up Docker (Windows)
-      if: runner.os == 'Windows'
-      shell: pwsh
-      run: |
-        # Install Docker Desktop for Windows
-        choco install docker-desktop -y
-        # Start Docker service
-        Start-Service docker
-        # Wait for Docker to be ready
-        $timeout = 300
-        $elapsed = 0
-        while ($elapsed -lt $timeout) {
-          try {
-            docker version
-            break
-          } catch {
-            Start-Sleep -Seconds 5
-            $elapsed += 5
-          }
-        }
-        docker --version
+    - name: Verify Docker installation
+      run: docker --version
 
     - name: Run checkhealth
       run: |
