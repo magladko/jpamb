@@ -500,8 +500,8 @@ def get_docker_command():
 
     # If USE_WSL_DOCKER is set (in CI), use WSL
     if os.environ.get("USE_WSL_DOCKER") == "1":
-        log.info("Using Docker in WSL (Ubuntu-24.04)")
-        return ["wsl", "-d", "Ubuntu-24.04", "sudo", "docker"]
+        log.info("Using Docker in WSL (Ubuntu)")
+        return ["wsl", "-d", "Ubuntu", "sudo", "docker"]
 
     # Otherwise use docker/podman from PATH (Docker Desktop, etc)
     dockerbin = shutil.which("podman") or shutil.which("docker")
