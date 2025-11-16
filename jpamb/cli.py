@@ -494,33 +494,6 @@ def evaluate(ctx, program, report, timeout, iterations, with_python):
     )
 
 
-@cli.command()
-@click.option(
-    "-D",
-    "--docker",
-    help="the docker container to build with.",
-    default="ghcr.io/kalhauge/jvm2json:jdk-latest",
-)
-@click.option(
-    "--compile / --no-compile",
-    help="compile the java source files.",
-    default=None,
-)
-@click.option(
-    "--decompile / --no-decompile",
-    help="decompile the classfiles using jvm2json.",
-    default=None,
-)
-@click.option(
-    "--document / --no-document",
-    help="docmument the files",
-    default=None,
-)
-@click.option(
-    "--test / --no-test",
-    help="test that all cases are correct.",
-    default=None,
-)
 def get_docker_command():
     """Get the appropriate docker command for the current platform."""
     import os
@@ -552,6 +525,33 @@ def to_wsl_path(path):
     return str(path)
 
 
+@cli.command()
+@click.option(
+    "-D",
+    "--docker",
+    help="the docker container to build with.",
+    default="ghcr.io/kalhauge/jvm2json:jdk-latest",
+)
+@click.option(
+    "--compile / --no-compile",
+    help="compile the java source files.",
+    default=None,
+)
+@click.option(
+    "--decompile / --no-decompile",
+    help="decompile the classfiles using jvm2json.",
+    default=None,
+)
+@click.option(
+    "--document / --no-document",
+    help="docmument the files",
+    default=None,
+)
+@click.option(
+    "--test / --no-test",
+    help="test that all cases are correct.",
+    default=None,
+)
 @click.pass_obj
 def build(suite, compile, decompile, document, test, docker):
     """Rebuild all benchmarks."""
