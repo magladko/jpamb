@@ -662,7 +662,7 @@ def build(suite, compile, decompile, document, test, docker):
                 root = folder.parent
 
                 rel = Path(getsourcefile(opcode.__class__)).relative_to(root)
-                giturl = f"{rel}?plain=1#L{getsourcelines(opcode.__class__)[1]}"
+                giturl = f"{rel.as_posix()}?plain=1#L{getsourcelines(opcode.__class__)[1]}"
 
                 document.write(
                     " | ["
