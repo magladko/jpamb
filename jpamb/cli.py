@@ -494,35 +494,65 @@ def evaluate(ctx, program, report, timeout, iterations, with_python):
     )
 
 
-def get_docker_command():
-    """Get the appropriate docker command for the current platform."""
-    import os
+@dataclasses.dataclass
+class DockerRunner:
+    """Encapsulates Docker/Podman execution with platform-specific handling."""
 
-    # If USE_WSL_DOCKER is set (in CI), use WSL
-    if os.environ.get("USE_WSL_DOCKER") == "1":
-        log.info("Using Docker in WSL (Ubuntu)")
-        return ["wsl", "-d", "Ubuntu", "--exec", "sudo", "docker"]
+    docker_cmd: list[str]  # The base docker command (e.g., ["docker"] or ["wsl", ...])
+    image: str  # Docker image to use
+    workfolder: str  # Path to mount (already WSL-converted if needed)
 
-    # Otherwise use docker/podman from PATH (Docker Desktop, etc)
-    dockerbin = shutil.which("podman") or shutil.which("docker")
-    if not dockerbin:
-        raise click.UsageError("No docker or podman on PATH")
+    @classmethod
+    def create(cls, workfolder: Path, image: str):
+        """Factory method that handles platform detection and path conversion."""
+        import os
 
-    log.info(f"Using docker: {dockerbin}")
-    return [dockerbin]
+        # Get docker command
+        if os.environ.get("USE_WSL_DOCKER") == "1":
+            log.info("Using Docker in WSL (Ubuntu)")
+            docker_cmd = ["wsl", "-d", "Ubuntu", "--exec", "sudo", "docker"]
+            # Convert path for WSL
+            path_str = str(workfolder).replace("\\", "/")
+            if len(path_str) >= 2 and path_str[1] == ":":
+                drive = path_str[0].lower()
+                rest = path_str[2:]
+                workfolder_str = f"/mnt/{drive}{rest}"
+            else:
+                workfolder_str = str(workfolder)
+        else:
+            dockerbin = shutil.which("podman") or shutil.which("docker")
+            if not dockerbin:
+                raise click.UsageError("No docker or podman on PATH")
+            log.info(f"Using docker: {dockerbin}")
+            docker_cmd = [dockerbin]
+            workfolder_str = str(workfolder)
 
+        return cls(docker_cmd, image, workfolder_str)
 
-def to_wsl_path(path):
-    """Convert Windows path to WSL path when using WSL Docker."""
-    import os
+    def run(self, command: list[str], **kwargs):
+        """
+        Run a command inside the Docker container.
 
-    if os.environ.get("USE_WSL_DOCKER") == "1":
-        path_str = str(path).replace("\\", "/")
-        if len(path_str) >= 2 and path_str[1] == ":":
-            drive = path_str[0].lower()
-            rest = path_str[2:]
-            return f"/mnt/{drive}{rest}"
-    return str(path)
+        Args:
+            command: The command to run (e.g., ["javac", "-d", "target/classes", ...])
+            **kwargs: Additional arguments passed to the run() function
+                     (timeout, logerr, logout, etc.)
+
+        Returns:
+            The result from run() function
+        """
+        full_cmd = (
+            self.docker_cmd
+            + [
+                "run",
+                "--rm",
+                "-v",
+                f"{self.workfolder}:/workspace",
+                self.image,
+            ]
+            + command
+        )
+        return run(full_cmd, **kwargs)
 
 
 @cli.command()
@@ -562,25 +592,12 @@ def build(suite, compile, decompile, document, test, docker):
         document = document is None
         test = test is None
 
-    docker_cmd = get_docker_command()
-    workfolder = to_wsl_path(suite.workfolder)
-
-    cmd = (
-        docker_cmd
-        + [
-            "run",
-            "--rm",
-            "-v",
-            f"{workfolder}:/workspace",
-            docker,
-        ]
-    )
+    docker_runner = DockerRunner.create(suite.workfolder, docker)
 
     if compile:
         log.info("Compiling")
-        run(
-            cmd
-            + ["javac", "-d", "target/classes"]
+        docker_runner.run(
+            ["javac", "-d", "target/classes"]
             + [a.relative_to(suite.workfolder).as_posix() for a in suite.sourcefiles()],
             logerr=log.warning,
             logout=log.info,
@@ -589,8 +606,8 @@ def build(suite, compile, decompile, document, test, docker):
 
         log.info("Building Stats")
 
-        res, x = run(
-            cmd + ["java", "-cp", "target/classes", "jpamb.Runtime"],
+        res, x = docker_runner.run(
+            ["java", "-cp", "target/classes", "jpamb.Runtime"],
             logout=log.info,
             logerr=log.debug,
             timeout=60,
@@ -604,9 +621,8 @@ def build(suite, compile, decompile, document, test, docker):
         log.info("Decompiling")
         for cl in suite.classes():
             log.info(f"Decompiling {cl}")
-            res, t = run(
-                cmd
-                + [
+            res, t = docker_runner.run(
+                [
                     "jvm2json",
                     "-s",
                     suite.classfile(cl).relative_to(suite.workfolder).as_posix(),
@@ -687,9 +703,8 @@ def build(suite, compile, decompile, document, test, docker):
             folder = suite.classfiles_folder
 
             try:
-                res, x = run(
-                    cmd
-                    + [
+                res, x = docker_runner.run(
+                    [
                         "java",
                         "-cp",
                         folder.relative_to(suite.workfolder).as_posix(),
