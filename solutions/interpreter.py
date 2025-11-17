@@ -132,6 +132,7 @@ def step(state: State) -> State | str:
                 return "ok"
         case a:
             a.help()
+            sys.exit(-1)
 
 
 frame = Frame.from_method(methodid)
