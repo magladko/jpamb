@@ -48,6 +48,12 @@ class ConstraintStore[AV: Abstraction]:
                 all(self.constraints[k] == other.constraints[k]
                     for k in self.constraints))
 
+    def __str__(self) -> str:
+        return (
+            "{" +
+            ", ".join(f"{k}:{v}" for k, v in sorted(self.constraints.items())) +
+            "}")
+
 @dataclass
 class PerVarFrame:
     """
@@ -109,9 +115,9 @@ class AState[AV: Abstraction]:
         3. Merge constraint stores
         """
         assert isinstance(other, AState), f"expected AState but got {other}"
-        assert (
-            len(self.frames.items) == len(other.frames.items)
-        ), f"frame stack sizes differ {self} != {other}"
+        # assert (
+        #     len(self.frames.items) == len(other.frames.items)
+        # ), f"frame stack sizes differ {self} != {other}"
 
         # Join heap POINTWISE (by address)
         for addr in other.heap:
@@ -140,42 +146,17 @@ class AState[AV: Abstraction]:
                 )
 
         # Join frames POINTWISE (by call stack position)
-        for f1, f2 in zip(self.frames.items, other.frames.items, strict=True):
-            assert f1.pc == f2.pc, f"Program counters differ: {f1.pc} != {f2.pc}"
+        f1 = self.frames.peek()
+        f2 = other.frames.peek()
+        # TODO(kornel): research if should join all frames or just the top one
+        # for f1, f2 in zip(self.frames.items, other.frames.items, strict=True):
+        assert f1.pc == f2.pc, f"Program counters differ: {f1.pc} != {f2.pc}"
 
-            # Join locals POINTWISE (by variable index)
-            for var_idx in f2.locals:
-                if var_idx in f1.locals:
-                    name1 = f1.locals[var_idx]
-                    name2 = f2.locals[var_idx]
-                    if name1 == name2:
-                        # Same name, join constraints
-                        self.constraints.constraints[name1] = (
-                            self.constraints.constraints[name1] |
-                            other.constraints.constraints[name2]
-                        )
-                    else:
-                        # Different names, create fresh name
-                        fresh = self.constraints.fresh_name()
-                        self.constraints.constraints[fresh] = (
-                            self.constraints.constraints[name1] |
-                            other.constraints.constraints[name2]
-                        )
-                        f1.locals[var_idx] = fresh
-                else:
-                    f1.locals[var_idx] = f2.locals[var_idx]
-                    self.constraints.constraints[f2.locals[var_idx]] = (
-                        other.constraints.constraints[f2.locals[var_idx]]
-                    )
-
-            # Join stacks POINTWISE (by stack depth)
-            assert len(f1.stack.items) == len(f2.stack.items), (
-                f"Stack sizes differ at {f1.pc}: "
-                f"{len(f1.stack.items)} != {len(f2.stack.items)}"
-            )
-            for i in range(len(f1.stack.items)):
-                name1 = f1.stack.items[i]
-                name2 = f2.stack.items[i]
+        # Join locals POINTWISE (by variable index)
+        for var_idx in f2.locals:
+            if var_idx in f1.locals:
+                name1 = f1.locals[var_idx]
+                name2 = f2.locals[var_idx]
                 if name1 == name2:
                     # Same name, join constraints
                     self.constraints.constraints[name1] = (
@@ -189,8 +170,36 @@ class AState[AV: Abstraction]:
                         self.constraints.constraints[name1] |
                         other.constraints.constraints[name2]
                     )
-                    f1.stack.items[i] = fresh
+                    f1.locals[var_idx] = fresh
+            else:
+                f1.locals[var_idx] = f2.locals[var_idx]
+                self.constraints.constraints[f2.locals[var_idx]] = (
+                    other.constraints.constraints[f2.locals[var_idx]]
+                )
 
+        # Join stacks POINTWISE (by stack depth)
+        assert len(f1.stack.items) == len(f2.stack.items), (
+            f"Stack sizes differ at {f1.pc}: "
+            f"{len(f1.stack.items)} != {len(f2.stack.items)}"
+        )
+        for i in range(len(f1.stack.items)):
+            name1 = f1.stack.items[i]
+            name2 = f2.stack.items[i]
+            if name1 == name2:
+                # Same name, join constraints
+                self.constraints.constraints[name1] = (
+                    self.constraints.constraints[name1] |
+                    other.constraints.constraints[name2]
+                )
+            else:
+                # Different names, create fresh name
+                fresh = self.constraints.fresh_name()
+                self.constraints.constraints[fresh] = (
+                    self.constraints.constraints[name1] |
+                    other.constraints.constraints[name2]
+                )
+                f1.stack.items[i] = fresh
+        # END FOR
         return self
 
     def __eq__(self, other: object) -> bool:
@@ -244,7 +253,7 @@ class AState[AV: Abstraction]:
         return self.frames.peek().pc
 
     def __str__(self) -> str:
-        return f"{self.heap} {self.frames}"
+        return f"{self.heap} {self.frames} {self.constraints}"
 
     def clone(self) -> "AState[AV]":
         """Deep copy of the entire state."""
@@ -286,15 +295,18 @@ class StateSet[AV: Abstraction]:
         """
         frame = PerVarFrame.from_method(methodid)
         params = methodid.extension.params
-        constraints = ConstraintStore[AV]({}, 0)
+        constraints = ConstraintStore[abstraction_cls]({}, 0)
 
         # Initialize parameters to TOP (⊤ = any possible value)  # noqa: RUF003
         for i, p in enumerate(params):
-            if isinstance(p, (jvm.Float, jvm.Double)):
+            if isinstance(p, (jvm.Float, jvm.Double)): # TODO(kornel): handle floats
                 raise NotImplementedError("Only integer parameters supported")
             # Create named value for parameter
             name = constraints.fresh_name()
-            constraints.constraints[name] = abstraction_cls.top()
+            if isinstance(p, jvm.Boolean):
+                constraints.constraints[name] = abstraction_cls.abstract({0, 1}) # bools
+            else:
+                constraints.constraints[name] = abstraction_cls.top()
             frame.locals[i] = name
 
         state = AState[AV]({}, Stack.empty().push(frame), constraints)
@@ -353,8 +365,10 @@ def step[AV: Abstraction](state: AState[AV],
                           abstraction_cls: type[AV]) -> Iterable[AState[AV] | str]:
     """Execute ONE instruction in the abstract domain."""
     assert isinstance(state, AState), f"expected AState but got {state}"
+    state = state.clone()  # Work on a copy
     frame = state.frames.peek()
-    opr = state.bc[frame.pc]
+    # frame = state.frames.peek()
+    opr = state.bc[state.pc]
     logger.debug(f"STEP {opr}\n{state}")
 
     match opr:
@@ -377,7 +391,6 @@ def step[AV: Abstraction](state: AState[AV],
         case jvm.Ifz(condition=c, target=t):
             # Compare ONE value to zero
             # Stack: [..., value] → [...]
-
             # Pop the NAME being tested
             value_name = frame.stack.pop()
             # Look up the constraint
@@ -525,6 +538,20 @@ def step[AV: Abstraction](state: AState[AV],
             logger.debug("Creating AssertionError object")
             return ["assertion error"]
 
+        case jvm.Goto(target=t):
+            frame.pc = PC(frame.pc.method, t)
+            return [state]
+
+        case jvm.InvokeStatic(method=m):
+            nargs = len(m.extension.params)
+            args = [frame.stack.pop() for _ in range(nargs)][::-1]
+            new_frame = PerVarFrame.from_method(m)
+            for i, v in enumerate(args):
+                new_frame.locals[i] = v
+            frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
+            state.frames.push(new_frame)
+            return [state]
+
         case a:
             raise NotImplementedError(f"Don't know how to handle: {a!r}")
 
@@ -577,6 +604,11 @@ AV = SignSet
 MAX_STEPS = 1000
 final: set[str] = set()
 
+# import debugpy
+# debugpy.listen(5678)
+# logger.info("Waiting for debugger to attach...")
+# debugpy.wait_for_client()
+
 # Initialize with entry state
 sts = StateSet[AV].initialstate_from_method(methodid, AV)
 logger.debug(f"Initial state:\n{sts}")
@@ -593,6 +625,8 @@ for iteration in range(MAX_STEPS):
             sts |= s
 
     logger.debug(f"Iteration {iteration}: {len(sts.needswork)} PCs need work")
+    for pc in sts.needswork:
+        logger.debug(pc)
     logger.debug(f"Final states: {final}")
 
     # If needswork is empty, we've reached fixed point
