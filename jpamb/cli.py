@@ -597,7 +597,7 @@ def build(suite, compile, decompile, document, test, docker):
     if compile:
         log.info("Compiling")
         docker_runner.run(
-            ["javac", "-d", "target/classes"]
+            ["javac", "-g", "-d", "target/classes"]
             + [a.relative_to(suite.workfolder).as_posix() for a in suite.sourcefiles()],
             logerr=log.warning,
             logout=log.info,
@@ -678,7 +678,9 @@ def build(suite, compile, decompile, document, test, docker):
                 root = folder.parent
 
                 rel = Path(getsourcefile(opcode.__class__)).relative_to(root)
-                giturl = f"{rel.as_posix()}?plain=1#L{getsourcelines(opcode.__class__)[1]}"
+                giturl = (
+                    f"{rel.as_posix()}?plain=1#L{getsourcelines(opcode.__class__)[1]}"
+                )
 
                 document.write(
                     " | ["
