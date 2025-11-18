@@ -96,6 +96,7 @@ class Opcode(ABC):
             raise NotImplementedError(f"Unhandled opcode {json!r}") from e
 
     def help(self):
+        logger.warning(f"It seems {self!r} is not implemented!")
         logger.warning("Instructions can be found at: " + self.url())
         if self.semantics():
             logger.debug(f"Semantics:\n {self.semantics()}")
@@ -106,6 +107,9 @@ class Opcode(ABC):
 
     @abstractmethod
     def mnemonic(self) -> str: ...
+
+    @abstractmethod
+    def semantics(self) -> str | None: ...
 
     def url(self) -> str:
         return (
@@ -194,6 +198,9 @@ class Negate(Opcode):
     def real(self) -> str:
         return f"negate {self.type}"
 
+    def semantics(self) -> str | None:
+        return None
+
     def mnemonic(self) -> str:
         match self.type:
             case jvm.Int():
@@ -225,11 +232,6 @@ class NewArray(Opcode):
             return f"multianewarray {self.type} {self.dim}"
 
     def semantics(self) -> str | None:
-        if self.dim == 1:
-            return "newarray"
-        else:
-            return "multianewarray"
-
         return None
 
     def mnemonic(self) -> str:
