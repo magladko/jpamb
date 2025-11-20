@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass
 from types import get_original_bases
-from typing import Callable, Literal, Self, get_args, get_origin
+from typing import Literal, Self, get_args, get_origin
 
 type Sign = Literal["+", "-", "0"]
 type Comparison = Literal["le", "eq", "lt", "gt", "ge", "ne"]

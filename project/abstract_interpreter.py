@@ -1,5 +1,5 @@
 import sys
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from typing import Self, cast
 
@@ -24,7 +24,7 @@ class ConstraintStore[AV: Abstraction]:
     - When branching, we can refine constraints for each path
     """
 
-    constraints: dict[str, AV]
+    _constraints: dict[str, AV]
     next_id: int = 0
 
     def fresh_name(self) -> str:
@@ -36,22 +36,42 @@ class ConstraintStore[AV: Abstraction]:
     def clone(self) -> "ConstraintStore[AV]":
         """Deep copy of the constraint store."""
         return ConstraintStore(
-            constraints=self.constraints.copy(),
+            _constraints=self._constraints.copy(),
             next_id=self.next_id
         )
+
+    def get(self, name: str) ->  AV | None:
+        return self._constraints.get(name, None)
+
+    def keys(self) -> Iterable[str]:
+        return self._constraints.keys()
+
+    def items(self) -> Iterable[tuple[str, AV]]:
+        return self._constraints.items()
 
     def __eq__(self, other: object) -> bool:
         """Check equality of constraint stores."""
         if not isinstance(other, ConstraintStore):
             return False
-        return (set(self.constraints.keys()) == set(other.constraints.keys()) and
-                all(self.constraints[k] == other.constraints[k]
-                    for k in self.constraints))
+        return (set(self.keys()) == set(other.keys()) and
+                all(self[k] == other[k] for k in self))
+
+    def __getitem__(self, name: str) -> AV:
+        return self._constraints[name]
+
+    def __setitem__(self, name: str, value: AV) -> None:
+        self._constraints[name] = value
+
+    def __contains__(self, name: str) -> bool:
+        return name in self._constraints
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._constraints)
 
     def __str__(self) -> str:
         return (
             "{" +
-            ", ".join(f"{k}:{v}" for k, v in sorted(self.constraints.items())) +
+            ", ".join(f"{k}:{v}" for k, v in sorted(self.items())) +
             "}")
 
 @dataclass
@@ -126,23 +146,23 @@ class AState[AV: Abstraction]:
                 name2 = other.heap[addr]
                 if name1 == name2:
                     # Same name, join constraints
-                    self.constraints.constraints[name1] = (
-                        self.constraints.constraints[name1] |
-                        other.constraints.constraints[name2]
+                    self.constraints[name1] = (
+                        self.constraints[name1] |
+                        other.constraints[name2]
                     )
                 else:
                     # Different names, create fresh name
                     fresh = self.constraints.fresh_name()
-                    self.constraints.constraints[fresh] = (
-                        self.constraints.constraints[name1] |
-                        other.constraints.constraints[name2]
+                    self.constraints[fresh] = (
+                        self.constraints[name1] |
+                        other.constraints[name2]
                     )
                     self.heap[addr] = fresh
             else:
                 # New address
                 self.heap[addr] = other.heap[addr]
-                self.constraints.constraints[other.heap[addr]] = (
-                    other.constraints.constraints[other.heap[addr]]
+                self.constraints[other.heap[addr]] = (
+                    other.constraints[other.heap[addr]]
                 )
 
         # Join frames POINTWISE (by call stack position)
@@ -159,22 +179,22 @@ class AState[AV: Abstraction]:
                 name2 = f2.locals[var_idx]
                 if name1 == name2:
                     # Same name, join constraints
-                    self.constraints.constraints[name1] = (
-                        self.constraints.constraints[name1] |
-                        other.constraints.constraints[name2]
+                    self.constraints[name1] = (
+                        self.constraints[name1] |
+                        other.constraints[name2]
                     )
                 else:
                     # Different names, create fresh name
                     fresh = self.constraints.fresh_name()
-                    self.constraints.constraints[fresh] = (
-                        self.constraints.constraints[name1] |
-                        other.constraints.constraints[name2]
+                    self.constraints[fresh] = (
+                        self.constraints[name1] |
+                        other.constraints[name2]
                     )
                     f1.locals[var_idx] = fresh
             else:
                 f1.locals[var_idx] = f2.locals[var_idx]
-                self.constraints.constraints[f2.locals[var_idx]] = (
-                    other.constraints.constraints[f2.locals[var_idx]]
+                self.constraints[f2.locals[var_idx]] = (
+                    other.constraints[f2.locals[var_idx]]
                 )
 
         # Join stacks POINTWISE (by stack depth)
@@ -187,16 +207,16 @@ class AState[AV: Abstraction]:
             name2 = f2.stack.items[i]
             if name1 == name2:
                 # Same name, join constraints
-                self.constraints.constraints[name1] = (
-                    self.constraints.constraints[name1] |
-                    other.constraints.constraints[name2]
+                self.constraints[name1] = (
+                    self.constraints[name1] |
+                    other.constraints[name2]
                 )
             else:
                 # Different names, create fresh name
                 fresh = self.constraints.fresh_name()
-                self.constraints.constraints[fresh] = (
-                    self.constraints.constraints[name1] |
-                    other.constraints.constraints[name2]
+                self.constraints[fresh] = (
+                    self.constraints[name1] |
+                    other.constraints[name2]
                 )
                 f1.stack.items[i] = fresh
         # END FOR
@@ -299,14 +319,12 @@ class StateSet[AV: Abstraction]:
 
         # Initialize parameters to TOP (⊤ = any possible value)  # noqa: RUF003
         for i, p in enumerate(params):
-            if isinstance(p, (jvm.Float, jvm.Double)): # TODO(kornel): handle floats
-                raise NotImplementedError("Only integer parameters supported")
             # Create named value for parameter
             name = constraints.fresh_name()
             if isinstance(p, jvm.Boolean):
-                constraints.constraints[name] = abstraction_cls.abstract({0, 1}) # bools
+                constraints[name] = abstraction_cls.abstract({0, 1}) # bools
             else:
-                constraints.constraints[name] = abstraction_cls.top()
+                constraints[name] = abstraction_cls.top()
             frame.locals[i] = name
 
         state = AState[AV]({}, Stack.empty().push(frame), constraints)
@@ -376,7 +394,7 @@ def step[AV: Abstraction](state: AState[AV],
             assert isinstance(v.value, int), f"Unsupported value type: {v.value!r}"
             # Create fresh named value for constant
             name = state.constraints.fresh_name()
-            state.constraints.constraints[name] = abstraction_cls.abstract({v.value})
+            state.constraints[name] = abstraction_cls.abstract({v.value})
             frame.stack.push(name)
             frame.pc = frame.pc + 1
             return [state]
@@ -394,7 +412,7 @@ def step[AV: Abstraction](state: AState[AV],
             # Pop the NAME being tested
             value_name = frame.stack.pop()
             # Look up the constraint
-            v1 = state.constraints.constraints[value_name]
+            v1 = state.constraints[value_name]
             v2 = abstraction_cls.abstract({0})
 
             res = v1.compare(cast("Comparison", c), v2)
@@ -407,7 +425,7 @@ def step[AV: Abstraction](state: AState[AV],
                 true_state.frames.peek().pc = PC(frame.pc.method, t)
                 # REFINE constraint: condition is TRUE
                 constrained = res[True][0]
-                true_state.constraints.constraints[value_name] = constrained
+                true_state.constraints[value_name] = constrained
                 computed_states.append(true_state)
 
             if False in res:
@@ -416,7 +434,7 @@ def step[AV: Abstraction](state: AState[AV],
                 false_state.frames.peek().pc = frame.pc + 1
                 # REFINE constraint: condition is FALSE
                 constrained = res[False][0]
-                false_state.constraints.constraints[value_name] = constrained
+                false_state.constraints[value_name] = constrained
                 computed_states.append(false_state)
 
             assert len(computed_states) > 0, "At least one path must be possible"
@@ -432,15 +450,15 @@ def step[AV: Abstraction](state: AState[AV],
             # If x < y
             #   x: {0}, y: {+}
             #   if y == 0:
-                    # assert false # unreachable
+            #       assert false # unreachable
 
 
             # Compare TWO values
             # Stack: [..., value1, value2] → [...]
             name2, name1 = frame.stack.pop(), frame.stack.pop()
             # Look up constraints
-            v1 = state.constraints.constraints[name1]
-            v2 = state.constraints.constraints[name2]
+            v1 = state.constraints[name1]
+            v2 = state.constraints[name2]
 
             # Evaluate comparison with current constraints
             res = v1.compare(cast("Comparison", c), v2)
@@ -454,8 +472,8 @@ def step[AV: Abstraction](state: AState[AV],
                 # For two-value comparison, constrain the first value
                 self_constrained = res[True][0]
                 other_constrained = res[True][1]
-                true_state.constraints.constraints[name1] = self_constrained
-                true_state.constraints.constraints[name2] = other_constrained
+                true_state.constraints[name1] = self_constrained
+                true_state.constraints[name2] = other_constrained
                 computed_states.append(true_state)
 
             if False in res:
@@ -465,8 +483,8 @@ def step[AV: Abstraction](state: AState[AV],
                 # REFINE constraint: condition is FALSE
                 self_constrained = res[False][0]
                 other_constrained = res[False][0]
-                false_state.constraints.constraints[name1] = self_constrained
-                false_state.constraints.constraints[name2] = other_constrained
+                false_state.constraints[name1] = self_constrained
+                false_state.constraints[name2] = other_constrained
                 computed_states.append(false_state)
 
             return computed_states
@@ -483,8 +501,8 @@ def step[AV: Abstraction](state: AState[AV],
         case jvm.Binary(type=jvm.Int(), operant=operant):
             # Pop names and look up constraints
             name2, name1 = frame.stack.pop(), frame.stack.pop()
-            v1 = state.constraints.constraints[name1]
-            v2 = state.constraints.constraints[name2]
+            v1 = state.constraints[name1]
+            v2 = state.constraints[name2]
 
             computed_states = []
             if (operant in (jvm.BinaryOpr.Div, jvm.BinaryOpr.Rem) and
@@ -513,7 +531,7 @@ def step[AV: Abstraction](state: AState[AV],
 
             # Create fresh named value for result
             result_name = state.constraints.fresh_name()
-            state.constraints.constraints[result_name] = result_value
+            state.constraints[result_name] = result_value
             frame.stack.push(result_name)
 
             frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
@@ -529,7 +547,7 @@ def step[AV: Abstraction](state: AState[AV],
         ):
             # Create named value for assertions disabled flag (always 0/false)
             name = state.constraints.fresh_name()
-            state.constraints.constraints[name] = abstraction_cls.abstract({0})
+            state.constraints[name] = abstraction_cls.abstract({0})
             frame.stack.push(name)
             frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
             return [state]
@@ -553,7 +571,8 @@ def step[AV: Abstraction](state: AState[AV],
             return [state]
 
         case a:
-            raise NotImplementedError(f"Don't know how to handle: {a!r}")
+            a.help()
+            sys.exit(-1)
 
 def manystep[AV: Abstraction](sts: StateSet[AV],
                               abstraction_cls: type[AV]) -> Iterable[AState[AV] | str]:
