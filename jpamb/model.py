@@ -309,7 +309,8 @@ class Suite:
 
     def method_opcodes(self, method: jvm.Absolute[jvm.MethodID]) -> list[jvm.Opcode]:
         json_code = self.findmethod(method)["code"]
-        lines = {lo["offset"]: lo["line"] for lo in json_code["lines"]}
+        lines = ({lo["offset"]: lo["line"] for lo in json_code["lines"]} 
+                 if "lines" in json_code else {})
         for op in json_code["bytecode"]:
             op["line"] = lines.get(op["offset"])
             yield jvm.Opcode.from_json(op)
