@@ -18,11 +18,12 @@ from jpamb.jvm import base as jvm
 logger.add(sys.stderr, format="[{level}] {message}")
 
 
-@dataclass(frozen=True, order=True)
+@dataclass(frozen=True, order=True, kw_only=True)
 class Opcode(ABC):
     """An opcode, as parsed from the jvm2json output."""
 
     offset: int
+    line: int | None = None
 
     def __post_init__(self):
         for f in fields(self):
@@ -128,6 +129,7 @@ class Push(Opcode):
     def from_json(cls, json: dict) -> Opcode:
         return cls(
             offset=json["offset"],
+            line=json.get("line"),
             value=jvm.Value.from_json(json["value"]),
         )
 
@@ -192,6 +194,7 @@ class Negate(Opcode):
     def from_json(cls, json: dict) -> Opcode:
         return cls(
             offset=json["offset"],
+            line=json.get("line"),
             type=jvm.Type.from_json(json["type"]),
         )
 
@@ -221,6 +224,7 @@ class NewArray(Opcode):
     def from_json(cls, json: dict) -> Opcode:
         return cls(
             offset=json["offset"],
+            line=json.get("line"),
             type=jvm.Type.from_json(json["type"]),
             dim=json["dim"],
         )
@@ -254,6 +258,7 @@ class Dup(Opcode):
     def from_json(cls, json: dict) -> Opcode:
         return cls(
             offset=json["offset"],
+            line=json.get("line"),
             words=json["words"],
         )
 
@@ -289,6 +294,7 @@ class ArrayStore(Opcode):
     def from_json(cls, json: dict) -> Opcode:
         return cls(
             offset=json["offset"],
+            line=json.get("line"),
             type=jvm.Type.from_json(json["type"]),
         )
 
@@ -322,6 +328,7 @@ class Cast(Opcode):
     def from_json(cls, json: dict) -> Opcode:
         return cls(
             offset=json["offset"],
+            line=json.get("line"),
             from_=jvm.Type.from_json(json["from"]),
             to_=jvm.Type.from_json(json["to"]),
         )
@@ -355,6 +362,7 @@ class ArrayLoad(Opcode):
     def from_json(cls, json: dict) -> Opcode:
         return cls(
             offset=json["offset"],
+            line=json.get("line"),
             type=jvm.Type.from_json(json["type"]),
         )
 
@@ -392,6 +400,7 @@ class ArrayLength(Opcode):
     def from_json(cls, json: dict) -> "Opcode":
         return cls(
             offset=json["offset"],
+            line=json.get("line"),
         )
 
     def real(self) -> str:
@@ -424,6 +433,7 @@ class InvokeVirtual(Opcode):
         assert json["opr"] == "invoke" and json["access"] == "virtual"
         return cls(
             offset=json["offset"],
+            line=json.get("line"),
             method=jvm.AbsMethodID.from_json(json["method"]),
         )
 
@@ -459,6 +469,7 @@ class InvokeStatic(Opcode):
         assert json["opr"] == "invoke" and json["access"] == "static"
         return cls(
             offset=json["offset"],
+            line=json.get("line"),
             method=jvm.AbsMethodID.from_json(json["method"]),
         )
 
@@ -495,6 +506,7 @@ class InvokeInterface(Opcode):
         assert json["opr"] == "invoke" and json["access"] == "interface"
         return cls(
             offset=json["offset"],
+            line=json.get("line"),
             method=jvm.AbsMethodID.from_json(json["method"]),
             stack_size=json["stack_size"],
         )
