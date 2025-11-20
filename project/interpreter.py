@@ -1,3 +1,4 @@
+import sys
 from dataclasses import dataclass
 from typing import Self
 
@@ -308,7 +309,8 @@ def step(state: State) -> State | str:  # noqa: C901, PLR0911, PLR0912, PLR0915
             frame.pc += 1
             return state
         case a:
-            raise NotImplementedError(f"Don't know how to handle: {a!r}")
+            a.help()
+            sys.exit(-1)
 
 
 def compare(v1: jvm.Value, op: str, v2: jvm.Value) -> bool:
