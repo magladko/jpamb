@@ -35,6 +35,10 @@ class Abstraction[T](ABC):
     def top(cls) -> Self:
         pass
 
+    @classmethod
+    def comp_res_str(cls, result: dict[bool, tuple[Self,Self]]) -> str:
+        return ", ".join(f"{k}: ({v[0]!s}, {v[1]!s})" for k, v in result.items())
+
     def compare(self, op: Comparison, other: Self) -> dict[bool, tuple[Self,Self]]:
         match op:
             case "le":

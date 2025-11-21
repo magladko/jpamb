@@ -416,7 +416,7 @@ def step[AV: Abstraction](state: AState[AV],
             v2 = abstraction_cls.abstract({0})
 
             res = v1.compare(cast("Comparison", c), v2)
-            logger.debug(f"ifz compare: {res}")
+            logger.debug(f"ifz compare: {v1.comp_res_str(res)}")
 
             computed_states = []
             if True in res:
@@ -462,7 +462,7 @@ def step[AV: Abstraction](state: AState[AV],
 
             # Evaluate comparison with current constraints
             res = v1.compare(cast("Comparison", c), v2)
-            logger.debug(f"if compare: {res}")
+            logger.debug(f"if compare: {v1.comp_res_str(res)}")
 
             computed_states = []
             if True in res:
