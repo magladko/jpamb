@@ -3,7 +3,8 @@ from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from typing import Self, cast
 
-from abstraction import Abstraction, Comparison, SignSet
+from abstractions.abstraction import Abstraction, Comparison
+from abstractions.signset import SignSet
 from interpreter import PC, Bytecode, Stack
 from loguru import logger
 

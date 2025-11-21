@@ -6,7 +6,8 @@ from hypothesis import example, given
 from hypothesis import strategies as st
 from hypothesis.strategies import integers, sampled_from, sets
 
-from project.abstraction import Comparison, SignSet
+from project.abstractions.abstraction import Comparison
+from project.abstractions.signset import SignSet
 
 # ============================================================================
 # HYPOTHESIS STRATEGIES
