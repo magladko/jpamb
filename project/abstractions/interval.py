@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 from typing import Self
 
-from project.abstractions.abstraction import Abstraction
+from .abstraction import Abstraction
 
 
 @dataclass

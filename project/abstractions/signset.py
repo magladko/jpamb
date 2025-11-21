@@ -2,7 +2,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Literal, Self
 
-from abstraction import Abstraction
+from .abstraction import Abstraction
 
 type Sign = Literal["+", "-", "0"]
 
