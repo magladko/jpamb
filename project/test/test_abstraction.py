@@ -6,9 +6,8 @@ from hypothesis import example, given
 from hypothesis import strategies as st
 from hypothesis.strategies import integers, sampled_from, sets
 
-from project.abstraction import Arithmetic, Comparison, SignSet
-from project.novel_domains import DoubleDomain, StringDomain
 from project.abstraction import Comparison, SignSet
+from project.novel_domains import DoubleDomain, StringDomain
 
 # ============================================================================
 # HYPOTHESIS STRATEGIES
@@ -92,12 +91,56 @@ def test_string_domain_concatenation() -> None:
     assert "hello" in combined
 
 
+def test_string_domain_collapses_to_top_when_exceeding_budget() -> None:
+    strings = {"s0", "s1", "s2", "s3", "s4", "s5"}  # MAX_TRACKED is 5
+    result = StringDomain.abstract(strings)
+    assert result.values is None  # ⊤
+
+
+def test_string_domain_accepts_non_string_literals() -> None:
+    domain = StringDomain.abstract({1, "2"})
+    assert "1" in domain
+    assert "2" in domain
+
+
+def test_string_domain_eq_ne_behavior() -> None:
+    a = StringDomain.abstract({"foo"})
+    b = StringDomain.abstract({"foo"})
+    c = StringDomain.abstract({"bar", "baz"})
+    assert a.compare("eq", b) == {True: (a, b)}
+    assert set(a.compare("eq", c)) == {False}
+    assert set(a.compare("ne", c)) == {True}
+
+
 def test_double_interval_arithmetic() -> None:
     lo = DoubleDomain.abstract({1.0})
     hi = DoubleDomain.abstract({2.0})
     summed = lo + hi
     assert 3.0 in summed
     assert summed <= DoubleDomain.top()
+
+
+def test_double_interval_intersection_and_ordering() -> None:
+    a = DoubleDomain.abstract({-2.0, 0.0})
+    b = DoubleDomain.abstract({-1.0, 1.0})
+    intersection = a & b
+    assert intersection.lower == -1.0
+    assert intersection.upper == 0.0
+    assert intersection <= a
+
+
+def test_double_division_by_interval_crossing_zero_yields_top() -> None:
+    numerator = DoubleDomain.abstract({5.0})
+    denominator = DoubleDomain.abstract({-1.0, 1.0})
+    result = numerator / denominator
+    assert result == DoubleDomain.top()
+
+
+def test_double_comparisons_respect_bounds() -> None:
+    small = DoubleDomain.abstract({-2.0, 0.0})
+    large = DoubleDomain.abstract({5.0, 6.0})
+    assert small.compare("lt", large) == {True: (small, large)}
+    assert large.compare("gt", small) == {True: (large, small)}
     
 def test_singset_binary_comparison() -> None:
     s1 = SignSet({"0", "-"})
