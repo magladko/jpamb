@@ -7,7 +7,12 @@ from hypothesis import strategies as st
 from hypothesis.strategies import integers, sampled_from, sets
 
 from project.abstraction import Comparison, SignSet
-from project.novel_domains import DoubleDomain, StringDomain
+from project.novel_domains import (
+    DoubleDomain,
+    MachineWordDomain,
+    PolyhedralDomain,
+    StringDomain,
+)
 
 # ============================================================================
 # HYPOTHESIS STRATEGIES
@@ -141,6 +146,39 @@ def test_double_comparisons_respect_bounds() -> None:
     large = DoubleDomain.abstract({5.0, 6.0})
     assert small.compare("lt", large) == {True: (small, large)}
     assert large.compare("gt", small) == {True: (large, small)}
+
+
+def test_machine_word_arithmetic_wraps_and_tracks() -> None:
+    mask = (1 << MachineWordDomain.WIDTH) - 1
+    a = MachineWordDomain.abstract({1})
+    b = MachineWordDomain.abstract({mask})
+    wrapped = a + b
+    assert 0 in wrapped
+    assert wrapped <= MachineWordDomain.top()
+
+
+def test_machine_word_equality_partitioning() -> None:
+    a = MachineWordDomain.abstract({5})
+    b = MachineWordDomain.abstract({5, 7})
+    result = a.compare("eq", b)
+    assert True in result and False in result
+    true_left, true_right = result[True]
+    false_left, false_right = result[False]
+    assert 5 in true_left and 5 in true_right
+    assert 7 in false_right
+    assert 5 in false_left
+
+
+def test_polyhedral_domain_bounds_and_ops() -> None:
+    box_a = PolyhedralDomain.abstract({(0.0, 1.0), (2.0, 3.0)})
+    box_b = PolyhedralDomain.abstract({(1.0, 0.0), (4.0, 2.0)})
+    assert (1.0, 1.0) in box_a
+    summed = box_a + box_b
+    assert (3.0, 3.0) in summed
+    intersection = box_a & box_b
+    assert intersection.bounds == [(1.0, 2.0), (1.0, 2.0)]
+    joined = box_a | box_b
+    assert joined.bounds == [(0.0, 4.0), (0.0, 3.0)]
     
 def test_singset_binary_comparison() -> None:
     s1 = SignSet({"0", "-"})

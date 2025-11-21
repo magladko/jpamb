@@ -95,7 +95,7 @@ class StringDomain(Abstraction[str]):
             return "⊥str"
         return "{" + ",".join(sorted(self.values)) + "}"
 
-      # Helpers
+    # Helpers
 
     def _unknown(self, other: Self) -> dict[bool, tuple[Self, Self]]:
         return {True: (self, other), False: (self, other)}
@@ -270,7 +270,6 @@ class DoubleDomain(Abstraction[float]):
         return self._truths_to_dict(other, truths)
 
     def ge(self, other: Self) -> dict[bool, tuple[Self, Self]]:
-        return {
             truth: (self_refined, other_refined)
             for truth, (other_refined, self_refined) in other.le(self).items()
         }
@@ -307,7 +306,362 @@ class DoubleDomain(Abstraction[float]):
         return {True: (self, other), False: (self, other)}
 
 
+@dataclass
+class MachineWordDomain(Abstraction[int]):
+    """Finite-set abstraction for machine word integers."""
+
+    residues: set[int] | None
+    is_bottom: bool = False
+
+    WIDTH = 32
+    MAX_TRACKED = 16
+
+    @classmethod
+    def _mask(cls) -> int:
+        return (1 << cls.WIDTH) - 1
+
+    @classmethod
+    def _normalize_values(cls, items: set[int]) -> set[int]:
+        mask = cls._mask()
+        return {item & mask for item in items}
+
+    @classmethod
+    def abstract(cls, items: set[int]) -> Self:
+        if not items:
+            return cls.bot()
+        normalized = cls._normalize_values(items)
+        if len(normalized) > cls.MAX_TRACKED:
+            return cls.top()
+        return cls(normalized)
+
+    @classmethod
+    def bot(cls) -> Self:
+        return cls(set(), True)
+
+    @classmethod
+    def top(cls) -> Self:
+        return cls(None)
+
+    def __contains__(self, member: int) -> bool:
+        if self.is_bottom:
+            return False
+        if self.residues is None:
+            return True
+        return (member & self._mask()) in self.residues
+
+    def _binary_op(self, other: Self, fn) -> "MachineWordDomain":
+        if self.is_bottom or other.is_bottom:
+            return MachineWordDomain.bot()
+        if self.residues is None or other.residues is None:
+            return MachineWordDomain.top()
+        mask = self._mask()
+        acc = {fn(a, b) & mask for a in self.residues for b in other.residues}
+        if len(acc) > self.MAX_TRACKED:
+            return MachineWordDomain.top()
+        return MachineWordDomain(acc)
+
+    def __add__(self, other: Self) -> Self:
+        return self._binary_op(other, lambda a, b: a + b)
+
+    def __sub__(self, other: Self) -> Self:
+        return self._binary_op(other, lambda a, b: a - b)
+
+    def __mul__(self, other: Self) -> Self:
+        return self._binary_op(other, lambda a, b: a * b)
+
+    def __div__(self, other: Self) -> Self:
+        if other.is_bottom:
+            return MachineWordDomain.bot()
+        if other.residues is None:
+            return MachineWordDomain.top()
+        if 0 in other.residues:
+            return MachineWordDomain.top()
+        return self._binary_op(other, lambda a, b: a // b)
+
+    __floordiv__ = __div__
+    __mod__ = __div__
+
+    def __le__(self, other: Self) -> bool:
+        if self.is_bottom:
+            return True
+        if other.residues is None:
+            return True
+        if self.residues is None:
+            return other.residues is None
+        if other.is_bottom:
+            return False
+        return self.residues <= other.residues
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            isinstance(other, MachineWordDomain)
+            and self.residues == other.residues
+            and self.is_bottom == other.is_bottom
+        )
+
+    def __and__(self, other: Self) -> Self:
+        if self.is_bottom or other.is_bottom:
+            return MachineWordDomain.bot()
+        if self.residues is None:
+            return other
+        if other.residues is None:
+            return self
+        return MachineWordDomain(self.residues & other.residues)
+
+    def __or__(self, other: Self) -> Self:
+        if self.is_bottom:
+            return other
+        if other.is_bottom:
+            return self
+        if self.residues is None or other.residues is None:
+            return MachineWordDomain.top()
+        merged = self.residues | other.residues
+        if len(merged) > self.MAX_TRACKED:
+            return MachineWordDomain.top()
+        return MachineWordDomain(merged)
+
+    def __str__(self) -> str:
+        if self.is_bottom:
+            return "⊥word"
+        if self.residues is None:
+            return "⊤word"
+        return "{" + ",".join(str(v) for v in sorted(self.residues)) + "}"
+
+    # Helpers
+
+    def _unknown(self, other: Self) -> dict[bool, tuple[Self, Self]]:
+        return {True: (self, other), False: (self, other)}
+
+    def _compare_values(
+        self, other: Self, comparator
+    ) -> dict[bool, tuple["MachineWordDomain", "MachineWordDomain"]]:
+        if self.is_bottom or other.is_bottom:
+            return self._unknown(other)
+        if self.residues is None or other.residues is None:
+            return self._unknown(other)
+        results: dict[bool, tuple[set[int], set[int]]] = {}
+        for lhs in self.residues:
+            for rhs in other.residues:
+                truth = comparator(lhs, rhs)
+                lhs_set, rhs_set = results.setdefault(truth, (set(), set()))
+                lhs_set.add(lhs)
+                rhs_set.add(rhs)
+        if not results:
+            return self._unknown(other)
+        translated: dict[bool, tuple[MachineWordDomain, MachineWordDomain]] = {}
+        for truth, (lhs_vals, rhs_vals) in results.items():
+            translated[truth] = (
+                MachineWordDomain(lhs_vals),
+                MachineWordDomain(rhs_vals),
+            )
+        return translated
+
+    def le(self, other: Self) -> dict[bool, tuple[Self, Self]]:
+        return self._compare_values(other, op.le)
+
+    def lt(self, other: Self) -> dict[bool, tuple[Self, Self]]:
+        return self._compare_values(other, op.lt)
+
+    def ge(self, other: Self) -> dict[bool, tuple[Self, Self]]:
+        return self._compare_values(other, op.ge)
+
+    def gt(self, other: Self) -> dict[bool, tuple[Self, Self]]:
+        return self._compare_values(other, op.gt)
+
+    def eq(self, other: Self) -> dict[bool, tuple[Self, Self]]:
+        return self._compare_values(other, op.eq)
+
+    def ne(self, other: Self) -> dict[bool, tuple[Self, Self]]:
+        return self._compare_values(other, op.ne)
+
+
+@dataclass
+class PolyhedralDomain(Abstraction[tuple[float, ...]]):
+
+    dimension: int
+    bounds: list[tuple[float, float]] | None
+    is_bottom: bool = False
+
+    DEFAULT_DIMENSION = 1
+
+    @classmethod
+    def _as_point(cls, value: tuple[float, ...] | float | int) -> tuple[float, ...]:
+        if isinstance(value, tuple):
+            return tuple(float(v) for v in value)
+        if isinstance(value, list):
+            return tuple(float(v) for v in value)
+        if isinstance(value, (int, float)):
+            return (float(value),)
+        raise TypeError(f"Unsupported value for PolyhedralDomain: {value!r}")
+
+    @classmethod
+    def abstract(cls, items: set[tuple[float, ...] | float | int]) -> Self:
+        if not items:
+            return cls.bot()
+        normalized = [cls._as_point(point) for point in items]
+        dimension = len(normalized[0])
+        mins = [float("inf")] * dimension
+        maxs = [float("-inf")] * dimension
+        for point in normalized:
+            if len(point) != dimension:
+                raise ValueError("points must share the same dimension")
+            for idx, value in enumerate(point):
+                mins[idx] = min(mins[idx], value)
+                maxs[idx] = max(maxs[idx], value)
+        bounds = list(zip(mins, maxs))
+        return cls(dimension, bounds)
+
+    @classmethod
+    def bot(cls, dimension: int | None = None) -> Self:
+        dim = cls.DEFAULT_DIMENSION if dimension is None else dimension
+        return cls(dim, None, True)
+
+    @classmethod
+    def top(cls, dimension: int | None = None) -> Self:
+        dim = cls.DEFAULT_DIMENSION if dimension is None else dimension
+        return cls(dim, None)
+
+    def __contains__(self, member: tuple[float, ...] | float | int) -> bool:
+        if self.is_bottom:
+            return False
+        if self.bounds is None:
+            return True
+        point = self._as_point(member)
+        if len(point) != self.dimension:
+            return False
+        return all(lo <= value <= hi for value, (lo, hi) in zip(point, self.bounds))
+
+    # Helpers 
+
+    def _preferself_dimension(self, other: Self) -> int:
+        """Best-effort dimension choice when collapsing to top/bot."""
+        if self.bounds is not None or self.is_bottom:
+            return self.dimension
+        if other.bounds is not None or other.is_bottom:
+            return other.dimension
+        return max(self.dimension, other.dimension)
+
+    def _apply_pairwise(self, other: Self, fn) -> "PolyhedralDomain":
+        if self.is_bottom or other.is_bottom:
+            dim = self._preferself_dimension(other)
+            return PolyhedralDomain.bot(dim)
+        if self.bounds is None or other.bounds is None:
+            dim = self._preferself_dimension(other)
+            return PolyhedralDomain.top(dim)
+        if self.dimension != other.dimension:
+            dim = max(self.dimension, other.dimension)
+            return PolyhedralDomain.top(dim)
+        merged = [fn(a, b) for a, b in zip(self.bounds, other.bounds)]
+        return PolyhedralDomain(self.dimension, merged)
+
+    def __add__(self, other: Self) -> Self:
+        return self._apply_pairwise(other, lambda a, b: (a[0] + b[0], a[1] + b[1]))
+
+    def __sub__(self, other: Self) -> Self:
+        return self._apply_pairwise(other, lambda a, b: (a[0] - b[1], a[1] - b[0]))
+
+    __mul__ = __div__ = __floordiv__ = __mod__ = __sub__
+
+    def __le__(self, other: Self) -> bool:
+        if self.is_bottom:
+            return True
+        if other.bounds is None:
+            return True
+        if self.bounds is None:
+            return other.bounds is None
+        if self.dimension != other.dimension:
+            return False
+        return all(
+            other_lo <= lo and hi <= other_hi
+            for (lo, hi), (other_lo, other_hi) in zip(self.bounds, other.bounds)
+        )
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            isinstance(other, PolyhedralDomain)
+            and self.dimension == other.dimension
+            and self.bounds == other.bounds
+            and self.is_bottom == other.is_bottom
+        )
+
+    def __and__(self, other: Self) -> Self:
+        if self.is_bottom or other.is_bottom:
+            dim = self._preferself_dimension(other)
+            return PolyhedralDomain.bot(dim)
+        if self.bounds is None:
+            return other
+        if other.bounds is None:
+            return self
+        if self.dimension != other.dimension:
+            dim = max(self.dimension, other.dimension)
+            return PolyhedralDomain.top(dim)
+        intersected = []
+        for (lo1, hi1), (lo2, hi2) in zip(self.bounds, other.bounds):
+            lo = max(lo1, lo2)
+            hi = min(hi1, hi2)
+            if lo > hi:
+                return PolyhedralDomain.bot(self.dimension)
+            intersected.append((lo, hi))
+        return PolyhedralDomain(self.dimension, intersected)
+
+    def __or__(self, other: Self) -> Self:
+        if self.is_bottom:
+            return other
+        if other.is_bottom:
+            return self
+        if self.bounds is None or other.bounds is None:
+            dim = self._preferself_dimension(other)
+            return PolyhedralDomain.top(dim)
+        if self.dimension != other.dimension:
+            dim = max(self.dimension, other.dimension)
+            return PolyhedralDomain.top(dim)
+        hull = []
+        for (lo1, hi1), (lo2, hi2) in zip(self.bounds, other.bounds):
+            hull.append((min(lo1, lo2), max(hi1, hi2)))
+        return PolyhedralDomain(self.dimension, hull)
+
+    def __str__(self) -> str:
+        if self.is_bottom:
+            return "⊥poly"
+        if self.bounds is None:
+            return "⊤poly"
+        parts = [f"{lo}≤x{idx}≤{hi}" for idx, (lo, hi) in enumerate(self.bounds)]
+        return "{" + ", ".join(parts) + "}"
+
+    # Helpers
+
+    def _unknown(self, other: Self) -> dict[bool, tuple[Self, Self]]:
+        return {True: (self, other), False: (self, other)}
+
+    def le(self, other: Self) -> dict[bool, tuple[Self, Self]]:
+        if self <= other:
+            return {True: (self, other)}
+        return self._unknown(other)
+
+    def lt(self, other: Self) -> dict[bool, tuple[Self, Self]]:
+        return self._unknown(other)
+
+    def ge(self, other: Self) -> dict[bool, tuple[Self, Self]]:
+        return other.le(self)
+
+    def gt(self, other: Self) -> dict[bool, tuple[Self, Self]]:
+        return other.lt(self)
+
+    def eq(self, other: Self) -> dict[bool, tuple[Self, Self]]:
+        if self == other and not self.is_bottom:
+            return {True: (self, other)}
+        return self._unknown(other)
+
+    def ne(self, other: Self) -> dict[bool, tuple[Self, Self]]:
+        result = self.eq(other)
+        if True in result and len(result) == 1:
+            return {False: result[True]}
+        return self._unknown(other)
+
+
 __all__ = [
     "StringDomain",
     "DoubleDomain",
+    "MachineWordDomain",
+    "PolyhedralDomain",
 ]

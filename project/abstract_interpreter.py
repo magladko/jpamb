@@ -11,7 +11,12 @@ from loguru import logger
 
 import jpamb
 from jpamb import jvm
-from project.novel_domains import DoubleDomain, StringDomain
+from project.novel_domains import (
+    DoubleDomain,
+    MachineWordDomain,
+    PolyhedralDomain,
+    StringDomain,
+)
 
 logger.remove()
 logger.add(sys.stderr, format="[{level}] {message}", level="DEBUG")
@@ -622,16 +627,20 @@ results: dict[str, int] = {
 }
 
 domain_name = os.environ.get("JPAMB_ABSTRACTION", "sign").lower()
-AV: type[Abstraction]
-if domain_name == "string":
-    AV = StringDomain
-elif domain_name == "double":
-    AV = DoubleDomain
-else:
-    if domain_name != "sign":
-        logger.warning(f"Unknown domain '{domain_name}', falling back to SignSet")
+domain_options: dict[str, type[Abstraction]] = {
+    "sign": SignSet,
+    "string": StringDomain,
+    "double": DoubleDomain,
+    "machine": MachineWordDomain,
+    "word": MachineWordDomain,
+    "machineword": MachineWordDomain,
+    "poly": PolyhedralDomain,
+}
+AV = domain_options.get(domain_name)
+if AV is None:
+    logger.warning(f"Unknown domain '{domain_name}', falling back to SignSet")
     AV = SignSet
-logger.info(f"Using abstraction domain: {domain_name if domain_name in {'string','double'} else 'sign'}")
+logger.info(f"Using abstraction domain: {AV.__name__}")
 
 MAX_STEPS = 1000
 final: set[str] = set()
