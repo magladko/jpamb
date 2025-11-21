@@ -7,6 +7,10 @@ type Comparison = Literal["le", "eq", "lt", "gt", "ge", "ne"]
 
 class Abstraction[T](ABC):
 
+    type DivisionResult = (Self
+                        | Literal["divide by zero"]
+                        | tuple[Self, Literal["divide by zero"]])
+
     concrete_type: type[T]
 
     def __init_subclass__(cls, **kwargs) -> None:  # noqa: ANN003
@@ -97,15 +101,15 @@ class Abstraction[T](ABC):
         pass
 
     @abstractmethod
-    def __div__(self, other: Self) -> Self:
+    def __div__(self, other: Self) -> DivisionResult:
         pass
 
     @abstractmethod
-    def __floordiv__(self, other: Self) -> Self:
+    def __floordiv__(self, other: Self) -> DivisionResult:
         pass
 
     @abstractmethod
-    def __mod__(self, other: Self) -> Self:
+    def __mod__(self, other: Self) -> DivisionResult:
         pass
 
     @abstractmethod

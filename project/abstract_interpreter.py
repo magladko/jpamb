@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Self, cast
 
 from abstractions.abstraction import Abstraction, Comparison
+from abstractions.interval import Interval
 from abstractions.signset import SignSet
 from interpreter import PC, Bytecode, Stack
 from loguru import logger
@@ -505,14 +506,6 @@ def step[AV: Abstraction](state: AState[AV],
             v1 = state.constraints[name1]
             v2 = state.constraints[name2]
 
-            computed_states = []
-            if (operant in (jvm.BinaryOpr.Div, jvm.BinaryOpr.Rem) and
-                0 in v2):
-                logger.debug("Division by zero found!")
-                computed_states.append("divide by zero")
-                if isinstance(v2, SignSet) and len(v2) == 1:
-                    # No more options left
-                    return computed_states
 
             # Compute result with abstract values
             match operant:
@@ -532,7 +525,16 @@ def step[AV: Abstraction](state: AState[AV],
 
             # Create fresh named value for result
             result_name = state.constraints.fresh_name()
-            state.constraints[result_name] = result_value
+            computed_states = []
+            match result_value:
+                case "divide by zero":
+                    return "divide by zero"
+                case (value, "divide by zero"):
+                    computed_states.append("divide by zero")
+                    state.constraints[result_name] = value
+                case value:
+                    state.constraints[result_name] = value
+
             frame.stack.push(result_name)
 
             frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
@@ -621,6 +623,7 @@ results: dict[str, int] = {
 }
 
 AV = SignSet
+# AV = Interval
 
 MAX_STEPS = 1000
 final: set[str] = set()

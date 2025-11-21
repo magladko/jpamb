@@ -11,7 +11,7 @@ class SignSet(Abstraction[int]):
     signs: set[Sign]
 
     @classmethod
-    def abstract(cls, items: set[int]) -> "SignSet":
+    def abstract(cls, items: set[int]) -> Self:
         signset = set()
         if 0 in items:
             signset.add("0")
@@ -22,24 +22,26 @@ class SignSet(Abstraction[int]):
         return cls(signset)
 
     @classmethod
-    def bot(cls) -> "SignSet":
+    def bot(cls) -> Self:
         return cls(set())
 
     @classmethod
-    def top(cls) -> "SignSet":
+    def top(cls) -> Self:
         return cls({"+", "-", "0"})
 
     def _binary_comparison(
-            self: "SignSet",
-            other: "SignSet",
-            outcome_fn: Callable[[str, str], set[bool]]
-        ) -> dict[bool, tuple["SignSet", "SignSet"]]:
+            self: Self,
+            other: Self,
+            outcome_fn: Callable[[Sign, Sign], set[bool]]
+        ) -> dict[bool, tuple[Self, Self]]:
 
-        results: dict[bool, tuple[SignSet, SignSet]] = {}
-        self_true_set = SignSet.bot()
-        self_false_set = SignSet.bot()
-        other_true_set = SignSet.bot()
-        other_false_set = SignSet.bot()
+        assert isinstance(other, SignSet)
+
+        results: dict[bool, tuple[Self, Self]] = {}
+        self_true_set = type(self).bot()
+        self_false_set = type(self).bot()
+        other_true_set = type(self).bot()
+        other_false_set = type(self).bot()
 
         for s1 in self.signs:
             for s2 in other.signs:
@@ -59,7 +61,7 @@ class SignSet(Abstraction[int]):
 
         return results
 
-    def le(self, other: "SignSet") -> dict[bool, tuple["SignSet", "SignSet"]]:
+    def le(self, other: Self) -> dict[bool, tuple[Self, Self]]:
         # {0} <= {0} -> {True}
         # {0} <= {+} -> {True}
         # {0} <= {-} -> {False}
@@ -69,7 +71,7 @@ class SignSet(Abstraction[int]):
         # {-} <= {0} -> {True}
         # {-} <= {+} -> {True}
         # {-} <= {-} -> {True, False}
-        def le_outcome(s1: str, s2: str) -> set[bool]:
+        def le_outcome(s1: Sign, s2: Sign) -> set[bool]:
             match (s1, s2):
                 case ("0", "0") | ("0", "+") | ("-", "0") | ("-", "+"):
                     return {True}
@@ -82,7 +84,7 @@ class SignSet(Abstraction[int]):
 
         return self._binary_comparison(other, le_outcome)
 
-    def eq(self, other: "SignSet") -> dict[bool, tuple["SignSet", "SignSet"]]:
+    def eq(self, other: Self) -> dict[bool, tuple[Self, Self]]:
         # {0} == {0} -> {True}
         # {0} == {+} -> {False}
         # {0} == {-} -> {False}
@@ -92,7 +94,7 @@ class SignSet(Abstraction[int]):
         # {-} == {0} -> {False}
         # {-} == {+} -> {False}
         # {-} == {-} -> {True, False}
-        def eq_outcome(s1: str, s2: str) -> set[bool]:
+        def eq_outcome(s1: Sign, s2: Sign) -> set[bool]:
             match (s1, s2):
                 case ("0", "0"):
                     return {True}
@@ -106,7 +108,7 @@ class SignSet(Abstraction[int]):
 
         return self._binary_comparison(other, eq_outcome)
 
-    def ne(self, other: "SignSet") -> dict[bool, tuple["SignSet", "SignSet"]]:
+    def ne(self, other: Self) -> dict[bool, tuple[Self, Self]]:
         # {0} != {0} -> {False}
         # {0} != {+} -> {True}
         # {0} != {-} -> {True}
@@ -116,7 +118,7 @@ class SignSet(Abstraction[int]):
         # {-} != {0} -> {True}
         # {-} != {+} -> {True}
         # {-} != {-} -> {True, False}
-        def ne_outcome(s1: str, s2: str) -> set[bool]:
+        def ne_outcome(s1: Sign, s2: Sign) -> set[bool]:
             match (s1, s2):
                 case ("0", "0"):
                     return {False}
@@ -130,7 +132,7 @@ class SignSet(Abstraction[int]):
 
         return self._binary_comparison(other, ne_outcome)
 
-    def lt(self, other: "SignSet") -> dict[bool, tuple["SignSet", "SignSet"]]:
+    def lt(self, other: Self) -> dict[bool, tuple[Self, Self]]:
         # {0} < {0} -> {False}
         # {0} < {+} -> {True}
         # {0} < {-} -> {False}
@@ -140,7 +142,7 @@ class SignSet(Abstraction[int]):
         # {-} < {0} -> {True}
         # {-} < {+} -> {True}
         # {-} < {-} -> {True, False}
-        def lt_outcome(s1: str, s2: str) -> set[bool]:
+        def lt_outcome(s1: Sign, s2: Sign) -> set[bool]:
             match (s1, s2):
                 case ("0", "+") | ("-", "0") | ("-", "+"):
                     return {True}
@@ -153,7 +155,7 @@ class SignSet(Abstraction[int]):
 
         return self._binary_comparison(other, lt_outcome)
 
-    def ge(self, other: "SignSet") -> dict[bool, tuple["SignSet", "SignSet"]]:
+    def ge(self, other: Self) -> dict[bool, tuple[Self, Self]]:
         # {0} >= {0} -> {True}
         # {0} >= {+} -> {False}
         # {0} >= {-} -> {True}
@@ -163,7 +165,7 @@ class SignSet(Abstraction[int]):
         # {-} >= {0} -> {False}
         # {-} >= {+} -> {False}
         # {-} >= {-} -> {True, False}
-        def ge_outcome(s1: str, s2: str) -> set[bool]:
+        def ge_outcome(s1: Sign, s2: Sign) -> set[bool]:
             match (s1, s2):
                 case ("0", "0") | ("0", "-") | ("+", "0") | ("+", "-"):
                     return {True}
@@ -176,7 +178,7 @@ class SignSet(Abstraction[int]):
 
         return self._binary_comparison(other, ge_outcome)
 
-    def gt(self, other: "SignSet") -> dict[bool, tuple["SignSet", "SignSet"]]:
+    def gt(self, other: Self) -> dict[bool, tuple[Self, Self]]:
         # {0} > {0} -> {False}
         # {0} > {+} -> {False}
         # {0} > {-} -> {True}
@@ -186,7 +188,7 @@ class SignSet(Abstraction[int]):
         # {-} > {0} -> {False}
         # {-} > {+} -> {False}
         # {-} > {-} -> {True, False}
-        def gt_outcome(s1: str, s2: str) -> set[bool]:
+        def gt_outcome(s1: Sign, s2: Sign) -> set[bool]:
             match (s1, s2):
                 case ("0", "-") | ("+", "0") | ("+", "-"):
                     return {True}
@@ -227,14 +229,14 @@ class SignSet(Abstraction[int]):
             case _:
                 raise ValueError(f"Invalid signs: {s1}, {s2}")
 
-    def __add__(self, other: "SignSet") -> "SignSet":
+    def __add__(self, other: Self) -> Self:
         """Abstract addition of two sign sets."""
         assert isinstance(other, SignSet)
         new_signs = set()
         for s1 in self.signs:
             for s2 in other.signs:
                 new_signs.update(self._add_signs(s1, s2))
-        return SignSet(new_signs)
+        return type(self)(new_signs)
 
     @staticmethod
     def _sub_signs(s1: Sign, s2: Sign) -> set[Sign]:
@@ -261,14 +263,14 @@ class SignSet(Abstraction[int]):
             case _:
                 raise ValueError(f"Invalid signs: {s1}, {s2}")
 
-    def __sub__(self, other: "SignSet") -> "SignSet":
+    def __sub__(self, other: Self) -> Self:
         """Abstract subtraction of two sign sets."""
         assert isinstance(other, SignSet)
         new_signs = set()
         for s1 in self.signs:
             for s2 in other.signs:
                 new_signs.update(self._sub_signs(s1, s2))
-        return SignSet(new_signs)
+        return type(self)(new_signs)
 
     @staticmethod
     def _mul_signs(s1: Sign, s2: Sign) -> set[Sign]:
@@ -289,40 +291,40 @@ class SignSet(Abstraction[int]):
             case _:
                 raise ValueError(f"Invalid signs: {s1}, {s2}")
 
-    def __mul__(self, other: "SignSet") -> "SignSet":
+    def __mul__(self, other: Self) -> Self:
         """Abstract multiplication of two sign sets."""
         assert isinstance(other, SignSet)
         new_signs = set()
         for s1 in self.signs:
             for s2 in other.signs:
                 new_signs.update(self._mul_signs(s1, s2))
-        return SignSet(new_signs)
+        return type(self)(new_signs)
 
-    def __div__(self, other: "SignSet") -> "SignSet":
+    def __div__(self, other: Self) -> Abstraction.DivisionResult:
         """Abstract division of two sign sets."""
         assert isinstance(other, SignSet)
-        if "0" in other.signs and len(other) == 1:
-            # Error: divide by zero
-            return SignSet.bot()
+        has_zero = "0" in other.signs
+        if has_zero and len(other) == 1:
+            return "divide by zero"
 
         new_signs = set()
         for s1 in self.signs:
             for s2 in other.signs:
-                # if s2 == "0":
-                #     raise ValueError("divide by zero")
                 new_signs.update(self._mul_signs(s1, s2))
-        return SignSet(new_signs)
+        result = type(self)(new_signs)
+        return result if not has_zero else (result, "divide by zero")
 
-    def __floordiv__(self, other: Self) -> "SignSet":
+    def __floordiv__(self, other: Self) -> Abstraction.DivisionResult:
         """Abstract integer division of two sign sets."""
         return self.__div__(other)
 
-    def __mod__(self, other: Self) -> "SignSet":
+    def __mod__(self, other: Self) -> Abstraction.DivisionResult:
         """Abstract modulus of two sign sets."""
         assert isinstance(other, SignSet)
-        if "0" in other.signs and len(other) == 1:
+        has_zero = "0" in other.signs
+        if has_zero and len(other) == 1:
             # Error: modulus by zero
-            return SignSet.bot()
+            return "divide by zero"
 
         new_signs: set[Sign] = {"0"}
         # JVM DOCS:
@@ -333,23 +335,28 @@ class SignSet(Abstraction[int]):
             new_signs.add("-")
         if "+" in other.signs:
             new_signs.add("+")
-        return SignSet(new_signs)
+        result = type(self)(new_signs)
+        return result if not has_zero else (result, "divide by zero")
 
-    def __le__(self, other: "SignSet") -> bool:
-        assert isinstance(other, SignSet)
+    def __le__(self, other: Self) -> bool:
+        if not isinstance(other, SignSet):
+            return False
         return self.signs <= other.signs
 
-    def __eq__(self, other: "SignSet") -> bool:
-        assert isinstance(other, SignSet)
+    def __eq__(self, other: Self) -> bool:
+        if not isinstance(other, SignSet):
+            return False
         return self.signs == other.signs
 
-    def __and__(self, other: "SignSet") -> "SignSet":
-        assert isinstance(other, SignSet)
-        return SignSet(self.signs & other.signs)
+    def __and__(self, other: Self) -> Self:
+        if not isinstance(other, SignSet):
+            return False
+        return type(self)(self.signs & other.signs)
 
-    def __or__(self, other: "SignSet") -> "SignSet":
-        assert isinstance(other, SignSet)
-        return SignSet(self.signs | other.signs)
+    def __or__(self, other: Self) -> Self:
+        if not isinstance(other, SignSet):
+            return False
+        return type(self)(self.signs | other.signs)
 
     def __str__(self) -> str:
         return "{" + ",".join(sorted(self.signs)) + "}"

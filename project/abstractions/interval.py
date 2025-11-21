@@ -1,5 +1,6 @@
 
 from dataclasses import dataclass
+from numbers import Number
 from typing import Self
 
 from .abstraction import Abstraction
@@ -104,7 +105,7 @@ class Interval(Abstraction[int]):
         overlap_upper = min(self.upper, other.upper)
 
         can_be_true = overlap_lower <= overlap_upper
-        can_be_false = True  # Can always be false unless singleton intervals that match
+        can_be_false = self != other
 
         if can_be_true:
             # When True: both must be in the intersection
@@ -131,7 +132,7 @@ class Interval(Abstraction[int]):
         # Can be false (equal) if intervals overlap
         can_be_false = overlap_lower <= overlap_upper
         # Can always be true unless both are singletons with same value
-        can_be_true = True
+        can_be_true = self != other
 
         if can_be_true:
             # When True: keep original intervals (no refinement in general)
@@ -181,6 +182,9 @@ class Interval(Abstraction[int]):
         if self.is_bot() or other.is_bot():
             return type(self).bot()
 
+        if self == 0 or other == 0:
+            return type(self)(0, 0)
+
         # Consider all four corner products
         products = [
             self.lower * other.lower,
@@ -190,15 +194,19 @@ class Interval(Abstraction[int]):
         ]
         return type(self)(min(products), max(products))
 
-    def __div__(self, other: Self) -> Self:
+    def __div__(self, other: Self) -> Abstraction.DivisionResult:
         """Interval division (true division)."""
         if self.is_bot() or other.is_bot():
             return type(self).bot()
 
         # Check for division by zero
-        if other.lower <= 0 <= other.upper:
-            # Interval contains zero - return bot (error state)
-            return type(self).bot()
+        has_zero = other.lower <= 0 <= other.upper
+        if other == 0:
+            return "divide by zero"
+
+        if any(float("inf") in map(abs, (x.lower, x.upper)) for x in [self, other]):
+            top = type(self).top()
+            return top if not has_zero else (top, "divide by zero")
 
         # Consider all four corner divisions
         divisions = [
@@ -207,19 +215,23 @@ class Interval(Abstraction[int]):
             self.upper / other.lower,
             self.upper / other.upper
         ]
-
         # Convert to integers
-        return type(self)(int(min(divisions)), int(max(divisions)))
+        result = type(self)(int(min(divisions)), int(max(divisions)))
+        return result if not has_zero else (result, "divide by zero")
 
-    def __floordiv__(self, other: Self) -> Self:
+    def __floordiv__(self, other: Self) -> Abstraction.DivisionResult:
         """Interval floor division."""
         if self.is_bot() or other.is_bot():
             return type(self).bot()
 
         # Check for division by zero
-        if other.lower <= 0 <= other.upper:
-            # Interval contains zero - return bot (error state)
-            return type(self).bot()
+        has_zero = other.lower <= 0 <= other.upper
+        if other == 0:
+            return "divide by zero"
+
+        if any(float("inf") in map(abs, (x.lower, x.upper)) for x in [self, other]):
+            top = type(self).top()
+            return top if not has_zero else (top, "divide by zero")
 
         # Consider all four corner divisions
         divisions = [
@@ -228,34 +240,39 @@ class Interval(Abstraction[int]):
             self.upper // other.lower,
             self.upper // other.upper
         ]
-        return type(self)(min(divisions), max(divisions))
 
-    def __mod__(self, other: Self) -> Self:
+        result = type(self)(min(divisions), max(divisions))
+        return result if not has_zero else (result, "divide by zero")
+
+
+    def __mod__(self, other: Self) -> Abstraction.DivisionResult:
         """Interval modulus operation."""
         if self.is_bot() or other.is_bot():
             return type(self).bot()
 
+        raise NotImplementedError("__mod__ not implemented yet")
+        # TODO(kornel): review
         # Check for modulus by zero
-        if other.lower <= 0 <= other.upper:
-            # Interval contains zero - return bot (error state)
-            return type(self).bot()
+        # has_zero = other.lower <= 0 <= other.upper
+        # if other == 0:
+        #     return "divide by zero"
 
-        # Conservative approximation based on JVM semantics:
-        # Result sign matches dividend sign
-        # Result magnitude is less than divisor magnitude
+        # # Conservative approximation based on JVM semantics:
+        # # Result sign matches dividend sign
+        # # Result magnitude is less than divisor magnitude
 
-        # Find the maximum absolute value in the divisor
-        max_divisor = max(abs(other.lower), abs(other.upper))
+        # # Find the maximum absolute value in the divisor
+        # max_divisor = max(abs(other.lower), abs(other.upper))
 
-        # Conservative bounds
-        if self.lower >= 0:
-            # Positive dividend: result in [0, max_divisor - 1]
-            return type(self)(0, max_divisor - 1)
-        if self.upper <= 0:
-            # Negative dividend: result in [-(max_divisor - 1), 0]
-            return type(self)(-(max_divisor - 1), 0)
-        # Mixed signs: result in [-(max_divisor - 1), max_divisor - 1]
-        return type(self)(-(max_divisor - 1), max_divisor - 1)
+        # # Conservative bounds
+        # if self.lower >= 0:
+        #     # Positive dividend: result in [0, max_divisor - 1]
+        #     return type(self)(0, max_divisor - 1)
+        # if self.upper <= 0:
+        #     # Negative dividend: result in [-(max_divisor - 1), 0]
+        #     return type(self)(-(max_divisor - 1), 0)
+        # # Mixed signs: result in [-(max_divisor - 1), max_divisor - 1]
+        # return type(self)(-(max_divisor - 1), max_divisor - 1)
 
     def __le__(self, other: Self) -> bool:
         """Return result of poset ordering (self ⊑ other)."""
@@ -270,6 +287,8 @@ class Interval(Abstraction[int]):
     def __eq__(self, other: object) -> bool:
         """Structural equality of intervals."""
         if not isinstance(other, Interval):
+            if isinstance(other, Number):
+                return self.lower == other and self.upper == other
             return False
         # Handle bot specially
         if self.is_bot() and other.is_bot():
