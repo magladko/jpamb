@@ -415,7 +415,7 @@ def step[AV: Abstraction](state: AState[AV],
             v2 = abstraction_cls.abstract({0})
 
             res = v1.compare(cast("Comparison", c), v2)
-            logger.debug(f"res: {res}")
+            logger.debug(f"ifz compare: {res}")
 
             computed_states = []
             if True in res:
@@ -461,6 +461,7 @@ def step[AV: Abstraction](state: AState[AV],
 
             # Evaluate comparison with current constraints
             res = v1.compare(cast("Comparison", c), v2)
+            logger.debug(f"if compare: {res}")
 
             computed_states = []
             if True in res:
@@ -552,7 +553,6 @@ def step[AV: Abstraction](state: AState[AV],
             return [state]
 
         case jvm.New(classname=jvm.ClassName(_as_string="java/lang/AssertionError")):
-            logger.debug("Creating AssertionError object")
             return ["assertion error"]
 
         case jvm.Goto(target=t):
@@ -586,7 +586,9 @@ def manystep[AV: Abstraction](sts: StateSet[AV],
     """
     states = []
     for _pc, state in sts.per_instruction():
-        states.extend(step(state, abstraction_cls))
+        res = step(state, abstraction_cls)
+        logger.debug("RESULT\n" + "\n".join(map(str, res)))
+        states.extend(res)
     return states
 
 
@@ -643,13 +645,13 @@ for iteration in range(MAX_STEPS):
             sts |= s
 
     logger.debug(f"Iteration {iteration}: {len(sts.needswork)} PCs need work")
-    for pc in sts.needswork:
-        logger.debug(pc)
+    # logger.debug("Needs work: " + ", ".join(map(str, sts.needswork)))
     logger.debug(f"Final states: {final}")
 
     # If needswork is empty, we've reached fixed point
     if not sts.needswork:
         logger.debug("Fixed point reached!")
+        final.add("*")
         break
 
 # Output results
