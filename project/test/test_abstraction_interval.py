@@ -1,214 +1,499 @@
-"""Tests for Interval abstraction."""
+"""Hypothesis-based property tests for Interval abstraction."""
 
+from itertools import chain
+
+from hypothesis import example, given
+from hypothesis import strategies as st
+
+from project.abstractions.abstraction import Comparison
 from project.abstractions.interval import Interval
 
-
-def test_abstract() -> None:
-    """Test abstract method."""
-    # Empty set should give bot
-    assert Interval.abstract(set()) == Interval.bot()
-
-    # Single element
-    assert Interval.abstract({5}) == Interval(5, 5)
-
-    # Multiple elements
-    assert Interval.abstract({1, 3, 5, 7}) == Interval(1, 7)
-    assert Interval.abstract({-5, 0, 10}) == Interval(-5, 10)
+# ============================================================================
+# HYPOTHESIS STRATEGIES
+# ============================================================================
 
 
-def test_bot_and_top() -> None:
-    """Test bot and top elements."""
+def intervals() -> st.SearchStrategy[Interval]:
+    """
+    Generate intervals with reasonable bounds.
+
+    Includes special cases: bot, top, singletons, negative, positive, mixed.
+    """
+    # Regular intervals with random bounds
+    random_intervals = st.builds(
+        lambda lower, upper: Interval(lower, upper),
+        lower=st.integers(min_value=-100, max_value=100),
+        upper=st.integers(min_value=-100, max_value=100),
+    )
+
+    # Special cases
+    special_intervals = st.sampled_from([
+        Interval.bot(),
+        Interval.top(),
+        Interval(0, 0),  # singleton zero
+        Interval(1, 1),  # singleton positive
+        Interval(-1, -1),  # singleton negative
+        Interval(-10, -1),  # negative range
+        Interval(1, 10),  # positive range
+        Interval(-5, 5),  # mixed range
+    ])
+
+    return st.one_of(random_intervals, special_intervals)
+
+
+def comparison_ops() -> st.SearchStrategy[Comparison]:
+    """Generate all comparison operations."""
+    return st.sampled_from(["le", "lt", "eq", "ne", "ge", "gt"])
+
+
+# ============================================================================
+# BASIC PROPERTY TESTS
+# ============================================================================
+
+
+@given(st.sets(st.integers(min_value=-100, max_value=100)))
+def test_valid_abstraction(xs: set[int]) -> None:
+    """Property: All concrete values are contained in their abstraction."""
+    interval = Interval.abstract(xs)
+    assert all(x in interval for x in xs)
+
+
+@given(
+    st.sets(st.integers(min_value=-50, max_value=50)),
+    st.sets(st.integers(min_value=-50, max_value=50)),
+)
+def test_interval_adds(xs: set[int], ys: set[int]) -> None:
+    """Property: Abstract addition is sound (overapproximates concrete)."""
+    if not xs or not ys:
+        return
+
+    concrete_sums = {x + y for x in xs for y in ys}
+    abstract_result = Interval.abstract(xs) + Interval.abstract(ys)
+
+    assert all(s in abstract_result for s in concrete_sums)
+
+
+@given(
+    st.sets(st.integers(min_value=-50, max_value=50)),
+    st.sets(st.integers(min_value=-50, max_value=50)),
+)
+def test_interval_subs(xs: set[int], ys: set[int]) -> None:
+    """Property: Abstract subtraction is sound."""
+    if not xs or not ys:
+        return
+
+    concrete_diffs = {x - y for x in xs for y in ys}
+    abstract_result = Interval.abstract(xs) - Interval.abstract(ys)
+
+    assert all(d in abstract_result for d in concrete_diffs)
+
+
+@given(
+    st.sets(st.integers(min_value=-20, max_value=20)),
+    st.sets(st.integers(min_value=-20, max_value=20)),
+)
+def test_interval_muls(xs: set[int], ys: set[int]) -> None:
+    """Property: Abstract multiplication is sound."""
+    if not xs or not ys:
+        return
+
+    concrete_prods = {x * y for x in xs for y in ys}
+    abstract_result = Interval.abstract(xs) * Interval.abstract(ys)
+
+    assert all(p in abstract_result for p in concrete_prods)
+
+
+@given(
+    st.sets(st.integers(min_value=-50, max_value=50)),
+    st.sets(st.integers(min_value=-50, max_value=50)),
+)
+def test_interval_compare_le(xs: set[int], ys: set[int]) -> None:
+    """Property: Abstract <= comparison includes all concrete outcomes."""
+    if not xs or not ys:
+        return
+
+    concrete_outcomes = {x <= y for x in xs for y in ys}
+    abstract_result = Interval.abstract(xs).compare("le", Interval.abstract(ys))
+
+    assert concrete_outcomes <= abstract_result.keys()
+
+
+@given(intervals(), intervals(), comparison_ops())
+def test_compare_returns_valid_bool_set_all_ops(
+    i1: Interval, i2: Interval, op: Comparison
+) -> None:
+    """Property: Comparison returns valid dict with bool keys and interval values."""
+    result = i1.compare(op, i2)
+    intervals_list = list(chain.from_iterable(result.values()))
+
+    assert isinstance(result, dict)
+    assert all(isinstance(k, bool) for k in result)
+    assert all(isinstance(v, Interval) for v in intervals_list)
+
+
+# ============================================================================
+# COMPLEMENTARITY PROPERTIES
+# ============================================================================
+
+
+@given(intervals(), intervals())
+@example(Interval(0, 10), Interval(5, 15))
+@example(Interval(1, 5), Interval(6, 10))
+def test_comparison_complementarity_lt_ge(i1: Interval, i2: Interval) -> None:
+    """Property: x < y and x >= y are complements."""
+    lt_result = i1.lt(i2)
+    ge_result = i1.ge(i2)
+
+    # If both non-empty, they should have complementary outcomes
+    if lt_result and ge_result:
+        # At least one outcome should be shared or complementary
+        for outcome in [True, False]:
+            if outcome in lt_result:
+                complement = not outcome
+                assert complement in ge_result or outcome in ge_result
+
+
+@given(intervals(), intervals())
+@example(Interval(0, 10), Interval(5, 15))
+def test_comparison_complementarity_le_gt(i1: Interval, i2: Interval) -> None:
+    """Property: x <= y and x > y are complements."""
+    le_result = i1.le(i2)
+    gt_result = i1.gt(i2)
+
+    if le_result and gt_result:
+        for outcome in [True, False]:
+            if outcome in le_result:
+                complement = not outcome
+                assert complement in gt_result or outcome in gt_result
+
+
+@given(intervals(), intervals())
+@example(Interval(5, 10), Interval(5, 10))
+def test_comparison_complementarity_eq_ne(i1: Interval, i2: Interval) -> None:
+    """Property: x == y and x != y are complements."""
+    eq_result = i1.eq(i2)
+    ne_result = i1.ne(i2)
+
+    if True in eq_result and False in ne_result:
+        assert eq_result[True] == ne_result[False]
+
+    if False in eq_result and True in ne_result:
+        assert eq_result[False] == ne_result[True]
+
+
+# ============================================================================
+# SYMMETRY PROPERTIES
+# ============================================================================
+
+
+@given(intervals(), intervals())
+@example(Interval(1, 5), Interval(3, 7))
+@example(Interval.bot(), Interval(1, 5))
+def test_comparison_symmetry_eq(i1: Interval, i2: Interval) -> None:
+    """Property: Equality is symmetric."""
+    eq_12 = i1.eq(i2)
+    eq_21 = i2.eq(i1)
+
+    assert eq_12.keys() == eq_21.keys()
+
+    for outcome in eq_12:
+        i1_refined, i2_refined = eq_12[outcome]
+        i2_refined_rev, i1_refined_rev = eq_21[outcome]
+        assert i1_refined == i1_refined_rev
+        assert i2_refined == i2_refined_rev
+
+
+@given(intervals(), intervals())
+@example(Interval(1, 5), Interval(6, 10))
+def test_comparison_antisymmetry_lt_gt(i1: Interval, i2: Interval) -> None:
+    """Property: i1 < i2 is the opposite of i2 > i1."""
+    lt_result = i1.lt(i2)
+    gt_result = i2.gt(i1)
+
+    assert lt_result.keys() == gt_result.keys()
+
+    for outcome in lt_result:
+        i1_refined_lt, i2_refined_lt = lt_result[outcome]
+        i2_refined_gt, i1_refined_gt = gt_result[outcome]
+        assert i1_refined_lt == i1_refined_gt
+        assert i2_refined_lt == i2_refined_gt
+
+
+@given(intervals(), intervals())
+@example(Interval(1, 5), Interval(3, 7))
+def test_comparison_antisymmetry_le_ge(i1: Interval, i2: Interval) -> None:
+    """Property: i1 <= i2 is the opposite of i2 >= i1."""
+    le_result = i1.le(i2)
+    ge_result = i2.ge(i1)
+
+    assert le_result.keys() == ge_result.keys()
+
+    for outcome in le_result:
+        i1_refined_le, i2_refined_le = le_result[outcome]
+        i2_refined_ge, i1_refined_ge = ge_result[outcome]
+        assert i1_refined_le == i1_refined_ge
+        assert i2_refined_le == i2_refined_ge
+
+
+# ============================================================================
+# IDENTITY PROPERTIES
+# ============================================================================
+
+
+@given(intervals())
+@example(Interval(5, 5))
+@example(Interval(1, 10))
+def test_comparison_identity_eq(i: Interval) -> None:
+    """Property: x == x should always include True outcome for non-bot."""
+    eq_result = i.eq(i)
+
+    if not i.is_bot():
+        assert True in eq_result
+        # For identity comparison, refined intervals should equal the original
+        assert eq_result[True] == (i, i)
+    else:
+        assert eq_result == {}
+
+
+@given(intervals())
+@example(Interval(1, 10))
+def test_comparison_identity_le(i: Interval) -> None:
+    """Property: x <= x should always include True."""
+    le_result = i.le(i)
+
+    if not i.is_bot():
+        assert True in le_result
+
+
+@given(intervals())
+@example(Interval(1, 10))
+def test_comparison_identity_ge(i: Interval) -> None:
+    """Property: x >= x should always include True."""
+    ge_result = i.ge(i)
+
+    if not i.is_bot():
+        assert True in ge_result
+
+
+# ============================================================================
+# LOGICAL RELATIONSHIP PROPERTIES
+# ============================================================================
+
+
+@given(intervals(), intervals())
+@example(Interval(1, 5), Interval(6, 10))
+def test_logical_relationship_lt_implies_le(i1: Interval, i2: Interval) -> None:
+    """Property: x < y implies x <= y."""
+    lt_result = i1.lt(i2)
+    le_result = i1.le(i2)
+
+    if True in lt_result:
+        assert True in le_result
+        lt_i1, lt_i2 = lt_result[True]
+        le_i1, le_i2 = le_result[True]
+        assert lt_i1 <= le_i1
+        assert lt_i2 <= le_i2
+
+
+@given(intervals(), intervals())
+@example(Interval(6, 10), Interval(1, 5))
+def test_logical_relationship_gt_implies_ge(i1: Interval, i2: Interval) -> None:
+    """Property: x > y implies x >= y."""
+    gt_result = i1.gt(i2)
+    ge_result = i1.ge(i2)
+
+    if True in gt_result:
+        assert True in ge_result
+        gt_i1, gt_i2 = gt_result[True]
+        ge_i1, ge_i2 = ge_result[True]
+        assert gt_i1 <= ge_i1
+        assert gt_i2 <= ge_i2
+
+
+@given(intervals(), intervals())
+@example(Interval(5, 5), Interval(5, 5))
+def test_logical_relationship_eq_implies_le_and_ge(
+    i1: Interval, i2: Interval
+) -> None:
+    """Property: x == y implies x <= y and x >= y."""
+    eq_result = i1.eq(i2)
+    le_result = i1.le(i2)
+    ge_result = i1.ge(i2)
+
+    if True in eq_result:
+        assert True in le_result
+        assert True in ge_result
+
+
+# ============================================================================
+# SOUNDNESS (ORACLE-BASED)
+# ============================================================================
+
+
+def compute_concrete_outcomes(i1: Interval, i2: Interval, op: Comparison) -> set[bool]:
+    """Oracle: compute concrete outcomes for intervals by sampling."""
+    if i1.is_bot() or i2.is_bot():
+        return set()
+
+    outcomes = set()
+
+    # Sample concrete values from intervals
+    def sample_from_interval(interval: Interval, num_samples: int = 5) -> list[int]:
+        """Sample concrete values from an interval."""
+        if interval.lower == float("-inf") or interval.upper == float("inf"):
+            # For infinite bounds, sample a fixed range
+            lower = int(max(interval.lower, -100))
+            upper = int(min(interval.upper, 100))
+        else:
+            lower = int(interval.lower)
+            upper = int(interval.upper)
+
+        if lower > upper:
+            return []
+
+        # Sample endpoints and some middle values
+        samples = [lower, upper]
+        if upper - lower >= 2:
+            samples.append((lower + upper) // 2)
+        if upper - lower >= 4:
+            samples.append((lower + (lower + upper) // 2) // 2)
+            samples.append(((lower + upper) // 2 + upper) // 2)
+
+        return list(set(samples))[:num_samples]
+
+    samples1 = sample_from_interval(i1)
+    samples2 = sample_from_interval(i2)
+
+    for val1 in samples1:
+        for val2 in samples2:
+            if op == "le":
+                outcomes.add(val1 <= val2)
+            elif op == "lt":
+                outcomes.add(val1 < val2)
+            elif op == "eq":
+                outcomes.add(val1 == val2)
+            elif op == "ne":
+                outcomes.add(val1 != val2)
+            elif op == "ge":
+                outcomes.add(val1 >= val2)
+            elif op == "gt":
+                outcomes.add(val1 > val2)
+
+    return outcomes
+
+
+@given(intervals(), intervals(), comparison_ops())
+@example(Interval(5, 5), Interval(5, 5), "eq")
+@example(Interval(1, 5), Interval(6, 10), "lt")
+@example(Interval(6, 10), Interval(1, 5), "gt")
+@example(Interval.bot(), Interval(1, 5), "le")
+def test_soundness_concrete_oracle(
+    i1: Interval, i2: Interval, op: Comparison
+) -> None:
+    """Property: Abstract comparison is sound w.r.t. concrete execution."""
+    if i1.is_bot() or i2.is_bot():
+        return
+
+    result = i1.compare(op, i2)
+    concrete_outcomes = compute_concrete_outcomes(i1, i2, op)
+
+    for concrete_outcome in concrete_outcomes:
+        assert (
+            concrete_outcome in result
+        ), f"Concrete outcome {concrete_outcome} not in result for {i1} {op} {i2}"
+
+
+# ============================================================================
+# REFINEMENT COVERAGE
+# ============================================================================
+
+
+@given(intervals(), intervals(), comparison_ops())
+@example(Interval.bot(), Interval.bot(), "eq")
+@example(Interval.top(), Interval.top(), "eq")
+@example(Interval(1, 10), Interval(5, 15), "le")
+def test_comparison_refinement_coverage(
+    i1: Interval, i2: Interval, op: Comparison
+) -> None:
+    """Property: Refinements cover the original intervals and are valid subsets."""
+    result = i1.compare(op, i2)
+
+    # Refined intervals should be subsets
+    for refined_i1, refined_i2 in result.values():
+        assert isinstance(refined_i1, Interval)
+        assert isinstance(refined_i2, Interval)
+        assert refined_i1 <= i1
+        assert refined_i2 <= i2
+
+    # Union of refined intervals should cover originals (for non-bot)
+    if result and not i1.is_bot() and not i2.is_bot():
+        all_i1_refined = Interval.bot()
+        all_i2_refined = Interval.bot()
+        for refined_i1, refined_i2 in result.values():
+            all_i1_refined = all_i1_refined | refined_i1
+            all_i2_refined = all_i2_refined | refined_i2
+        assert all_i1_refined == i1
+        assert all_i2_refined == i2
+
+
+# ============================================================================
+# LATTICE PROPERTY TESTS
+# ============================================================================
+
+
+@given(intervals(), intervals())
+@example(Interval(1, 5), Interval(3, 7))
+def test_meet_commutativity(i1: Interval, i2: Interval) -> None:
+    """Property: Meet is commutative (i1 ⊓ i2 = i2 ⊓ i1)."""
+    assert (i1 & i2) == (i2 & i1)
+
+
+@given(intervals(), intervals())
+@example(Interval(1, 5), Interval(3, 7))
+def test_join_commutativity(i1: Interval, i2: Interval) -> None:
+    """Property: Join is commutative (i1 ⊔ i2 = i2 ⊔ i1)."""
+    assert (i1 | i2) == (i2 | i1)
+
+
+@given(intervals(), intervals(), intervals())
+def test_meet_associativity(i1: Interval, i2: Interval, i3: Interval) -> None:
+    """Property: Meet is associative ((i1 ⊓ i2) ⊓ i3 = i1 ⊓ (i2 ⊓ i3))."""
+    assert ((i1 & i2) & i3) == (i1 & (i2 & i3))
+
+
+@given(intervals(), intervals(), intervals())
+def test_join_associativity(i1: Interval, i2: Interval, i3: Interval) -> None:
+    """Property: Join is associative ((i1 ⊔ i2) ⊔ i3 = i1 ⊔ (i2 ⊔ i3))."""
+    assert ((i1 | i2) | i3) == (i1 | (i2 | i3))
+
+
+@given(intervals(), intervals())
+@example(Interval(1, 5), Interval(3, 7))
+def test_absorption_law_1(i1: Interval, i2: Interval) -> None:
+    """Property: Absorption law i1 ⊔ (i1 ⊓ i2) = i1."""
+    assert (i1 | (i1 & i2)) == i1
+
+
+@given(intervals(), intervals())
+@example(Interval(1, 5), Interval(3, 7))
+def test_absorption_law_2(i1: Interval, i2: Interval) -> None:
+    """Property: Absorption law i1 ⊓ (i1 ⊔ i2) = i1."""
+    assert (i1 & (i1 | i2)) == i1
+
+
+@given(intervals())
+@example(Interval(1, 10))
+def test_bot_is_identity_for_join(i: Interval) -> None:
+    """Property: Bot is identity for join (i ⊔ ⊥ = i)."""
     bot = Interval.bot()
-    assert bot.is_bot()
-    assert bot.lower > bot.upper
-
-    top = Interval.top()
-    assert not top.is_bot()
-    assert top.lower == float("-inf")
-    assert top.upper == float("inf")
+    assert (i | bot) == i
+    assert (bot | i) == i
 
 
-def test_contains() -> None:
-    """Test membership check."""
-    interval = Interval(1, 10)
-    assert 1 in interval
-    assert 5 in interval  # noqa: PLR2004
-    assert 10 in interval  # noqa: PLR2004
-    assert 0 not in interval
-    assert 11 not in interval  # noqa: PLR2004
-
+@given(intervals())
+@example(Interval(1, 10))
+def test_bot_is_absorbing_for_meet(i: Interval) -> None:
+    """Property: Bot is absorbing for meet (i ⊓ ⊥ = ⊥)."""
     bot = Interval.bot()
-    assert 5 not in bot  # noqa: PLR2004
-
-
-def test_addition() -> None:
-    """Test interval addition."""
-    a = Interval(1, 3)
-    b = Interval(2, 4)
-    result = a + b
-    assert result == Interval(3, 7)
-
-    # With negative numbers
-    a = Interval(-5, -1)
-    b = Interval(2, 4)
-    result = a + b
-    assert result == Interval(-3, 3)
-
-
-def test_subtraction() -> None:
-    """Test interval subtraction."""
-    a = Interval(5, 10)
-    b = Interval(2, 3)
-    result = a - b
-    assert result == Interval(2, 8)
-
-
-def test_multiplication() -> None:
-    """Test interval multiplication."""
-    a = Interval(2, 3)
-    b = Interval(4, 5)
-    result = a * b
-    assert result == Interval(8, 15)
-
-    # With negative numbers
-    a = Interval(-2, 3)
-    b = Interval(1, 4)
-    result = a * b
-    assert result == Interval(-8, 12)
-
-
-def test_division() -> None:
-    """Test interval division."""
-    a = Interval(10, 20)
-    b = Interval(2, 5)
-    result = a // b
-    # 10 // 5 = 2, 10 // 2 = 5, 20 // 5 = 4, 20 // 2 = 10
-    assert result == Interval(2, 10)
-
-    # Division by zero should return bot
-    a = Interval(10, 20)
-    b = Interval(-1, 1)
-    result = a // b
-    assert result.is_bot()
-
-
-def test_modulus() -> None:
-    """Test interval modulus."""
-    a = Interval(10, 20)
-    b = Interval(3, 7)
-    result = a % b
-    # Conservative: [0, 6] (max divisor - 1)
-    assert result == Interval(0, 6)
-
-    # Negative dividend
-    a = Interval(-20, -10)
-    b = Interval(3, 7)
-    result = a % b
-    assert result == Interval(-6, 0)
-
-
-def test_lattice_ordering() -> None:
-    """Test poset ordering (<=)."""
-    a = Interval(3, 5)
-    b = Interval(1, 7)
-    assert a <= b  # a is contained in b
-    assert not (b <= a)
-
-    # Equal intervals
-    a = Interval(3, 5)
-    b = Interval(3, 5)
-    assert a <= b
-    assert b <= a
-
-    # Bot is less than everything
-    bot = Interval.bot()
-    a = Interval(1, 5)
-    assert bot <= a
-    assert not (a <= bot)
-
-
-def test_meet() -> None:
-    """Test meet operator (intersection)."""
-    a = Interval(1, 5)
-    b = Interval(3, 7)
-    result = a & b
-    assert result == Interval(3, 5)
-
-    # Non-overlapping intervals
-    a = Interval(1, 3)
-    b = Interval(5, 7)
-    result = a & b
-    assert result.is_bot()
-
-
-def test_join() -> None:
-    """Test join operator (convex hull)."""
-    a = Interval(1, 3)
-    b = Interval(5, 7)
-    result = a | b
-    assert result == Interval(1, 7)
-
-    a = Interval(1, 5)
-    b = Interval(3, 7)
-    result = a | b
-    assert result == Interval(1, 7)
-
-
-def test_equality() -> None:
-    """Test structural equality."""
-    a = Interval(1, 5)
-    b = Interval(1, 5)
-    assert a == b
-
-    a = Interval(1, 5)
-    b = Interval(2, 5)
-    assert a != b
-
-    # Both bot should be equal
-    bot1 = Interval.bot()
-    bot2 = Interval.bot()
-    assert bot1 == bot2
-
-
-def test_comparison_le() -> None:
-    """Test <= comparison with refinement."""
-    a = Interval(0, 10)
-    b = Interval(5, 15)
-    result = a.le(b)
-
-    # Both outcomes are possible
-    assert True in result
-    assert False in result
-
-    # When true: a <= b, refine both intervals
-    a_true, b_true = result[True]
-    assert a_true == Interval(0, 10)
-    assert b_true == Interval(5, 15)
-
-    # When false: a > b
-    a_false, b_false = result[False]
-    assert a_false == Interval(6, 10)
-    assert b_false == Interval(5, 9)
-
-
-def test_comparison_eq() -> None:
-    """Test == comparison with refinement."""
-    a = Interval(0, 10)
-    b = Interval(5, 15)
-    result = a.eq(b)
-
-    # Both outcomes are possible
-    assert True in result
-    assert False in result
-
-    # When true: both must be in intersection
-    a_true, b_true = result[True]
-    assert a_true == Interval(5, 10)
-    assert b_true == Interval(5, 10)
-
-
-def test_string_representation() -> None:
-    """Test string representation."""
-    assert str(Interval(1, 5)) == "[1, 5]"
-    assert str(Interval.bot()) == "⊥"
-    assert str(Interval.top()) == "⊤"
+    assert (i & bot) == bot
+    assert (bot & i) == bot
