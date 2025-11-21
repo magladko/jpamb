@@ -387,6 +387,17 @@ def step[AV: Abstraction](state: AState[AV],
             frame.pc = frame.pc + 1
             return [state]
 
+        case jvm.Store(type=_type, index=index):
+            v = frame.stack.pop()
+            # if v and v.value is not None:
+            #     assert isinstance(v.value, int), (
+            #         f"Expected type {int}, but got {v.value!r}"
+            #     )
+            frame.locals[index] = v
+            frame.pc = frame.pc + 1
+            return [state]
+
+
         case jvm.Load(type=_type, index=i):
             assert i in frame.locals, f"Local variable {i} not initialized"
             # Push the NAME to create dependency
