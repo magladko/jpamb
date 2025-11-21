@@ -15,18 +15,19 @@ from project.abstractions.interval import Interval
 
 def intervals() -> st.SearchStrategy[Interval]:
     """
-    Generate intervals with reasonable bounds.
+    Generate intervals with diverse bounds.
 
-    Includes special cases: bot, top, singletons, negative, positive, mixed.
+    Includes special cases: bot, top, singletons, and random intervals.
+    Let Hypothesis explore the space naturally without artificial limits.
     """
-    # Regular intervals with random bounds
+    # Regular intervals with unbounded random bounds
     random_intervals = st.builds(
         lambda lower, upper: Interval(lower, upper),
-        lower=st.integers(min_value=-100, max_value=100),
-        upper=st.integers(min_value=-100, max_value=100),
+        lower=st.integers(),
+        upper=st.integers(),
     )
 
-    # Special cases
+    # Special cases for edge coverage
     special_intervals = st.sampled_from([
         Interval.bot(),
         Interval.top(),
@@ -51,17 +52,14 @@ def comparison_ops() -> st.SearchStrategy[Comparison]:
 # ============================================================================
 
 
-@given(st.sets(st.integers(min_value=-100, max_value=100)))
+@given(st.sets(st.integers()))
 def test_valid_abstraction(xs: set[int]) -> None:
     """Property: All concrete values are contained in their abstraction."""
     interval = Interval.abstract(xs)
     assert all(x in interval for x in xs)
 
 
-@given(
-    st.sets(st.integers(min_value=-50, max_value=50)),
-    st.sets(st.integers(min_value=-50, max_value=50)),
-)
+@given(st.sets(st.integers()), st.sets(st.integers()))
 def test_interval_adds(xs: set[int], ys: set[int]) -> None:
     """Property: Abstract addition is sound (overapproximates concrete)."""
     if not xs or not ys:
@@ -73,10 +71,7 @@ def test_interval_adds(xs: set[int], ys: set[int]) -> None:
     assert all(s in abstract_result for s in concrete_sums)
 
 
-@given(
-    st.sets(st.integers(min_value=-50, max_value=50)),
-    st.sets(st.integers(min_value=-50, max_value=50)),
-)
+@given(st.sets(st.integers()), st.sets(st.integers()))
 def test_interval_subs(xs: set[int], ys: set[int]) -> None:
     """Property: Abstract subtraction is sound."""
     if not xs or not ys:
@@ -88,10 +83,7 @@ def test_interval_subs(xs: set[int], ys: set[int]) -> None:
     assert all(d in abstract_result for d in concrete_diffs)
 
 
-@given(
-    st.sets(st.integers(min_value=-20, max_value=20)),
-    st.sets(st.integers(min_value=-20, max_value=20)),
-)
+@given(st.sets(st.integers()), st.sets(st.integers()))
 def test_interval_muls(xs: set[int], ys: set[int]) -> None:
     """Property: Abstract multiplication is sound."""
     if not xs or not ys:
@@ -103,10 +95,7 @@ def test_interval_muls(xs: set[int], ys: set[int]) -> None:
     assert all(p in abstract_result for p in concrete_prods)
 
 
-@given(
-    st.sets(st.integers(min_value=-50, max_value=50)),
-    st.sets(st.integers(min_value=-50, max_value=50)),
-)
+@given(st.sets(st.integers()), st.sets(st.integers()))
 def test_interval_compare_le(xs: set[int], ys: set[int]) -> None:
     """Property: Abstract <= comparison includes all concrete outcomes."""
     if not xs or not ys:
@@ -353,9 +342,9 @@ def compute_concrete_outcomes(i1: Interval, i2: Interval, op: Comparison) -> set
 
         # Sample endpoints and some middle values
         samples = [lower, upper]
-        if upper - lower >= 2:
+        if upper - lower >= 2:  # noqa: PLR2004
             samples.append((lower + upper) // 2)
-        if upper - lower >= 4:
+        if upper - lower >= 4:  # noqa: PLR2004
             samples.append((lower + (lower + upper) // 2) // 2)
             samples.append(((lower + upper) // 2 + upper) // 2)
 
