@@ -482,7 +482,7 @@ def step[AV: Abstraction](state: AState[AV],
                 false_state.frames.peek().pc = frame.pc + 1
                 # REFINE constraint: condition is FALSE
                 self_constrained = res[False][0]
-                other_constrained = res[False][0]
+                other_constrained = res[False][1]
                 false_state.constraints[name1] = self_constrained
                 false_state.constraints[name2] = other_constrained
                 computed_states.append(false_state)
