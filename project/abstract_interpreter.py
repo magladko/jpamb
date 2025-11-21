@@ -1,11 +1,13 @@
+import os
 import sys
 from collections.abc import Iterable
 from copy import deepcopy
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Self, cast
 
-from abstraction import Abstraction, Comparison, SignSet
-from interpreter import PC, Bytecode, Stack
+from project.abstraction import Abstraction, Comparison, SignSet
+from project.interpreter import Bytecode, PC, Stack
 from loguru import logger
 
 import jpamb
@@ -429,7 +431,17 @@ results: dict[str, int] = {
     "*": 0,
 }
 
-AV = SignSet
+domain_name = os.environ.get("JPAMB_ABSTRACTION", "sign").lower()
+AV: type[Abstraction]
+if domain_name == "string":
+    AV = StringDomain
+elif domain_name == "double":
+    AV = DoubleDomain
+else:
+    if domain_name != "sign":
+        logger.warning(f"Unknown domain '{domain_name}', falling back to SignSet")
+    AV = SignSet
+logger.info(f"Using abstraction domain: {domain_name if domain_name in {'string','double'} else 'sign'}")
 
 MAX_STEPS = 1000
 final: set[str] = set()

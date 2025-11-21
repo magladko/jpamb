@@ -4,6 +4,7 @@ from hypothesis import given
 from hypothesis.strategies import integers, sampled_from, sets
 
 from project.abstraction import Arithmetic, Comparison, SignSet
+from project.novel_domains import DoubleDomain, StringDomain
 
 
 @given(sets(integers()))
@@ -43,3 +44,18 @@ def test_compare_returns_valid_bool_set_all_ops(
     assert all(isinstance(x, bool) for x in result)
     if len(xs) > 0 and len(ys) > 0:
         assert True in result or False in result
+
+
+def test_string_domain_concatenation() -> None:
+    hello = StringDomain.abstract({"he"})
+    world = StringDomain.abstract({"llo"})
+    combined = hello + world
+    assert "hello" in combined
+
+
+def test_double_interval_arithmetic() -> None:
+    lo = DoubleDomain.abstract({1.0})
+    hi = DoubleDomain.abstract({2.0})
+    summed = lo + hi
+    assert 3.0 in summed
+    assert summed <= DoubleDomain.top()
