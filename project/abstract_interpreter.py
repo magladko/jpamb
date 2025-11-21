@@ -80,10 +80,9 @@ class PerVarFrame:
     Abstract frame at a SINGLE program point.
 
     Represents the abstract state of locals and stack at one PC.
-    Now stores NAMES of values instead of values directly.
     """
 
-    locals: dict[int, str]  # variable_index → value_name
+    locals: dict[int, str]  # variable_index -> value_name
     stack: Stack[str]       # operand stack of value names
     pc: PC
 
@@ -119,7 +118,7 @@ class AState[AV: Abstraction]:
     The "program point" is determined by the PC of the TOP frame.
     """
 
-    heap: dict[int, str]  # heap_addr → value_name
+    heap: dict[int, str]  # heap_addr -> value_name
     frames: Stack[PerVarFrame]
     constraints: ConstraintStore[AV]
     heap_ptr: int = 0
@@ -264,12 +263,7 @@ class AState[AV: Abstraction]:
 
     @property
     def pc(self) -> PC:
-        """
-        Current program counter = PC of the TOP frame.
-
-        This is the "program point" where this state exists.
-        Used as the key in StateSet.per_inst.
-        """
+        """Current program counter = PC of the TOP frame."""
         return self.frames.peek().pc
 
     def __str__(self) -> str:
@@ -292,13 +286,9 @@ class StateSet[AV: Abstraction]:
 
     Maps each program point (PC) to the abstract state at that PC.
     Tracks which PCs need processing (needswork = worklist).
-
-    This is the "Per-Instruction Abstraction" from theory:
-      Pc = PC → 2^State
-    But we only keep ONE abstract state per PC (the join of all states).
     """
 
-    per_inst: dict[PC, AState[AV]]  # PC → AState
+    per_inst: dict[PC, AState[AV]]  # PC -> AState
     needswork: set[PC]              # PCs that need reprocessing
 
     @classmethod
@@ -347,8 +337,6 @@ class StateSet[AV: Abstraction]:
     def __ior__(self, astate: AState[AV]) -> Self:
         """
         Join an abstract state into the state set.
-
-        This is the KEY operation for the worklist algorithm!
 
         If PC doesn't exist: add the state
         If PC exists: JOIN (⊔) with existing state
@@ -408,7 +396,7 @@ def step[AV: Abstraction](state: AState[AV],
 
         case jvm.Ifz(condition=c, target=t):
             # Compare ONE value to zero
-            # Stack: [..., value] → [...]
+            # Stack: [..., value] -> [...]
             # Pop the NAME being tested
             value_name = frame.stack.pop()
             # Look up the constraint
@@ -454,7 +442,7 @@ def step[AV: Abstraction](state: AState[AV],
 
 
             # Compare TWO values
-            # Stack: [..., value1, value2] → [...]
+            # Stack: [..., value1, value2] -> [...]
             name2, name1 = frame.stack.pop(), frame.stack.pop()
             # Look up constraints
             v1 = state.constraints[name1]
