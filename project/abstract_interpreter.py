@@ -652,7 +652,8 @@ for iteration in range(MAX_STEPS):
     # If needswork is empty, we've reached fixed point
     if not sts.needswork:
         logger.debug("Fixed point reached!")
-        final.add("*")
+        # TODO(kornel): fixpoint can be reached even without infinite execution...
+        # final.add("*")
         break
 
 # Output results
