@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import operator as op
 from typing import Self
 
-from project.abstraction import Abstraction
+from abstraction import Abstraction
 
 
 @dataclass
@@ -128,7 +128,10 @@ class StringDomain(Abstraction[str]):
         return self._compare_literals(other, op.lt)
 
     def ge(self, other: Self) -> dict[bool, tuple[Self, Self]]:
-        return self._compare_literals(other, op.ge)
+        return {
+            truth: (self_refined, other_refined)
+            for truth, (other_refined, self_refined) in other.le(self).items()
+        }
 
     def gt(self, other: Self) -> dict[bool, tuple[Self, Self]]:
         return self._compare_literals(other, op.gt)
@@ -157,7 +160,7 @@ class DoubleDomain(Abstraction[float]):
 
     @classmethod
     def bot(cls) -> Self:
-        return cls(0.0, -0.0, True)
+        return cls(0.0, 0.0, True)
 
     @classmethod
     def top(cls) -> Self:
@@ -270,6 +273,7 @@ class DoubleDomain(Abstraction[float]):
         return self._truths_to_dict(other, truths)
 
     def ge(self, other: Self) -> dict[bool, tuple[Self, Self]]:
+        return {
             truth: (self_refined, other_refined)
             for truth, (other_refined, self_refined) in other.le(self).items()
         }

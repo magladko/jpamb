@@ -6,8 +6,8 @@ from hypothesis import example, given
 from hypothesis import strategies as st
 from hypothesis.strategies import integers, sampled_from, sets
 
-from project.abstraction import Comparison, SignSet
-from project.novel_domains import (
+from abstraction import Comparison, SignSet
+from novel_domains import (
     DoubleDomain,
     MachineWordDomain,
     PolyhedralDomain,
