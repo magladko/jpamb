@@ -597,7 +597,7 @@ def test_top_floor_division(i: Interval) -> None:
 @example(Interval.bot())
 def test_top_modulus(i: Interval) -> None:
     """Property: Top % interval behavior with infinite bounds."""
-    top = Interval.top()
+    # top = Interval.top()
 
     # if i.is_bot():
     #     result1 = top % i
