@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import operator as op
 from typing import Self
 
-from abstraction import Abstraction
+from project.abstraction import Abstraction
 
 
 @dataclass

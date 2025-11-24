@@ -6,8 +6,8 @@ from hypothesis import example, given
 from hypothesis import strategies as st
 from hypothesis.strategies import integers, sampled_from, sets
 
-from abstraction import Comparison, SignSet
-from novel_domains import (
+from project.abstraction import Comparison, SignSet
+from project.novel_domains import (
     DoubleDomain,
     MachineWordDomain,
     PolyhedralDomain,
@@ -480,3 +480,4 @@ def test_exhaustive_comparison_coverage(
     for refined_s1, refined_s2 in result.values():
         assert refined_s1 <= s1
         assert refined_s2 <= s2
+
