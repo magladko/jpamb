@@ -47,6 +47,7 @@ jpamb = "jpamb.cli:cli"
 
 [dependency-groups]
 dev = [
+    "debugpy>=1.8.17",
     "pytest>=8.3.4",
     "ruff>=0.1.0", # Added Ruff to dev dependencies
 ]
@@ -81,6 +82,7 @@ select = [
 
 # Ignore specific rules if needed
 ignore = [
+  "C901",     # Function is too complex
   "COM812",   # Trailing comma missing
   # == Missing docstring
   "D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107",
@@ -90,8 +92,12 @@ ignore = [
   "EM",       # errmsg formatting
   "ERA001",   # Commented-out code
   "F403",     # 'from module import *' used; unable to detect undefined names
+  "FBT003",   # Pass boolean as function argument
   "FIX",      # Fix notes found
   "G004",     # Logging statement uses f-strings
+  "PLR0911",  # Too many return statements
+  "PLR0912",  # Too many branches
+  "PLR0915",  # Too many statements
   "PLW1641",  # Missing __hash__ method
   "S101",     # Use of assert detected
   "S311",     # Use of weak cryptographic hash function

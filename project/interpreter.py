@@ -10,20 +10,21 @@ from jpamb import jvm
 # methodid, input = jpamb.getcase()
 
 
-@dataclass
+@dataclass(frozen=True)
 class PC:
+    """Immutable program counter: method + offset."""
+
     method: jvm.AbsMethodID
     offset: int
-
-    def __iadd__(self, delta: int) -> Self:
-        self.offset += delta
-        return self
 
     def __add__(self, delta: int) -> "PC":
         return PC(self.method, self.offset + delta)
 
     def __str__(self) -> str:
         return f"{self.method}:{self.offset}"
+
+    def __hash__(self) -> int:
+        return hash((self.method, self.offset))
 
 
 @dataclass
@@ -95,7 +96,7 @@ class State:
         return f"{self.heap} {self.frames}"
 
 
-def step(state: State) -> State | str:  # noqa: C901, PLR0911, PLR0912, PLR0915
+def step(state: State) -> State | str:
     assert isinstance(state, State), f"expected frame but got {state}"
     frame = state.frames.peek()
     opr = state.bc[frame.pc]
@@ -107,13 +108,13 @@ def step(state: State) -> State | str:  # noqa: C901, PLR0911, PLR0912, PLR0915
                 v = jvm.Value(jvm.Reference(), state.heap_ptr)
                 state.heap_ptr += 1
             frame.stack.push(v)
-            frame.pc += 1
+            frame.pc = frame.pc + 1
             return state
         case jvm.Load(type=type, index=i):
             assert i in frame.locals, f"Local variable {i} not initialized"
             v = frame.locals[i]
             frame.stack.push(frame.locals[i])
-            frame.pc += 1
+            frame.pc = frame.pc + 1
             return state
         case jvm.Binary(type=jvm.Int(), operant=operant):
             v2, v1 = frame.stack.pop(), frame.stack.pop()
@@ -141,7 +142,7 @@ def step(state: State) -> State | str:  # noqa: C901, PLR0911, PLR0912, PLR0915
                 case _:
                     raise NotImplementedError(f"Operand '{operant!r}' not implemented.")
             frame.stack.push(v)
-            frame.pc += 1
+            frame.pc = frame.pc + 1
             return state
         case jvm.Return(type=type):
             state.frames.pop()
@@ -159,23 +160,23 @@ def step(state: State) -> State | str:  # noqa: C901, PLR0911, PLR0912, PLR0915
                 extension=jvm.FieldID(name="$assertionsDisabled", type=jvm.Boolean()),
             ),
         ):
-            frame.stack.push(type_heap_to_stack(jvm.Value.boolean(False)))  # noqa: FBT003
-            frame.pc += 1
+            frame.stack.push(type_heap_to_stack(jvm.Value.boolean(False)))
+            frame.pc = frame.pc + 1
             return state
         case jvm.Ifz(condition=condition, target=target):
             v = frame.stack.pop()
             if compare(v, condition, jvm.Value.int(0)):
-                frame.pc.offset = target
+                frame.pc = PC(frame.pc.method, target)
             else:
-                frame.pc += 1
+                frame.pc = frame.pc + 1
             return state
         case jvm.If(condition=condition, target=target):
             v2, v1 = frame.stack.pop(), frame.stack.pop()
 
             if compare(v1, condition, v2):
-                frame.pc.offset = target
+                frame.pc = PC(frame.pc.method, target)
             else:
-                frame.pc += 1
+                frame.pc = frame.pc + 1
             return state
         case jvm.New(classname=jvm.ClassName(_as_string="java/lang/AssertionError")):
             return "assertion error"
@@ -192,7 +193,7 @@ def step(state: State) -> State | str:  # noqa: C901, PLR0911, PLR0912, PLR0915
             state.heap[state.heap_ptr] = jvm.Value.array(type, arr)
             frame.stack.push(jvm.Value(type=jvm.Reference(), value=state.heap_ptr))
             state.heap_ptr += 1
-            frame.pc += 1
+            frame.pc = frame.pc + 1
             return state
         case jvm.ArrayLength():
             ref = frame.stack.pop()
@@ -212,7 +213,7 @@ def step(state: State) -> State | str:  # noqa: C901, PLR0911, PLR0912, PLR0915
             assert isinstance(arr, tuple)
 
             frame.stack.push(jvm.Value.int(len(arr)))
-            frame.pc += 1
+            frame.pc = frame.pc + 1
             return state
         case jvm.ArrayStore(type=type):
             val, idx, ref = frame.stack.pop(), frame.stack.pop(), frame.stack.pop()
@@ -243,7 +244,7 @@ def step(state: State) -> State | str:  # noqa: C901, PLR0911, PLR0912, PLR0915
                 ),
             )
 
-            frame.pc += 1
+            frame.pc = frame.pc + 1
             return state
         case jvm.ArrayLoad(type=type):
             idx, arr = frame.stack.pop(), frame.stack.pop()
@@ -266,12 +267,12 @@ def step(state: State) -> State | str:  # noqa: C901, PLR0911, PLR0912, PLR0915
                 type_heap_to_stack(jvm.Value(type=type, value=arr[idx.value]))
             )
             # jvm.Value(type=type, value=arr[idx.value]))
-            frame.pc += 1
+            frame.pc = frame.pc + 1
             return state
         case jvm.Dup(words=1):
             assert len(frame.stack.items) > 0, "Unexpected empty stack"
             frame.stack.push(frame.stack.peek())
-            frame.pc += 1
+            frame.pc = frame.pc + 1
             return state
         case jvm.Store(type=type, index=index):
             v = frame.stack.pop()
@@ -280,16 +281,16 @@ def step(state: State) -> State | str:  # noqa: C901, PLR0911, PLR0912, PLR0915
                     f"Expected type {int}, but got {v.value!r}"
                 )
             frame.locals[index] = v
-            frame.pc += 1
+            frame.pc = frame.pc + 1
             return state
         case jvm.Goto(target=target):
-            frame.pc.offset = target
+            frame.pc = PC(frame.pc.method, target)
             return state
         case jvm.Incr(index=i, amount=amount):
             local_var = frame.locals[i].value
             assert isinstance(local_var, int)
             frame.locals[i] = jvm.Value.int(local_var + amount)
-            frame.pc += 1
+            frame.pc = frame.pc + 1
             return state
         case jvm.InvokeStatic(method=m):
             nargs = len(m.extension.params)
@@ -298,7 +299,7 @@ def step(state: State) -> State | str:  # noqa: C901, PLR0911, PLR0912, PLR0915
             for i, v in enumerate(args):
                 new_frame.locals[i] = v
             state.frames.push(new_frame)
-            frame.pc += 1
+            frame.pc = frame.pc + 1
             return state
         case jvm.Cast(from_=from_, to_=to_):
             # TODO(kornel): make lossful casts
@@ -306,7 +307,7 @@ def step(state: State) -> State | str:  # noqa: C901, PLR0911, PLR0912, PLR0915
             assert v.type is from_, f"Expected type {from_!r}, but got {v.type!r}"
             v = jvm.Value(to_, v.value)
             frame.stack.push(v)
-            frame.pc += 1
+            frame.pc = frame.pc + 1
             return state
         case a:
             a.help()
