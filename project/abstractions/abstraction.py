@@ -6,10 +6,9 @@ type Comparison = Literal["le", "eq", "lt", "gt", "ge", "ne"]
 
 
 class Abstraction[T](ABC):
-
-    type DivisionResult = (Self
-                        | Literal["divide by zero"]
-                        | tuple[Self, Literal["divide by zero"]])
+    type DivisionResult = (
+        Self | Literal["divide by zero"] | tuple[Self, Literal["divide by zero"]]
+    )
 
     concrete_type: type[T]
 
@@ -40,10 +39,10 @@ class Abstraction[T](ABC):
         pass
 
     @classmethod
-    def comp_res_str(cls, result: dict[bool, tuple[Self,Self]]) -> str:
+    def comp_res_str(cls, result: dict[bool, tuple[Self, Self]]) -> str:
         return ", ".join(f"{k}: ({v[0]!s}, {v[1]!s})" for k, v in result.items())
 
-    def compare(self, op: Comparison, other: Self) -> dict[bool, tuple[Self,Self]]:
+    def compare(self, op: Comparison, other: Self) -> dict[bool, tuple[Self, Self]]:
         match op:
             case "le":
                 return self.le(other)
@@ -131,4 +130,3 @@ class Abstraction[T](ABC):
     @abstractmethod
     def __str__(self) -> str:
         pass
-

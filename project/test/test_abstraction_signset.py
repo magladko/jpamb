@@ -13,6 +13,7 @@ from project.abstractions.signset import SignSet
 # HYPOTHESIS STRATEGIES
 # ============================================================================
 
+
 def sign_sets_exhaustive() -> st.SearchStrategy[SignSet]:
     """
     Exhaustive strategy sampling from all 8 possible SignSets.
@@ -50,23 +51,19 @@ def test_valid_abstraction(xs: set[int]) -> None:
 
 @given(sets(integers()), sets(integers()))
 def test_sign_adds(xs: set[int], ys: set[int]) -> None:
-    assert (
-        SignSet.abstract({x + y for x in xs for y in ys})
-        <= SignSet.abstract(xs) + SignSet.abstract(ys)
-    )
+    assert SignSet.abstract({x + y for x in xs for y in ys}) <= SignSet.abstract(
+        xs
+    ) + SignSet.abstract(ys)
 
 
 @given(sets(integers()), sets(integers()))
 def test_sign_compare_le(xs: set[int], ys: set[int]) -> None:
-    assert ({x <= y for x in xs for y in ys}
-            <= SignSet.abstract(xs).compare("le", SignSet.abstract(ys)).keys()
-            )
+    assert {x <= y for x in xs for y in ys} <= SignSet.abstract(xs).compare(
+        "le", SignSet.abstract(ys)
+    ).keys()
 
-@given(
-    sets(integers()),
-    sets(integers()),
-    sampled_from(get_args(Comparison.__value__))
-)
+
+@given(sets(integers()), sets(integers()), sampled_from(get_args(Comparison.__value__)))
 def test_compare_returns_valid_bool_set_all_ops(
     xs: set[int], ys: set[int], op: Comparison
 ) -> None:
@@ -83,6 +80,7 @@ def test_compare_returns_valid_bool_set_all_ops(
     if len(xs) > 0 and len(ys) > 0:
         assert True in result or False in result
 
+
 def test_singset_binary_comparison() -> None:
     s1 = SignSet({"0", "-"})
     s2 = SignSet({"0", "+"})
@@ -93,7 +91,7 @@ def test_singset_binary_comparison() -> None:
     lt_result = s1.lt(s2)
     assert lt_result == {
         True: (SignSet({"0", "-"}), SignSet({"0", "+"})),
-        False: (SignSet({"0"}), SignSet({"0"}))
+        False: (SignSet({"0"}), SignSet({"0"})),
     }
 
     s1 = SignSet({"0"})
@@ -104,7 +102,7 @@ def test_singset_binary_comparison() -> None:
     lt_result = s1.lt(s2)
     assert lt_result == {
         True: (SignSet({"0"}), SignSet({"+"})),
-        False: (SignSet({"0"}), SignSet({"0"}))
+        False: (SignSet({"0"}), SignSet({"0"})),
     }
 
 
@@ -113,6 +111,7 @@ def test_singset_binary_comparison() -> None:
 # ============================================================================
 # TODO(kornel): review tests
 # --- Complementarity Properties ---
+
 
 @given(sign_sets_exhaustive(), sign_sets_exhaustive())
 def test_comparison_complementarity_lt_ge(s1: SignSet, s2: SignSet) -> None:
@@ -152,6 +151,7 @@ def test_comparison_complementarity_eq_ne(s1: SignSet, s2: SignSet) -> None:
 
 
 # --- Symmetry Properties ---
+
 
 @given(sign_sets_exhaustive(), sign_sets_exhaustive())
 def test_comparison_symmetry_eq(s1: SignSet, s2: SignSet) -> None:
@@ -200,6 +200,7 @@ def test_comparison_antisymmetry_le_ge(s1: SignSet, s2: SignSet) -> None:
 
 # --- Identity Properties ---
 
+
 @given(sign_sets_exhaustive())
 def test_comparison_identity_eq(s: SignSet) -> None:
     """Property: x == x should always include True outcome for non-empty sets."""
@@ -232,6 +233,7 @@ def test_comparison_identity_ge(s: SignSet) -> None:
 
 
 # --- Logical Relationship Properties ---
+
 
 @given(sign_sets_exhaustive(), sign_sets_exhaustive())
 def test_logical_relationship_lt_implies_le(s1: SignSet, s2: SignSet) -> None:
@@ -275,6 +277,7 @@ def test_logical_relationship_eq_implies_le_and_ge(s1: SignSet, s2: SignSet) -> 
 
 # --- Soundness (Oracle-based) ---
 
+
 def compute_concrete_outcomes(s1: SignSet, s2: SignSet, op: Comparison) -> set[bool]:
     """Oracle: compute concrete outcomes for sign sets."""
     outcomes = set()
@@ -313,11 +316,13 @@ def test_soundness_concrete_oracle(s1: SignSet, s2: SignSet, op: Comparison) -> 
     concrete_outcomes = compute_concrete_outcomes(s1, s2, op)
 
     for concrete_outcome in concrete_outcomes:
-        assert concrete_outcome in result, \
+        assert concrete_outcome in result, (
             f"Concrete outcome {concrete_outcome} not in result for {s1} {op} {s2}"
+        )
 
 
 # --- Refinement Coverage ---
+
 
 @given(sign_sets_exhaustive(), sign_sets_exhaustive(), comparison_ops())
 @example(SignSet(set()), SignSet(set()), "eq")

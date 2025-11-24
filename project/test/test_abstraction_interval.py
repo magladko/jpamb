@@ -28,16 +28,18 @@ def intervals() -> st.SearchStrategy[Interval]:
     )
 
     # Special cases for edge coverage
-    special_intervals = st.sampled_from([
-        Interval.bot(),
-        Interval.top(),
-        Interval(0, 0),  # singleton zero
-        Interval(1, 1),  # singleton positive
-        Interval(-1, -1),  # singleton negative
-        Interval(-10, -1),  # negative range
-        Interval(1, 10),  # positive range
-        Interval(-5, 5),  # mixed range
-    ])
+    special_intervals = st.sampled_from(
+        [
+            Interval.bot(),
+            Interval.top(),
+            Interval(0, 0),  # singleton zero
+            Interval(1, 1),  # singleton positive
+            Interval(-1, -1),  # singleton negative
+            Interval(-10, -1),  # negative range
+            Interval(1, 10),  # positive range
+            Interval(-5, 5),  # mixed range
+        ]
+    )
 
     return st.one_of(random_intervals, special_intervals)
 
@@ -301,9 +303,7 @@ def test_logical_relationship_gt_implies_ge(i1: Interval, i2: Interval) -> None:
 
 @given(intervals(), intervals())
 @example(Interval(5, 5), Interval(5, 5))
-def test_logical_relationship_eq_implies_le_and_ge(
-    i1: Interval, i2: Interval
-) -> None:
+def test_logical_relationship_eq_implies_le_and_ge(i1: Interval, i2: Interval) -> None:
     """Property: x == y implies x <= y and x >= y."""
     eq_result = i1.eq(i2)
     le_result = i1.le(i2)

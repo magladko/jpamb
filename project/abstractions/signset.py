@@ -6,6 +6,7 @@ from .abstraction import Abstraction
 
 type Sign = Literal["+", "-", "0"]
 
+
 @dataclass
 class SignSet(Abstraction[int]):
     signs: set[Sign]
@@ -30,11 +31,8 @@ class SignSet(Abstraction[int]):
         return cls({"+", "-", "0"})
 
     def _binary_comparison(
-            self: Self,
-            other: Self,
-            outcome_fn: Callable[[Sign, Sign], set[bool]]
-        ) -> dict[bool, tuple[Self, Self]]:
-
+        self: Self, other: Self, outcome_fn: Callable[[Sign, Sign], set[bool]]
+    ) -> dict[bool, tuple[Self, Self]]:
         assert isinstance(other, SignSet)
 
         results: dict[bool, tuple[Self, Self]] = {}
@@ -98,8 +96,14 @@ class SignSet(Abstraction[int]):
             match (s1, s2):
                 case ("0", "0"):
                     return {True}
-                case (("0", "+") | ("0", "-") | ("+", "0") |
-                      ("-", "0") | ("+", "-") | ("-", "+")):
+                case (
+                    ("0", "+")
+                    | ("0", "-")
+                    | ("+", "0")
+                    | ("-", "0")
+                    | ("+", "-")
+                    | ("-", "+")
+                ):
                     return {False}
                 case ("+", "+") | ("-", "-"):
                     return {True, False}
@@ -122,8 +126,14 @@ class SignSet(Abstraction[int]):
             match (s1, s2):
                 case ("0", "0"):
                     return {False}
-                case (("0", "+") | ("0", "-") | ("+", "0") |
-                      ("-", "0") | ("+", "-") | ("-", "+")):
+                case (
+                    ("0", "+")
+                    | ("0", "-")
+                    | ("+", "0")
+                    | ("-", "0")
+                    | ("+", "-")
+                    | ("-", "+")
+                ):
                     return {True}
                 case ("+", "+") | ("-", "-"):
                     return {True, False}

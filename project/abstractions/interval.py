@@ -1,4 +1,3 @@
-
 from dataclasses import dataclass
 from numbers import Number
 from typing import Self
@@ -31,7 +30,6 @@ class Interval(Abstraction[int]):
     def top(cls) -> Self:
         """Return the top element (all integers)."""
         return cls(float("-inf"), float("inf"))
-
 
     def le(self, other: Self) -> dict[bool, tuple[Self, Self]]:
         """Less than or equal comparison with refinement."""
@@ -190,7 +188,7 @@ class Interval(Abstraction[int]):
             self.lower * other.lower,
             self.lower * other.upper,
             self.upper * other.lower,
-            self.upper * other.upper
+            self.upper * other.upper,
         ]
         return type(self)(min(products), max(products))
 
@@ -213,7 +211,7 @@ class Interval(Abstraction[int]):
             self.lower / other.lower,
             self.lower / other.upper,
             self.upper / other.lower,
-            self.upper / other.upper
+            self.upper / other.upper,
         ]
         # Convert to integers
         result = type(self)(int(min(divisions)), int(max(divisions)))
@@ -238,12 +236,11 @@ class Interval(Abstraction[int]):
             self.lower // other.lower,
             self.lower // other.upper,
             self.upper // other.lower,
-            self.upper // other.upper
+            self.upper // other.upper,
         ]
 
         result = type(self)(min(divisions), max(divisions))
         return result if not has_zero else (result, "divide by zero")
-
 
     def __mod__(self, other: Self) -> Abstraction.DivisionResult:
         """Interval modulus operation."""

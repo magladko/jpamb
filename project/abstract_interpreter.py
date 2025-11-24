@@ -38,11 +38,10 @@ class ConstraintStore[AV: Abstraction]:
     def clone(self) -> "ConstraintStore[AV]":
         """Deep copy of the constraint store."""
         return ConstraintStore(
-            _constraints=self._constraints.copy(),
-            next_id=self.next_id
+            _constraints=self._constraints.copy(), next_id=self.next_id
         )
 
-    def get(self, name: str) ->  AV | None:
+    def get(self, name: str) -> AV | None:
         return self._constraints.get(name, None)
 
     def keys(self) -> Iterable[str]:
@@ -55,8 +54,9 @@ class ConstraintStore[AV: Abstraction]:
         """Check equality of constraint stores."""
         if not isinstance(other, ConstraintStore):
             return False
-        return (set(self.keys()) == set(other.keys()) and
-                all(self[k] == other[k] for k in self))
+        return set(self.keys()) == set(other.keys()) and all(
+            self[k] == other[k] for k in self
+        )
 
     def __getitem__(self, name: str) -> AV:
         return self._constraints[name]
@@ -71,10 +71,7 @@ class ConstraintStore[AV: Abstraction]:
         return iter(self._constraints)
 
     def __str__(self) -> str:
-        return (
-            "{" +
-            ", ".join(f"{k}:{v}" for k, v in sorted(self.items())) +
-            "}")
+        return "{" + ", ".join(f"{k}:{v}" for k, v in sorted(self.items())) + "}"
 
 
 @dataclass
@@ -86,7 +83,7 @@ class PerVarFrame:
     """
 
     locals: dict[int, str]  # variable_index -> value_name
-    stack: Stack[str]       # operand stack of value names
+    stack: Stack[str]  # operand stack of value names
     pc: PC
 
     def __str__(self) -> str:
@@ -103,7 +100,7 @@ class PerVarFrame:
         return PerVarFrame(
             locals=self.locals.copy(),
             stack=Stack(self.stack.items.copy()),
-            pc=self.pc  # PC is immutable, safe to share
+            pc=self.pc,  # PC is immutable, safe to share
         )
 
 
@@ -149,23 +146,19 @@ class AState[AV: Abstraction]:
                 if name1 == name2:
                     # Same name, join constraints
                     self.constraints[name1] = (
-                        self.constraints[name1] |
-                        other.constraints[name2]
+                        self.constraints[name1] | other.constraints[name2]
                     )
                 else:
                     # Different names, create fresh name
                     fresh = self.constraints.fresh_name()
                     self.constraints[fresh] = (
-                        self.constraints[name1] |
-                        other.constraints[name2]
+                        self.constraints[name1] | other.constraints[name2]
                     )
                     self.heap[addr] = fresh
             else:
                 # New address
                 self.heap[addr] = other.heap[addr]
-                self.constraints[other.heap[addr]] = (
-                    other.constraints[other.heap[addr]]
-                )
+                self.constraints[other.heap[addr]] = other.constraints[other.heap[addr]]
 
         # Join frames POINTWISE (by call stack position)
         f1 = self.frames.peek()
@@ -182,22 +175,20 @@ class AState[AV: Abstraction]:
                 if name1 == name2:
                     # Same name, join constraints
                     self.constraints[name1] = (
-                        self.constraints[name1] |
-                        other.constraints[name2]
+                        self.constraints[name1] | other.constraints[name2]
                     )
                 else:
                     # Different names, create fresh name
                     fresh = self.constraints.fresh_name()
                     self.constraints[fresh] = (
-                        self.constraints[name1] |
-                        other.constraints[name2]
+                        self.constraints[name1] | other.constraints[name2]
                     )
                     f1.locals[var_idx] = fresh
             else:
                 f1.locals[var_idx] = f2.locals[var_idx]
-                self.constraints[f2.locals[var_idx]] = (
-                    other.constraints[f2.locals[var_idx]]
-                )
+                self.constraints[f2.locals[var_idx]] = other.constraints[
+                    f2.locals[var_idx]
+                ]
 
         # Join stacks POINTWISE (by stack depth)
         assert len(f1.stack.items) == len(f2.stack.items), (
@@ -210,15 +201,13 @@ class AState[AV: Abstraction]:
             if name1 == name2:
                 # Same name, join constraints
                 self.constraints[name1] = (
-                    self.constraints[name1] |
-                    other.constraints[name2]
+                    self.constraints[name1] | other.constraints[name2]
                 )
             else:
                 # Different names, create fresh name
                 fresh = self.constraints.fresh_name()
                 self.constraints[fresh] = (
-                    self.constraints[name1] |
-                    other.constraints[name2]
+                    self.constraints[name1] | other.constraints[name2]
                 )
                 f1.stack.items[i] = fresh
         # END FOR
@@ -278,7 +267,7 @@ class AState[AV: Abstraction]:
             heap=self.heap.copy(),  # shallow copy of heap dict (names are immutable)
             frames=Stack([f.clone() for f in self.frames.items]),  # deep copy frames
             constraints=self.constraints.clone(),  # deep copy constraints
-            heap_ptr=self.heap_ptr
+            heap_ptr=self.heap_ptr,
         )
 
 
@@ -292,11 +281,12 @@ class StateSet[AV: Abstraction]:
     """
 
     per_inst: dict[PC, AState[AV]]  # PC -> AState
-    needswork: set[PC]              # PCs that need reprocessing
+    needswork: set[PC]  # PCs that need reprocessing
 
     @classmethod
-    def initialstate_from_method(cls, methodid: jvm.AbsMethodID,
-                                 abstraction_cls: type[AV]) -> Self:
+    def initialstate_from_method(
+        cls, methodid: jvm.AbsMethodID, abstraction_cls: type[AV]
+    ) -> Self:
         """
         Create initial state set for analyzing a method.
 
@@ -315,16 +305,13 @@ class StateSet[AV: Abstraction]:
             # Create named value for parameter
             name = constraints.fresh_name()
             if isinstance(p, jvm.Boolean):
-                constraints[name] = abstraction_cls.abstract({0, 1}) # bools
+                constraints[name] = abstraction_cls.abstract({0, 1})  # bools
             else:
                 constraints[name] = abstraction_cls.top()
             frame.locals[i] = name
 
         state = AState[AV]({}, Stack.empty().push(frame), constraints)
-        return cls(
-            per_inst={frame.pc: state},
-            needswork={frame.pc}
-        )
+        return cls(per_inst={frame.pc: state}, needswork={frame.pc})
 
     def per_instruction(self) -> Iterable[tuple[PC, AState[AV]]]:
         """
@@ -371,8 +358,9 @@ class StateSet[AV: Abstraction]:
         return "\n".join(f"{pc}: {state}" for pc, state in self.per_inst.items())
 
 
-def step[AV: Abstraction](state: AState[AV],
-                          abstraction_cls: type[AV]) -> Iterable[AState[AV] | str]:
+def step[AV: Abstraction](
+    state: AState[AV], abstraction_cls: type[AV]
+) -> Iterable[AState[AV] | str]:
     """Execute ONE instruction in the abstract domain."""
     assert isinstance(state, AState), f"expected AState but got {state}"
     state = state.clone()  # Work on a copy
@@ -456,7 +444,6 @@ def step[AV: Abstraction](state: AState[AV],
             #   if y == 0:
             #       assert false # unreachable
 
-
             # Compare TWO values
             # Stack: [..., value1, value2] -> [...]
             name2, name1 = frame.stack.pop(), frame.stack.pop()
@@ -509,7 +496,6 @@ def step[AV: Abstraction](state: AState[AV],
             v1 = state.constraints[name1]
             v2 = state.constraints[name2]
 
-
             # Compute result with abstract values
             match operant:
                 case jvm.BinaryOpr.Div:
@@ -523,8 +509,7 @@ def step[AV: Abstraction](state: AState[AV],
                 case jvm.BinaryOpr.Add:
                     result_value = v1 + v2
                 case _:
-                    raise NotImplementedError(
-                        f"Operand '{operant!r}' not implemented.")
+                    raise NotImplementedError(f"Operand '{operant!r}' not implemented.")
 
             # Create fresh named value for result
             result_name = state.constraints.fresh_name()
@@ -576,15 +561,16 @@ def step[AV: Abstraction](state: AState[AV],
             return [state]
 
         # case jvm.Cast(from_=from_, to_=to_):
-            # Casts cannot be done safely
+        # Casts cannot be done safely
 
         case a:
             a.help()
             sys.exit(-1)
 
 
-def manystep[AV: Abstraction](sts: StateSet[AV],
-                              abstraction_cls: type[AV]) -> Iterable[AState[AV] | str]:
+def manystep[AV: Abstraction](
+    sts: StateSet[AV], abstraction_cls: type[AV]
+) -> Iterable[AState[AV] | str]:
     """
     Process all states in the worklist.
 
