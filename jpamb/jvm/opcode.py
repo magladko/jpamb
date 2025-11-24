@@ -556,6 +556,7 @@ class InvokeSpecial(Opcode):
 
         return cls(
             offset=json["offset"],
+            line=json.get("line"),
             method=jvm.AbsMethodID.from_json(json["method"]),
             is_interface=json["method"]["is_interface"],
         )
@@ -594,6 +595,7 @@ class Store(Opcode):
     def from_json(cls, json: dict) -> "Opcode":
         return cls(
             offset=json["offset"],
+            line=json.get("line"),
             type=jvm.Type.from_json(json["type"]),
             index=json["index"],
         )
@@ -660,6 +662,7 @@ class Binary(Opcode):
     def from_json(cls, json: dict) -> "Opcode":
         return cls(
             offset=json["offset"],
+            line=json.get("line"),
             type=jvm.Type.from_json(json["type"]),
             operant=BinaryOpr.from_json(json["operant"]),
         )
@@ -699,6 +702,7 @@ class Load(Opcode):
     def from_json(cls, json: dict) -> "Opcode":
         return cls(
             offset=json["offset"],
+            line=json.get("line"),
             type=jvm.Type.from_json(json["type"]),
             index=json["index"],
         )
@@ -748,7 +752,10 @@ class If(Opcode):
     @classmethod
     def from_json(cls, json: dict) -> "Opcode":
         return cls(
-            offset=json["offset"], condition=json["condition"], target=json["target"]
+            offset=json["offset"],
+            line=json.get("line"),
+            condition=json["condition"],
+            target=json["target"]
         )
 
     def real(self) -> str:
@@ -821,7 +828,11 @@ class Get(Opcode):
             ),
         )
 
-        return cls(offset=json["offset"], static=json["static"], field=field)
+        return cls(
+            offset=json["offset"],
+            line=json.get("line"),
+            static=json["static"],
+            field=field)
 
     def real(self) -> str:
         opcode = "getstatic" if self.static else "getfield"
@@ -874,7 +885,10 @@ class Ifz(Opcode):
     @classmethod
     def from_json(cls, json: dict) -> "Opcode":
         return cls(
-            offset=json["offset"], condition=json["condition"], target=json["target"]
+            offset=json["offset"],
+            line=json.get("line"),
+            condition=json["condition"],
+            target=json["target"]
         )
 
     def real(self) -> str:
@@ -937,7 +951,10 @@ class New(Opcode):
 
     @classmethod
     def from_json(cls, json: dict) -> "Opcode":
-        return cls(offset=json["offset"], classname=jvm.ClassName.decode(json["class"]))
+        return cls(
+            offset=json["offset"],
+            line=json.get("line"),
+            classname=jvm.ClassName.decode(json["class"]))
 
     def real(self) -> str:
         return f"new {self.classname.slashed()}"
@@ -974,7 +991,9 @@ class Throw(Opcode):
 
     @classmethod
     def from_json(cls, json: dict) -> "Opcode":
-        return cls(offset=json["offset"])
+        return cls(
+            line=json.get("line"),
+            offset=json["offset"])
 
     def real(self) -> str:
         return "athrow"
@@ -1015,7 +1034,11 @@ class Incr(Opcode):
 
     @classmethod
     def from_json(cls, json: dict) -> "Opcode":
-        return cls(offset=json["offset"], index=json["index"], amount=json["amount"])
+        return cls(
+            offset=json["offset"],
+            line=json.get("line"),
+            index=json["index"],
+            amount=json["amount"])
 
     def real(self) -> str:
         return f"iinc {self.index} {self.amount}"
@@ -1054,7 +1077,10 @@ class Goto(Opcode):
 
     @classmethod
     def from_json(cls, json: dict) -> "Opcode":
-        return cls(offset=json["offset"], target=json["target"])
+        return cls(
+            offset=json["offset"],
+            line=json.get("line"),
+            target=json["target"])
 
     def real(self) -> str:
         # Note: We don't distinguish between goto and goto_w here
@@ -1106,7 +1132,10 @@ class Return(Opcode):
         else:
             return_type = jvm.Type.from_json(type_info)
 
-        return cls(offset=json["offset"], type=return_type)
+        return cls(
+            offset=json["offset"],
+            line=json.get("line"),
+            type=return_type)
 
     def real(self) -> str:
         if self.type is None:
