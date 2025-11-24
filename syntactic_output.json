@@ -3,8 +3,9 @@
         "fileName": "Calls.java",
         "className": "Calls",
         "methodName": "assertTrue",
-        "startLine": 9,
-        "endLine": -1,
+        "parameters": [],
+        "start_line": 9,
+        "end_line": 11,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -12,14 +13,17 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Calls.java",
         "className": "Calls",
         "methodName": "assertFalse",
-        "startLine": 13,
-        "endLine": -1,
+        "parameters": [],
+        "start_line": 13,
+        "end_line": 15,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -27,14 +31,19 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Calls.java",
         "className": "Calls",
         "methodName": "assertIf",
-        "startLine": 17,
-        "endLine": -1,
+        "parameters": [
+            "boolean test"
+        ],
+        "start_line": 17,
+        "end_line": 23,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -42,14 +51,17 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Calls.java",
         "className": "Calls",
         "methodName": "callsAssertTrue",
-        "startLine": 26,
-        "endLine": -1,
+        "parameters": [],
+        "start_line": 26,
+        "end_line": 28,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -57,14 +69,17 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Calls.java",
         "className": "Calls",
         "methodName": "callsAssertFalse",
-        "startLine": 31,
-        "endLine": -1,
+        "parameters": [],
+        "start_line": 32,
+        "end_line": 34,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -72,14 +87,19 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Calls.java",
         "className": "Calls",
         "methodName": "callsAssertIf",
-        "startLine": 36,
-        "endLine": -1,
+        "parameters": [
+            "boolean b"
+        ],
+        "start_line": 39,
+        "end_line": 41,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -87,14 +107,17 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Calls.java",
         "className": "Calls",
         "methodName": "callsAssertIfWithTrue",
-        "startLine": 41,
-        "endLine": -1,
+        "parameters": [],
+        "start_line": 45,
+        "end_line": 47,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -102,14 +125,19 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Calls.java",
         "className": "Calls",
         "methodName": "fib",
-        "startLine": 45,
-        "endLine": -1,
+        "parameters": [
+            "int i"
+        ],
+        "start_line": 49,
+        "end_line": 54,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -123,14 +151,19 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": true,
+        "removableCode": []
     },
     {
         "fileName": "Calls.java",
         "className": "Calls",
         "methodName": "callsAssertFib",
-        "startLine": 54,
-        "endLine": -1,
+        "parameters": [
+            "int i"
+        ],
+        "start_line": 60,
+        "end_line": 62,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -140,14 +173,19 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Calls.java",
         "className": "Calls",
         "methodName": "generatePrimeArray",
-        "startLine": 58,
-        "endLine": -1,
+        "parameters": [
+            "int length"
+        ],
+        "start_line": 64,
+        "end_line": 86,
         "variables": [
             "primeArray",
             "count",
@@ -176,14 +214,21 @@
             "primeArray depends on Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=2)",
             "isprime depends on BinaryOperation(operandl=BinaryOperation(operandl=MemberReference(member=number, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=MemberReference(member=p, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operator=%), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=0), operator=!=)",
             "primeArray depends on MemberReference(member=number, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[])"
+        ],
+        "isRecursive": false,
+        "removableCode": [
+            "Break used outside of any loop \u2013 meaningless"
         ]
     },
     {
         "fileName": "Calls.java",
         "className": "Calls",
         "methodName": "allPrimesArePositive",
-        "startLine": 83,
-        "endLine": -1,
+        "parameters": [
+            "int number"
+        ],
+        "start_line": 92,
+        "end_line": 96,
         "variables": [
             "p"
         ],
@@ -197,14 +242,74 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
+    },
+    {
+        "fileName": "Calls.java",
+        "className": "Calls",
+        "methodName": "redundantExamples",
+        "parameters": [],
+        "start_line": 99,
+        "end_line": 111,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [
+            "WhileStatement(body=BlockStatement(label=None, statements=[StatementExpression(expression=MethodInvocation(arguments=[Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=\"Unreachable loop\")], member=println, postfix_operators=[], prefix_operators=[], qualifier=System.out, selectors=[], type_arguments=None), label=None)]), condition=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=false), label=None)"
+        ],
+        "constants": [],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": [
+            "Empty block {}",
+            "Unreachable while(false) loop",
+            "If(false) \u2013 main branch never executes"
+        ]
+    },
+    {
+        "fileName": "Calls.java",
+        "className": "Calls",
+        "methodName": "weirdfunction",
+        "parameters": [],
+        "start_line": 113,
+        "end_line": 122,
+        "variables": [
+            "hello",
+            "world"
+        ],
+        "forLoops": [
+            "ForStatement(body=BlockStatement(label=None, statements=[IfStatement(condition=BinaryOperation(operandl=BinaryOperation(operandl=MemberReference(member=hello, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=2), operator=%), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=0), operator===), else_statement=BlockStatement(label=None, statements=[StatementExpression(expression=MethodInvocation(arguments=[BinaryOperation(operandl=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=\"Odd number: \"), operandr=MemberReference(member=hello, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operator=+)], member=println, postfix_operators=[], prefix_operators=[], qualifier=System.out, selectors=[], type_arguments=None), label=None)]), label=None, then_statement=BlockStatement(label=None, statements=[StatementExpression(expression=MethodInvocation(arguments=[BinaryOperation(operandl=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=\"Even number: \"), operandr=MemberReference(member=hello, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operator=+)], member=println, postfix_operators=[], prefix_operators=[], qualifier=System.out, selectors=[], type_arguments=None), label=None)]))]), control=ForControl(condition=BinaryOperation(operandl=MemberReference(member=hello, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=10), operator=<), init=[Assignment(expressionl=MemberReference(member=hello, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), type==, value=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=0))], update=[MemberReference(member=hello, postfix_operators=['++'], prefix_operators=[], qualifier=, selectors=[])]), label=None)"
+        ],
+        "whileLoops": [],
+        "constants": [
+            "0",
+            "10",
+            "2",
+            "0",
+            "1"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": [
+            "hello depends on Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=0)"
+        ],
+        "isRecursive": false,
+        "removableCode": [
+            "Variable 'world' declared after return \u2013 dead code"
+        ]
     },
     {
         "fileName": "Loops.java",
         "className": "Loops",
         "methodName": "forever",
-        "startLine": 9,
-        "endLine": -1,
+        "parameters": [],
+        "start_line": 10,
+        "end_line": 13,
         "variables": [],
         "forLoops": [],
         "whileLoops": [
@@ -214,14 +319,20 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": [
+            "Empty block {}",
+            "Infinite while(true) loop \u2013 may cause unreachable code after it"
+        ]
     },
     {
         "fileName": "Loops.java",
         "className": "Loops",
         "methodName": "neverAsserts",
-        "startLine": 15,
-        "endLine": -1,
+        "parameters": [],
+        "start_line": 17,
+        "end_line": 22,
         "variables": [
             "i"
         ],
@@ -236,14 +347,19 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": [
+            "Empty block {}"
+        ]
     },
     {
         "fileName": "Loops.java",
         "className": "Loops",
         "methodName": "neverDivides",
-        "startLine": 23,
-        "endLine": -1,
+        "parameters": [],
+        "start_line": 26,
+        "end_line": 31,
         "variables": [
             "i"
         ],
@@ -260,14 +376,19 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": [
+            "Empty block {}"
+        ]
     },
     {
         "fileName": "Loops.java",
         "className": "Loops",
         "methodName": "terminates",
-        "startLine": 31,
-        "endLine": -1,
+        "parameters": [],
+        "start_line": 35,
+        "end_line": 40,
         "variables": [
             "i"
         ],
@@ -282,14 +403,21 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": [
+            "Empty block {}"
+        ]
     },
     {
         "fileName": "Dependent.java",
         "className": "Dependent",
         "methodName": "safeDivByN",
-        "startLine": 8,
-        "endLine": -1,
+        "parameters": [
+            "int n"
+        ],
+        "start_line": 9,
+        "end_line": 14,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -303,14 +431,20 @@
         ],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Dependent.java",
         "className": "Dependent",
         "methodName": "normalizedDistance",
-        "startLine": 16,
-        "endLine": -1,
+        "parameters": [
+            "int x",
+            "int y"
+        ],
+        "start_line": 17,
+        "end_line": 31,
         "variables": [
             "dst"
         ],
@@ -330,14 +464,20 @@
         "dependencies": [
             "x depends on MemberReference(member=x, postfix_operators=[], prefix_operators=['-'], qualifier=, selectors=[])",
             "y depends on MemberReference(member=y, postfix_operators=[], prefix_operators=['-'], qualifier=, selectors=[])"
-        ]
+        ],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Dependent.java",
         "className": "Dependent",
         "methodName": "badNormalizedDistance",
-        "startLine": 33,
-        "endLine": -1,
+        "parameters": [
+            "int x",
+            "int y"
+        ],
+        "start_line": 35,
+        "end_line": 46,
         "variables": [
             "dst"
         ],
@@ -355,14 +495,19 @@
         "dependencies": [
             "x depends on MemberReference(member=x, postfix_operators=[], prefix_operators=['-'], qualifier=, selectors=[])",
             "y depends on MemberReference(member=y, postfix_operators=[], prefix_operators=['-'], qualifier=, selectors=[])"
-        ]
+        ],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Dependent.java",
         "className": "Dependent",
         "methodName": "divisionLoop",
-        "startLine": 47,
-        "endLine": -1,
+        "parameters": [
+            "int n"
+        ],
+        "start_line": 50,
+        "end_line": 55,
         "variables": [
             "i"
         ],
@@ -383,14 +528,19 @@
         "deadByConstant": [],
         "dependencies": [
             "n depends on Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=2)"
-        ]
+        ],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Tricky.java",
         "className": "Tricky",
         "methodName": "collatz",
-        "startLine": 9,
-        "endLine": -1,
+        "parameters": [
+            "int n"
+        ],
+        "start_line": 11,
+        "end_line": 20,
         "variables": [],
         "forLoops": [],
         "whileLoops": [
@@ -411,14 +561,17 @@
         "dependencies": [
             "n depends on BinaryOperation(operandl=MemberReference(member=n, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=2), operator=/)",
             "n depends on BinaryOperation(operandl=BinaryOperation(operandl=MemberReference(member=n, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=3), operator=*), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=1), operator=+)"
-        ]
+        ],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Arrays.java",
         "className": "Arrays",
         "methodName": "arrayOutOfBounds",
-        "startLine": 9,
-        "endLine": -1,
+        "parameters": [],
+        "start_line": 10,
+        "end_line": 13,
         "variables": [
             "array"
         ],
@@ -435,14 +588,17 @@
         "deadByConstant": [],
         "dependencies": [
             "array depends on Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=0)"
-        ]
+        ],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Arrays.java",
         "className": "Arrays",
         "methodName": "arrayInBounds",
-        "startLine": 15,
-        "endLine": -1,
+        "parameters": [],
+        "start_line": 17,
+        "end_line": 20,
         "variables": [
             "array"
         ],
@@ -459,14 +615,17 @@
         "deadByConstant": [],
         "dependencies": [
             "array depends on Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=1)"
-        ]
+        ],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Arrays.java",
         "className": "Arrays",
         "methodName": "arrayLength",
-        "startLine": 21,
-        "endLine": -1,
+        "parameters": [],
+        "start_line": 24,
+        "end_line": 27,
         "variables": [
             "array"
         ],
@@ -480,14 +639,17 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Arrays.java",
         "className": "Arrays",
         "methodName": "arrayIsNull",
-        "startLine": 27,
-        "endLine": -1,
+        "parameters": [],
+        "start_line": 31,
+        "end_line": 34,
         "variables": [
             "array"
         ],
@@ -502,14 +664,17 @@
         "deadByConstant": [],
         "dependencies": [
             "array depends on Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=10)"
-        ]
+        ],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Arrays.java",
         "className": "Arrays",
         "methodName": "arrayIsNullLength",
-        "startLine": 33,
-        "endLine": -1,
+        "parameters": [],
+        "start_line": 38,
+        "end_line": 41,
         "variables": [
             "array"
         ],
@@ -521,14 +686,19 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Arrays.java",
         "className": "Arrays",
         "methodName": "arraySometimesNull",
-        "startLine": 39,
-        "endLine": -1,
+        "parameters": [
+            "int i"
+        ],
+        "start_line": 46,
+        "end_line": 52,
         "variables": [
             "array"
         ],
@@ -545,14 +715,17 @@
         "dependencies": [
             "array depends on ArrayCreator(dimensions=[None], initializer=ArrayInitializer(initializers=[MemberReference(member=i, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[])]), postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], type=BasicType(dimensions=None, name=int))",
             "array depends on Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=10)"
-        ]
+        ],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Arrays.java",
         "className": "Arrays",
         "methodName": "arrayContent",
-        "startLine": 48,
-        "endLine": -1,
+        "parameters": [],
+        "start_line": 56,
+        "end_line": 61,
         "variables": [
             "array",
             "i"
@@ -573,14 +746,19 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Arrays.java",
         "className": "Arrays",
         "methodName": "binarySearch",
-        "startLine": 56,
-        "endLine": -1,
+        "parameters": [
+            "int x"
+        ],
+        "start_line": 66,
+        "end_line": 79,
         "variables": [
             "arr",
             "l",
@@ -609,14 +787,19 @@
         "dependencies": [
             "l depends on BinaryOperation(operandl=MemberReference(member=m, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=1), operator=+)",
             "r depends on BinaryOperation(operandl=MemberReference(member=m, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=1), operator=-)"
-        ]
+        ],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Arrays.java",
         "className": "Arrays",
         "methodName": "arrayNotEmpty",
-        "startLine": 72,
-        "endLine": -1,
+        "parameters": [
+            "int array"
+        ],
+        "start_line": 84,
+        "end_line": 86,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -626,14 +809,19 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Arrays.java",
         "className": "Arrays",
         "methodName": "arraySpellsHello",
-        "startLine": 77,
-        "endLine": -1,
+        "parameters": [
+            "char array"
+        ],
+        "start_line": 92,
+        "end_line": 98,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -647,14 +835,19 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Arrays.java",
         "className": "Arrays",
         "methodName": "arraySumIsLarge",
-        "startLine": 86,
-        "endLine": -1,
+        "parameters": [
+            "int array"
+        ],
+        "start_line": 103,
+        "end_line": 109,
         "variables": [
             "sum",
             "i"
@@ -673,14 +866,17 @@
         "deadByConstant": [],
         "dependencies": [
             "sum depends on MemberReference(member=array, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[ArraySelector(index=MemberReference(member=i, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]))])"
-        ]
+        ],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Simple.java",
         "className": "Simple",
         "methodName": "assertFalse",
-        "startLine": 8,
-        "endLine": -1,
+        "parameters": [],
+        "start_line": 8,
+        "end_line": 10,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -688,14 +884,19 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Simple.java",
         "className": "Simple",
         "methodName": "assertBoolean",
-        "startLine": 13,
-        "endLine": -1,
+        "parameters": [
+            "boolean shouldFail"
+        ],
+        "start_line": 14,
+        "end_line": 16,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -703,14 +904,19 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Simple.java",
         "className": "Simple",
         "methodName": "assertInteger",
-        "startLine": 18,
-        "endLine": -1,
+        "parameters": [
+            "int n"
+        ],
+        "start_line": 20,
+        "end_line": 22,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -720,14 +926,19 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Simple.java",
         "className": "Simple",
         "methodName": "assertPositive",
-        "startLine": 23,
-        "endLine": -1,
+        "parameters": [
+            "int num"
+        ],
+        "start_line": 26,
+        "end_line": 28,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -737,14 +948,17 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Simple.java",
         "className": "Simple",
         "methodName": "divideByZero",
-        "startLine": 28,
-        "endLine": -1,
+        "parameters": [],
+        "start_line": 31,
+        "end_line": 33,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -755,14 +969,19 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Simple.java",
         "className": "Simple",
         "methodName": "divideByN",
-        "startLine": 33,
-        "endLine": -1,
+        "parameters": [
+            "int n"
+        ],
+        "start_line": 37,
+        "end_line": 39,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -772,14 +991,20 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Simple.java",
         "className": "Simple",
         "methodName": "divideZeroByZero",
-        "startLine": 38,
-        "endLine": -1,
+        "parameters": [
+            "int a",
+            "int b"
+        ],
+        "start_line": 43,
+        "end_line": 45,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -787,14 +1012,19 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Simple.java",
         "className": "Simple",
         "methodName": "multiError",
-        "startLine": 43,
-        "endLine": -1,
+        "parameters": [
+            "boolean b"
+        ],
+        "start_line": 49,
+        "end_line": 52,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -805,14 +1035,17 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Simple.java",
         "className": "Simple",
         "methodName": "earlyReturn",
-        "startLine": 49,
-        "endLine": -1,
+        "parameters": [],
+        "start_line": 55,
+        "end_line": 61,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -823,14 +1056,21 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": [
+            "If(true) \u2013 else branch never executes"
+        ]
     },
     {
         "fileName": "Simple.java",
         "className": "Simple",
         "methodName": "checkBeforeDivideByN",
-        "startLine": 58,
-        "endLine": -1,
+        "parameters": [
+            "int n"
+        ],
+        "start_line": 65,
+        "end_line": 68,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -841,14 +1081,19 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Simple.java",
         "className": "Simple",
         "methodName": "checkBeforeDivideByN2",
-        "startLine": 64,
-        "endLine": -1,
+        "parameters": [
+            "int n"
+        ],
+        "start_line": 72,
+        "end_line": 78,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -861,14 +1106,19 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Simple.java",
         "className": "Simple",
         "methodName": "checkBeforeAssert",
-        "startLine": 73,
-        "endLine": -1,
+        "parameters": [
+            "int n"
+        ],
+        "start_line": 82,
+        "end_line": 87,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -880,14 +1130,17 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Simple.java",
         "className": "Simple",
         "methodName": "justReturn",
-        "startLine": 81,
-        "endLine": -1,
+        "parameters": [],
+        "start_line": 90,
+        "end_line": 92,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -897,14 +1150,20 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Simple.java",
         "className": "Simple",
         "methodName": "justAdd",
-        "startLine": 86,
-        "endLine": -1,
+        "parameters": [
+            "int a",
+            "int b"
+        ],
+        "start_line": 95,
+        "end_line": 97,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -912,14 +1171,20 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Simple.java",
         "className": "Simple",
         "methodName": "justMulitply",
-        "startLine": 91,
-        "endLine": -1,
+        "parameters": [
+            "int a",
+            "int b"
+        ],
+        "start_line": 100,
+        "end_line": 102,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -927,14 +1192,17 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Simple.java",
         "className": "Simple",
         "methodName": "justReturnNothing",
-        "startLine": 96,
-        "endLine": -1,
+        "parameters": [],
+        "start_line": 105,
+        "end_line": 107,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -942,14 +1210,19 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     },
     {
         "fileName": "Simple.java",
         "className": "Simple",
         "methodName": "divideByNMinus10054203",
-        "startLine": 101,
-        "endLine": -1,
+        "parameters": [
+            "int n"
+        ],
+        "start_line": 111,
+        "end_line": 113,
         "variables": [],
         "forLoops": [],
         "whileLoops": [],
@@ -960,6 +1233,8 @@
         "comments": [],
         "keywordComments": [],
         "deadByConstant": [],
-        "dependencies": []
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": []
     }
 ]

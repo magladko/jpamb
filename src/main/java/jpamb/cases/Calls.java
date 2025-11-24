@@ -95,4 +95,30 @@ public class Calls {
     }
   }
 
+  public static void redundantExamples() 
+  {
+    {}
+
+    if (false) {
+        System.out.println("Never runs");
+    } else {
+        System.out.println("Always runs");
+    }
+
+    while (false) {
+        System.out.println("Unreachable loop");
+    }
+  }
+
+  public static int weirdfunction(){ int hello;
+    for(hello=0;hello<10;hello++){
+      if(hello%2==0){
+        System.out.println("Even number: "+hello);
+      }else{
+        System.out.println("Odd number: "+hello);
+      }
+    }
+    return 1;
+  int world;}
+
 }
