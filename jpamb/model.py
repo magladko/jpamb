@@ -307,12 +307,13 @@ class Suite:
             raise IndexError(f"Could not find {methodid}")
         return method
 
-    def method_opcodes(self, method: jvm.Absolute[jvm.MethodID]) -> list[jvm.Opcode]:
+    def method_opcodes(self, method: jvm.Absolute[jvm.MethodID]) -> Iterable[jvm.Opcode]:
         json_code = self.findmethod(method)["code"]
-        lines = ({lo["offset"]: lo["line"] for lo in json_code["lines"]} 
+        lines = ({int(lo["offset"]): int(lo["line"]) for lo in json_code["lines"]} 
                  if "lines" in json_code else {})
+        for idx, line in lines.items():
+            json_code["bytecode"][idx]["line"] = line
         for op in json_code["bytecode"]:
-            op["line"] = lines.get(op["offset"])
             yield jvm.Opcode.from_json(op)
 
     def classes(self) -> Iterable[jvm.ClassName]:
