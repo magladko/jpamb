@@ -1,0 +1,965 @@
+[
+    {
+        "fileName": "Calls.java",
+        "className": "Calls",
+        "methodName": "assertTrue",
+        "startLine": 9,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Calls.java",
+        "className": "Calls",
+        "methodName": "assertFalse",
+        "startLine": 13,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Calls.java",
+        "className": "Calls",
+        "methodName": "assertIf",
+        "startLine": 17,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Calls.java",
+        "className": "Calls",
+        "methodName": "callsAssertTrue",
+        "startLine": 26,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Calls.java",
+        "className": "Calls",
+        "methodName": "callsAssertFalse",
+        "startLine": 31,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Calls.java",
+        "className": "Calls",
+        "methodName": "callsAssertIf",
+        "startLine": 36,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Calls.java",
+        "className": "Calls",
+        "methodName": "callsAssertIfWithTrue",
+        "startLine": 41,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Calls.java",
+        "className": "Calls",
+        "methodName": "fib",
+        "startLine": 45,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [
+            "0",
+            "0",
+            "1",
+            "1",
+            "2"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Calls.java",
+        "className": "Calls",
+        "methodName": "callsAssertFib",
+        "startLine": 54,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [
+            "21"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Calls.java",
+        "className": "Calls",
+        "methodName": "generatePrimeArray",
+        "startLine": 58,
+        "endLine": -1,
+        "variables": [
+            "primeArray",
+            "count",
+            "number",
+            "isprime",
+            "p"
+        ],
+        "forLoops": [
+            "ForStatement(body=BlockStatement(label=None, statements=[StatementExpression(expression=Assignment(expressionl=MemberReference(member=isprime, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), type==, value=BinaryOperation(operandl=BinaryOperation(operandl=MemberReference(member=number, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=MemberReference(member=p, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operator=%), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=0), operator=!=)), label=None), IfStatement(condition=BinaryOperation(operandl=MemberReference(member=isprime, postfix_operators=[], prefix_operators=['!'], qualifier=, selectors=[]), operandr=BinaryOperation(operandl=BinaryOperation(operandl=MemberReference(member=p, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=MemberReference(member=p, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operator=*), operandr=MemberReference(member=number, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operator=>), operator=||), else_statement=None, label=None, then_statement=BlockStatement(label=None, statements=[BreakStatement(goto=None, label=None)]))]), control=EnhancedForControl(iterable=MemberReference(member=primeArray, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), var=VariableDeclaration(annotations=[], declarators=[VariableDeclarator(dimensions=None, initializer=None, name=p)], modifiers=set(), type=BasicType(dimensions=[], name=int))), label=None)"
+        ],
+        "whileLoops": [
+            "WhileStatement(body=BlockStatement(label=None, statements=[LocalVariableDeclaration(annotations=[], declarators=[VariableDeclarator(dimensions=[], initializer=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=true), name=isprime)], modifiers=set(), type=BasicType(dimensions=[], name=boolean)), ForStatement(body=BlockStatement(label=None, statements=[StatementExpression(expression=Assignment(expressionl=MemberReference(member=isprime, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), type==, value=BinaryOperation(operandl=BinaryOperation(operandl=MemberReference(member=number, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=MemberReference(member=p, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operator=%), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=0), operator=!=)), label=None), IfStatement(condition=BinaryOperation(operandl=MemberReference(member=isprime, postfix_operators=[], prefix_operators=['!'], qualifier=, selectors=[]), operandr=BinaryOperation(operandl=BinaryOperation(operandl=MemberReference(member=p, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=MemberReference(member=p, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operator=*), operandr=MemberReference(member=number, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operator=>), operator=||), else_statement=None, label=None, then_statement=BlockStatement(label=None, statements=[BreakStatement(goto=None, label=None)]))]), control=EnhancedForControl(iterable=MemberReference(member=primeArray, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), var=VariableDeclaration(annotations=[], declarators=[VariableDeclarator(dimensions=None, initializer=None, name=p)], modifiers=set(), type=BasicType(dimensions=[], name=int))), label=None), IfStatement(condition=MemberReference(member=isprime, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), else_statement=None, label=None, then_statement=BlockStatement(label=None, statements=[StatementExpression(expression=Assignment(expressionl=MemberReference(member=primeArray, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[ArraySelector(index=MemberReference(member=count, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]))]), type==, value=MemberReference(member=number, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[])), label=None), StatementExpression(expression=MemberReference(member=count, postfix_operators=['++'], prefix_operators=[], qualifier=, selectors=[]), label=None)])), StatementExpression(expression=MemberReference(member=number, postfix_operators=['++'], prefix_operators=[], qualifier=, selectors=[]), label=None)]), condition=BinaryOperation(operandl=MemberReference(member=count, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=MemberReference(member=length, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operator=<), label=None)"
+        ],
+        "constants": [
+            "0",
+            "0",
+            "2",
+            "1",
+            "3",
+            "0"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": [
+            "primeArray depends on Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=2)",
+            "isprime depends on BinaryOperation(operandl=BinaryOperation(operandl=MemberReference(member=number, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=MemberReference(member=p, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operator=%), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=0), operator=!=)",
+            "primeArray depends on MemberReference(member=number, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[])"
+        ]
+    },
+    {
+        "fileName": "Calls.java",
+        "className": "Calls",
+        "methodName": "allPrimesArePositive",
+        "startLine": 83,
+        "endLine": -1,
+        "variables": [
+            "p"
+        ],
+        "forLoops": [
+            "ForStatement(body=BlockStatement(label=None, statements=[AssertStatement(condition=BinaryOperation(operandl=MemberReference(member=p, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=0), operator=>), label=None, value=None)]), control=EnhancedForControl(iterable=MethodInvocation(arguments=[MemberReference(member=number, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[])], member=generatePrimeArray, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[], type_arguments=None), var=VariableDeclaration(annotations=[], declarators=[VariableDeclarator(dimensions=None, initializer=None, name=p)], modifiers=set(), type=BasicType(dimensions=[], name=int))), label=None)"
+        ],
+        "whileLoops": [],
+        "constants": [
+            "0"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Loops.java",
+        "className": "Loops",
+        "methodName": "forever",
+        "startLine": 9,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [
+            "WhileStatement(body=BlockStatement(label=None, statements=[]), condition=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=true), label=None)"
+        ],
+        "constants": [],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Loops.java",
+        "className": "Loops",
+        "methodName": "neverAsserts",
+        "startLine": 15,
+        "endLine": -1,
+        "variables": [
+            "i"
+        ],
+        "forLoops": [],
+        "whileLoops": [
+            "WhileStatement(body=BlockStatement(label=None, statements=[]), condition=BinaryOperation(operandl=MemberReference(member=i, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=0), operator=>), label=None)"
+        ],
+        "constants": [
+            "1",
+            "0"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Loops.java",
+        "className": "Loops",
+        "methodName": "neverDivides",
+        "startLine": 23,
+        "endLine": -1,
+        "variables": [
+            "i"
+        ],
+        "forLoops": [],
+        "whileLoops": [
+            "WhileStatement(body=BlockStatement(label=None, statements=[]), condition=BinaryOperation(operandl=MemberReference(member=i, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=0), operator=>), label=None)"
+        ],
+        "constants": [
+            "1",
+            "0",
+            "0",
+            "0"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Loops.java",
+        "className": "Loops",
+        "methodName": "terminates",
+        "startLine": 31,
+        "endLine": -1,
+        "variables": [
+            "i"
+        ],
+        "forLoops": [],
+        "whileLoops": [
+            "WhileStatement(body=BlockStatement(label=None, statements=[]), condition=BinaryOperation(operandl=MemberReference(member=i, postfix_operators=['++'], prefix_operators=[], qualifier=, selectors=[]), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=0), operator=!=), label=None)"
+        ],
+        "constants": [
+            "0",
+            "0"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Dependent.java",
+        "className": "Dependent",
+        "methodName": "safeDivByN",
+        "startLine": 8,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [
+            "0",
+            "1",
+            "0"
+        ],
+        "comments": [
+            "// 1024 / 2^5 = 32"
+        ],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Dependent.java",
+        "className": "Dependent",
+        "methodName": "normalizedDistance",
+        "startLine": 16,
+        "endLine": -1,
+        "variables": [
+            "dst"
+        ],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [
+            "0",
+            "0",
+            "0",
+            "0"
+        ],
+        "comments": [
+            "// 1024 / 2^5 = 32"
+        ],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": [
+            "x depends on MemberReference(member=x, postfix_operators=[], prefix_operators=['-'], qualifier=, selectors=[])",
+            "y depends on MemberReference(member=y, postfix_operators=[], prefix_operators=['-'], qualifier=, selectors=[])"
+        ]
+    },
+    {
+        "fileName": "Dependent.java",
+        "className": "Dependent",
+        "methodName": "badNormalizedDistance",
+        "startLine": 33,
+        "endLine": -1,
+        "variables": [
+            "dst"
+        ],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [
+            "0",
+            "0"
+        ],
+        "comments": [
+            "// 1024 / 2^5 = 32"
+        ],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": [
+            "x depends on MemberReference(member=x, postfix_operators=[], prefix_operators=['-'], qualifier=, selectors=[])",
+            "y depends on MemberReference(member=y, postfix_operators=[], prefix_operators=['-'], qualifier=, selectors=[])"
+        ]
+    },
+    {
+        "fileName": "Dependent.java",
+        "className": "Dependent",
+        "methodName": "divisionLoop",
+        "startLine": 47,
+        "endLine": -1,
+        "variables": [
+            "i"
+        ],
+        "forLoops": [
+            "ForStatement(body=BlockStatement(label=None, statements=[StatementExpression(expression=Assignment(expressionl=MemberReference(member=n, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), type=/=, value=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=2)), label=None)]), control=ForControl(condition=BinaryOperation(operandl=MemberReference(member=i, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=5), operator=<), init=VariableDeclaration(annotations=[], declarators=[VariableDeclarator(dimensions=None, initializer=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=0), name=i)], modifiers=set(), type=BasicType(dimensions=[], name=int)), update=[MemberReference(member=i, postfix_operators=['++'], prefix_operators=[], qualifier=, selectors=[])]), label=None)"
+        ],
+        "whileLoops": [],
+        "constants": [
+            "0",
+            "5",
+            "2",
+            "32"
+        ],
+        "comments": [
+            "// 1024 / 2^5 = 32"
+        ],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": [
+            "n depends on Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=2)"
+        ]
+    },
+    {
+        "fileName": "Tricky.java",
+        "className": "Tricky",
+        "methodName": "collatz",
+        "startLine": 9,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [
+            "WhileStatement(body=BlockStatement(label=None, statements=[IfStatement(condition=BinaryOperation(operandl=BinaryOperation(operandl=MemberReference(member=n, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=2), operator=%), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=0), operator===), else_statement=BlockStatement(label=None, statements=[StatementExpression(expression=Assignment(expressionl=MemberReference(member=n, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), type==, value=BinaryOperation(operandl=BinaryOperation(operandl=MemberReference(member=n, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=3), operator=*), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=1), operator=+)), label=None)]), label=None, then_statement=BlockStatement(label=None, statements=[StatementExpression(expression=Assignment(expressionl=MemberReference(member=n, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), type==, value=BinaryOperation(operandl=MemberReference(member=n, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=2), operator=/)), label=None)]))]), condition=BinaryOperation(operandl=MemberReference(member=n, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=1), operator=!=), label=None)"
+        ],
+        "constants": [
+            "0",
+            "1",
+            "2",
+            "0",
+            "2",
+            "3",
+            "1"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": [
+            "n depends on BinaryOperation(operandl=MemberReference(member=n, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=2), operator=/)",
+            "n depends on BinaryOperation(operandl=BinaryOperation(operandl=MemberReference(member=n, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=3), operator=*), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=1), operator=+)"
+        ]
+    },
+    {
+        "fileName": "Arrays.java",
+        "className": "Arrays",
+        "methodName": "arrayOutOfBounds",
+        "startLine": 9,
+        "endLine": -1,
+        "variables": [
+            "array"
+        ],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [
+            "0",
+            "0",
+            "3",
+            "0"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": [
+            "array depends on Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=0)"
+        ]
+    },
+    {
+        "fileName": "Arrays.java",
+        "className": "Arrays",
+        "methodName": "arrayInBounds",
+        "startLine": 15,
+        "endLine": -1,
+        "variables": [
+            "array"
+        ],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [
+            "0",
+            "0",
+            "1",
+            "1"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": [
+            "array depends on Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=1)"
+        ]
+    },
+    {
+        "fileName": "Arrays.java",
+        "className": "Arrays",
+        "methodName": "arrayLength",
+        "startLine": 21,
+        "endLine": -1,
+        "variables": [
+            "array"
+        ],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [
+            "0",
+            "0",
+            "2"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Arrays.java",
+        "className": "Arrays",
+        "methodName": "arrayIsNull",
+        "startLine": 27,
+        "endLine": -1,
+        "variables": [
+            "array"
+        ],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [
+            "1",
+            "10"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": [
+            "array depends on Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=10)"
+        ]
+    },
+    {
+        "fileName": "Arrays.java",
+        "className": "Arrays",
+        "methodName": "arrayIsNullLength",
+        "startLine": 33,
+        "endLine": -1,
+        "variables": [
+            "array"
+        ],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [
+            "0"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Arrays.java",
+        "className": "Arrays",
+        "methodName": "arraySometimesNull",
+        "startLine": 39,
+        "endLine": -1,
+        "variables": [
+            "array"
+        ],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [
+            "10",
+            "1",
+            "10"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": [
+            "array depends on ArrayCreator(dimensions=[None], initializer=ArrayInitializer(initializers=[MemberReference(member=i, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[])]), postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], type=BasicType(dimensions=None, name=int))",
+            "array depends on Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=10)"
+        ]
+    },
+    {
+        "fileName": "Arrays.java",
+        "className": "Arrays",
+        "methodName": "arrayContent",
+        "startLine": 48,
+        "endLine": -1,
+        "variables": [
+            "array",
+            "i"
+        ],
+        "forLoops": [
+            "ForStatement(body=BlockStatement(label=None, statements=[AssertStatement(condition=BinaryOperation(operandl=MemberReference(member=i, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=0), operator=>), label=None, value=None)]), control=ForControl(condition=BinaryOperation(operandl=MemberReference(member=i, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=MemberReference(member=length, postfix_operators=[], prefix_operators=[], qualifier=array, selectors=[]), operator=<), init=VariableDeclaration(annotations=[], declarators=[VariableDeclarator(dimensions=None, initializer=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=0), name=i)], modifiers=set(), type=BasicType(dimensions=[], name=int)), update=[MemberReference(member=i, postfix_operators=['++'], prefix_operators=[], qualifier=, selectors=[])]), label=None)"
+        ],
+        "whileLoops": [],
+        "constants": [
+            "1",
+            "2",
+            "100",
+            "13",
+            "23",
+            "0",
+            "0"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Arrays.java",
+        "className": "Arrays",
+        "methodName": "binarySearch",
+        "startLine": 56,
+        "endLine": -1,
+        "variables": [
+            "arr",
+            "l",
+            "r",
+            "m"
+        ],
+        "forLoops": [],
+        "whileLoops": [
+            "WhileStatement(body=BlockStatement(label=None, statements=[LocalVariableDeclaration(annotations=[], declarators=[VariableDeclarator(dimensions=[], initializer=BinaryOperation(operandl=MemberReference(member=l, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=BinaryOperation(operandl=BinaryOperation(operandl=MemberReference(member=r, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=MemberReference(member=l, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operator=-), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=2), operator=/), operator=+), name=m)], modifiers=set(), type=BasicType(dimensions=[], name=int)), IfStatement(condition=BinaryOperation(operandl=MemberReference(member=arr, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[ArraySelector(index=MemberReference(member=m, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]))]), operandr=MemberReference(member=x, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operator===), else_statement=None, label=None, then_statement=ReturnStatement(expression=None, label=None)), IfStatement(condition=BinaryOperation(operandl=MemberReference(member=arr, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[ArraySelector(index=MemberReference(member=m, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]))]), operandr=MemberReference(member=x, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operator=<), else_statement=StatementExpression(expression=Assignment(expressionl=MemberReference(member=r, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), type==, value=BinaryOperation(operandl=MemberReference(member=m, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=1), operator=-)), label=None), label=None, then_statement=StatementExpression(expression=Assignment(expressionl=MemberReference(member=l, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), type==, value=BinaryOperation(operandl=MemberReference(member=m, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=1), operator=+)), label=None))]), condition=BinaryOperation(operandl=MemberReference(member=l, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=MemberReference(member=r, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operator=<=), label=None)"
+        ],
+        "constants": [
+            "2",
+            "3",
+            "4",
+            "10",
+            "40",
+            "0",
+            "1",
+            "2",
+            "1",
+            "1"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": [
+            "l depends on BinaryOperation(operandl=MemberReference(member=m, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=1), operator=+)",
+            "r depends on BinaryOperation(operandl=MemberReference(member=m, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=1), operator=-)"
+        ]
+    },
+    {
+        "fileName": "Arrays.java",
+        "className": "Arrays",
+        "methodName": "arrayNotEmpty",
+        "startLine": 72,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [
+            "0"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Arrays.java",
+        "className": "Arrays",
+        "methodName": "arraySpellsHello",
+        "startLine": 77,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [
+            "0",
+            "1",
+            "2",
+            "3",
+            "4"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Arrays.java",
+        "className": "Arrays",
+        "methodName": "arraySumIsLarge",
+        "startLine": 86,
+        "endLine": -1,
+        "variables": [
+            "sum",
+            "i"
+        ],
+        "forLoops": [
+            "ForStatement(body=BlockStatement(label=None, statements=[StatementExpression(expression=Assignment(expressionl=MemberReference(member=sum, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), type=+=, value=MemberReference(member=array, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[ArraySelector(index=MemberReference(member=i, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]))])), label=None)]), control=ForControl(condition=BinaryOperation(operandl=MemberReference(member=i, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=MemberReference(member=length, postfix_operators=[], prefix_operators=[], qualifier=array, selectors=[]), operator=<), init=VariableDeclaration(annotations=[], declarators=[VariableDeclarator(dimensions=None, initializer=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=0), name=i)], modifiers=set(), type=BasicType(dimensions=[], name=int)), update=[MemberReference(member=i, postfix_operators=['++'], prefix_operators=[], qualifier=, selectors=[])]), label=None)"
+        ],
+        "whileLoops": [],
+        "constants": [
+            "0",
+            "0",
+            "300"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": [
+            "sum depends on MemberReference(member=array, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[ArraySelector(index=MemberReference(member=i, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]))])"
+        ]
+    },
+    {
+        "fileName": "Simple.java",
+        "className": "Simple",
+        "methodName": "assertFalse",
+        "startLine": 8,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Simple.java",
+        "className": "Simple",
+        "methodName": "assertBoolean",
+        "startLine": 13,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Simple.java",
+        "className": "Simple",
+        "methodName": "assertInteger",
+        "startLine": 18,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [
+            "0"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Simple.java",
+        "className": "Simple",
+        "methodName": "assertPositive",
+        "startLine": 23,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [
+            "0"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Simple.java",
+        "className": "Simple",
+        "methodName": "divideByZero",
+        "startLine": 28,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [
+            "1",
+            "0"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Simple.java",
+        "className": "Simple",
+        "methodName": "divideByN",
+        "startLine": 33,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [
+            "1"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Simple.java",
+        "className": "Simple",
+        "methodName": "divideZeroByZero",
+        "startLine": 38,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Simple.java",
+        "className": "Simple",
+        "methodName": "multiError",
+        "startLine": 43,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [
+            "1",
+            "0"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Simple.java",
+        "className": "Simple",
+        "methodName": "earlyReturn",
+        "startLine": 49,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [
+            "0",
+            "0"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Simple.java",
+        "className": "Simple",
+        "methodName": "checkBeforeDivideByN",
+        "startLine": 58,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [
+            "0",
+            "1"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Simple.java",
+        "className": "Simple",
+        "methodName": "checkBeforeDivideByN2",
+        "startLine": 64,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [
+            "0",
+            "1",
+            "10",
+            "0"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Simple.java",
+        "className": "Simple",
+        "methodName": "checkBeforeAssert",
+        "startLine": 73,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [
+            "0",
+            "1",
+            "0"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Simple.java",
+        "className": "Simple",
+        "methodName": "justReturn",
+        "startLine": 81,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [
+            "0"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Simple.java",
+        "className": "Simple",
+        "methodName": "justAdd",
+        "startLine": 86,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Simple.java",
+        "className": "Simple",
+        "methodName": "justMulitply",
+        "startLine": 91,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Simple.java",
+        "className": "Simple",
+        "methodName": "justReturnNothing",
+        "startLine": 96,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    },
+    {
+        "fileName": "Simple.java",
+        "className": "Simple",
+        "methodName": "divideByNMinus10054203",
+        "startLine": 101,
+        "endLine": -1,
+        "variables": [],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [
+            "1",
+            "10054203"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": []
+    }
+]
