@@ -6,7 +6,8 @@ from hypothesis import example, given
 from hypothesis import strategies as st
 from hypothesis.strategies import integers, sampled_from, sets
 
-from project.abstraction import Comparison, SignSet
+from project.abstractions.signset import SignSet
+from project.abstractions.abstraction import Comparison
 from project.novel_domains import (
     DoubleDomain,
     MachineWordDomain,
@@ -179,7 +180,7 @@ def test_polyhedral_domain_bounds_and_ops() -> None:
     assert intersection.bounds == [(1.0, 2.0), (1.0, 2.0)]
     joined = box_a | box_b
     assert joined.bounds == [(0.0, 4.0), (0.0, 3.0)]
-    
+
 def test_singset_binary_comparison() -> None:
     s1 = SignSet({"0", "-"})
     s2 = SignSet({"0", "+"})
@@ -480,4 +481,3 @@ def test_exhaustive_comparison_coverage(
     for refined_s1, refined_s2 in result.values():
         assert refined_s1 <= s1
         assert refined_s2 <= s2
-

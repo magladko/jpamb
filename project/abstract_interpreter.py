@@ -1,22 +1,16 @@
-import os
 import sys
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Self, cast
 
-from project.abstraction import Abstraction, Comparison, SignSet
-from project.interpreter import Bytecode, PC, Stack
+from abstractions.abstraction import Abstraction, Comparison
+from abstractions.interval import Interval
+from abstractions.signset import SignSet
+from interpreter import PC, Bytecode, Stack
 from loguru import logger
 
 import jpamb
 from jpamb import jvm
-from project.novel_domains import (
-    DoubleDomain,
-    MachineWordDomain,
-    PolyhedralDomain,
-    StringDomain,
-)
 
 logger.remove()
 logger.add(sys.stderr, format="[{level}] {message}", level="DEBUG")
@@ -82,16 +76,16 @@ class ConstraintStore[AV: Abstraction]:
             ", ".join(f"{k}:{v}" for k, v in sorted(self.items())) +
             "}")
 
+
 @dataclass
 class PerVarFrame:
     """
     Abstract frame at a SINGLE program point.
 
     Represents the abstract state of locals and stack at one PC.
-    Now stores NAMES of values instead of values directly.
     """
 
-    locals: dict[int, str]  # variable_index → value_name
+    locals: dict[int, str]  # variable_index -> value_name
     stack: Stack[str]       # operand stack of value names
     pc: PC
 
@@ -127,7 +121,7 @@ class AState[AV: Abstraction]:
     The "program point" is determined by the PC of the TOP frame.
     """
 
-    heap: dict[int, str]  # heap_addr → value_name
+    heap: dict[int, str]  # heap_addr -> value_name
     frames: Stack[PerVarFrame]
     constraints: ConstraintStore[AV]
     heap_ptr: int = 0
@@ -272,12 +266,7 @@ class AState[AV: Abstraction]:
 
     @property
     def pc(self) -> PC:
-        """
-        Current program counter = PC of the TOP frame.
-
-        This is the "program point" where this state exists.
-        Used as the key in StateSet.per_inst.
-        """
+        """Current program counter = PC of the TOP frame."""
         return self.frames.peek().pc
 
     def __str__(self) -> str:
@@ -300,13 +289,9 @@ class StateSet[AV: Abstraction]:
 
     Maps each program point (PC) to the abstract state at that PC.
     Tracks which PCs need processing (needswork = worklist).
-
-    This is the "Per-Instruction Abstraction" from theory:
-      Pc = PC → 2^State
-    But we only keep ONE abstract state per PC (the join of all states).
     """
 
-    per_inst: dict[PC, AState[AV]]  # PC → AState
+    per_inst: dict[PC, AState[AV]]  # PC -> AState
     needswork: set[PC]              # PCs that need reprocessing
 
     @classmethod
@@ -356,8 +341,6 @@ class StateSet[AV: Abstraction]:
         """
         Join an abstract state into the state set.
 
-        This is the KEY operation for the worklist algorithm!
-
         If PC doesn't exist: add the state
         If PC exists: JOIN (⊔) with existing state
 
@@ -387,15 +370,18 @@ class StateSet[AV: Abstraction]:
     def __str__(self) -> str:
         return "\n".join(f"{pc}: {state}" for pc, state in self.per_inst.items())
 
+
 def step[AV: Abstraction](state: AState[AV],
                           abstraction_cls: type[AV]) -> Iterable[AState[AV] | str]:
     """Execute ONE instruction in the abstract domain."""
     assert isinstance(state, AState), f"expected AState but got {state}"
     state = state.clone()  # Work on a copy
     frame = state.frames.peek()
-    # frame = state.frames.peek()
     opr = state.bc[state.pc]
     logger.debug(f"STEP {opr}\n{state}")
+
+    if opr.line:
+        lines_executed.setdefault(state.pc.method, set()).add(opr.line)
 
     match opr:
         case jvm.Push(value=v):
@@ -404,6 +390,16 @@ def step[AV: Abstraction](state: AState[AV],
             name = state.constraints.fresh_name()
             state.constraints[name] = abstraction_cls.abstract({v.value})
             frame.stack.push(name)
+            frame.pc = frame.pc + 1
+            return [state]
+
+        case jvm.Store(type=_type, index=index):
+            v = frame.stack.pop()
+            # if v and v.value is not None:
+            #     assert isinstance(v.value, int), (
+            #         f"Expected type {int}, but got {v.value!r}"
+            #     )
+            frame.locals[index] = v
             frame.pc = frame.pc + 1
             return [state]
 
@@ -416,7 +412,7 @@ def step[AV: Abstraction](state: AState[AV],
 
         case jvm.Ifz(condition=c, target=t):
             # Compare ONE value to zero
-            # Stack: [..., value] → [...]
+            # Stack: [..., value] -> [...]
             # Pop the NAME being tested
             value_name = frame.stack.pop()
             # Look up the constraint
@@ -424,7 +420,7 @@ def step[AV: Abstraction](state: AState[AV],
             v2 = abstraction_cls.abstract({0})
 
             res = v1.compare(cast("Comparison", c), v2)
-            logger.debug(f"res: {res}")
+            logger.debug(f"ifz compare: {v1.comp_res_str(res)}")
 
             computed_states = []
             if True in res:
@@ -462,7 +458,7 @@ def step[AV: Abstraction](state: AState[AV],
 
 
             # Compare TWO values
-            # Stack: [..., value1, value2] → [...]
+            # Stack: [..., value1, value2] -> [...]
             name2, name1 = frame.stack.pop(), frame.stack.pop()
             # Look up constraints
             v1 = state.constraints[name1]
@@ -470,6 +466,7 @@ def step[AV: Abstraction](state: AState[AV],
 
             # Evaluate comparison with current constraints
             res = v1.compare(cast("Comparison", c), v2)
+            logger.debug(f"if compare: {v1.comp_res_str(res)}")
 
             computed_states = []
             if True in res:
@@ -512,14 +509,6 @@ def step[AV: Abstraction](state: AState[AV],
             v1 = state.constraints[name1]
             v2 = state.constraints[name2]
 
-            computed_states = []
-            if (operant in (jvm.BinaryOpr.Div, jvm.BinaryOpr.Rem) and
-                0 in v2):
-                logger.debug("Division by zero found!")
-                computed_states.append("divide by zero")
-                if isinstance(v2, SignSet) and len(v2) == 1:
-                    # No more options left
-                    return computed_states
 
             # Compute result with abstract values
             match operant:
@@ -539,7 +528,16 @@ def step[AV: Abstraction](state: AState[AV],
 
             # Create fresh named value for result
             result_name = state.constraints.fresh_name()
-            state.constraints[result_name] = result_value
+            computed_states = []
+            match result_value:
+                case "divide by zero":
+                    return ["divide by zero"]
+                case (value, "divide by zero"):
+                    computed_states.append("divide by zero")
+                    state.constraints[result_name] = value
+                case value:
+                    state.constraints[result_name] = value
+
             frame.stack.push(result_name)
 
             frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
@@ -561,7 +559,6 @@ def step[AV: Abstraction](state: AState[AV],
             return [state]
 
         case jvm.New(classname=jvm.ClassName(_as_string="java/lang/AssertionError")):
-            logger.debug("Creating AssertionError object")
             return ["assertion error"]
 
         case jvm.Goto(target=t):
@@ -578,9 +575,13 @@ def step[AV: Abstraction](state: AState[AV],
             state.frames.push(new_frame)
             return [state]
 
+        # case jvm.Cast(from_=from_, to_=to_):
+            # Casts cannot be done safely
+
         case a:
             a.help()
             sys.exit(-1)
+
 
 def manystep[AV: Abstraction](sts: StateSet[AV],
                               abstraction_cls: type[AV]) -> Iterable[AState[AV] | str]:
@@ -595,7 +596,9 @@ def manystep[AV: Abstraction](sts: StateSet[AV],
     """
     states = []
     for _pc, state in sts.per_instruction():
-        states.extend(step(state, abstraction_cls))
+        res = step(state, abstraction_cls)
+        logger.debug("RESULT\n" + "\n".join(map(str, res)))
+        states.extend(res)
     return states
 
 
@@ -626,24 +629,12 @@ results: dict[str, int] = {
     "*": 0,
 }
 
-domain_name = os.environ.get("JPAMB_ABSTRACTION", "sign").lower()
-domain_options: dict[str, type[Abstraction]] = {
-    "sign": SignSet,
-    "string": StringDomain,
-    "double": DoubleDomain,
-    "machine": MachineWordDomain,
-    "word": MachineWordDomain,
-    "machineword": MachineWordDomain,
-    "poly": PolyhedralDomain,
-}
-AV = domain_options.get(domain_name)
-if AV is None:
-    logger.warning(f"Unknown domain '{domain_name}', falling back to SignSet")
-    AV = SignSet
-logger.info(f"Using abstraction domain: {AV.__name__}")
+# AV = SignSet
+AV = Interval
 
 MAX_STEPS = 1000
 final: set[str] = set()
+lines_executed: dict[jvm.AbsMethodID, set[int]] = {methodid: set()}
 
 # import debugpy
 # debugpy.listen(5678)
@@ -666,14 +657,17 @@ for iteration in range(MAX_STEPS):
             sts |= s
 
     logger.debug(f"Iteration {iteration}: {len(sts.needswork)} PCs need work")
-    for pc in sts.needswork:
-        logger.debug(pc)
+    # logger.debug("Needs work: " + ", ".join(map(str, sts.needswork)))
     logger.debug(f"Final states: {final}")
 
     # If needswork is empty, we've reached fixed point
     if not sts.needswork:
         logger.debug("Fixed point reached!")
+        # TODO(kornel): fixpoint can be reached even without infinite execution...
+        # final.add("*")
         break
+
+logger.debug(f"Executed lines {lines_executed}")
 
 # Output results
 for result in results:
