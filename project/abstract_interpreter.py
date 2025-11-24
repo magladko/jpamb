@@ -76,6 +76,7 @@ class ConstraintStore[AV: Abstraction]:
             ", ".join(f"{k}:{v}" for k, v in sorted(self.items())) +
             "}")
 
+
 @dataclass
 class PerVarFrame:
     """
@@ -369,15 +370,18 @@ class StateSet[AV: Abstraction]:
     def __str__(self) -> str:
         return "\n".join(f"{pc}: {state}" for pc, state in self.per_inst.items())
 
+
 def step[AV: Abstraction](state: AState[AV],
                           abstraction_cls: type[AV]) -> Iterable[AState[AV] | str]:
     """Execute ONE instruction in the abstract domain."""
     assert isinstance(state, AState), f"expected AState but got {state}"
     state = state.clone()  # Work on a copy
     frame = state.frames.peek()
-    # frame = state.frames.peek()
     opr = state.bc[state.pc]
     logger.debug(f"STEP {opr}\n{state}")
+
+    if opr.line:
+        lines_executed.setdefault(state.pc.method, set()).add(opr.line)
 
     match opr:
         case jvm.Push(value=v):
@@ -398,7 +402,6 @@ def step[AV: Abstraction](state: AState[AV],
             frame.locals[index] = v
             frame.pc = frame.pc + 1
             return [state]
-
 
         case jvm.Load(type=_type, index=i):
             assert i in frame.locals, f"Local variable {i} not initialized"
@@ -528,7 +531,7 @@ def step[AV: Abstraction](state: AState[AV],
             computed_states = []
             match result_value:
                 case "divide by zero":
-                    return "divide by zero"
+                    return ["divide by zero"]
                 case (value, "divide by zero"):
                     computed_states.append("divide by zero")
                     state.constraints[result_name] = value
@@ -572,9 +575,13 @@ def step[AV: Abstraction](state: AState[AV],
             state.frames.push(new_frame)
             return [state]
 
+        # case jvm.Cast(from_=from_, to_=to_):
+            # Casts cannot be done safely
+
         case a:
             a.help()
             sys.exit(-1)
+
 
 def manystep[AV: Abstraction](sts: StateSet[AV],
                               abstraction_cls: type[AV]) -> Iterable[AState[AV] | str]:
@@ -622,11 +629,12 @@ results: dict[str, int] = {
     "*": 0,
 }
 
-AV = SignSet
-# AV = Interval
+# AV = SignSet
+AV = Interval
 
 MAX_STEPS = 1000
 final: set[str] = set()
+lines_executed: dict[jvm.AbsMethodID, set[int]] = {methodid: set()}
 
 # import debugpy
 # debugpy.listen(5678)
@@ -658,6 +666,8 @@ for iteration in range(MAX_STEPS):
         # TODO(kornel): fixpoint can be reached even without infinite execution...
         # final.add("*")
         break
+
+logger.debug(f"Executed lines {lines_executed}")
 
 # Output results
 for result in results:
