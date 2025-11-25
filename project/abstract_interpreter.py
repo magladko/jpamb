@@ -348,7 +348,7 @@ def step[AV: Abstraction](
     state = state.clone()  # Work on a copy
     frame = state.frames.peek()
     opr = state.bc[state.pc]
-    logger.debug(f"STEP {opr}\n{state}")
+    logger.debug(f"STEP {opr} {{{opr.line if opr.line else ""}}}\n{state}")
 
     if opr.line:
         lines_executed.setdefault(state.pc.method, set()).add(opr.line)
