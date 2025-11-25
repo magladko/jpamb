@@ -172,18 +172,9 @@ class AState[AV: Abstraction]:
             if var_idx in f1.locals:
                 name1 = f1.locals[var_idx]
                 name2 = f2.locals[var_idx]
-                if name1 == name2:
-                    # Same name, join constraints
-                    self.constraints[name1] = (
-                        self.constraints[name1] | other.constraints[name2]
-                    )
-                else:
-                    # Different names, create fresh name
-                    fresh = self.constraints.fresh_name()
-                    self.constraints[fresh] = (
-                        self.constraints[name1] | other.constraints[name2]
-                    )
-                    f1.locals[var_idx] = fresh
+                self.constraints[name1] = (
+                    self.constraints[name1] | other.constraints[name2]
+                )
             else:
                 f1.locals[var_idx] = f2.locals[var_idx]
                 self.constraints[f2.locals[var_idx]] = other.constraints[
@@ -198,18 +189,9 @@ class AState[AV: Abstraction]:
         for i in range(len(f1.stack.items)):
             name1 = f1.stack.items[i]
             name2 = f2.stack.items[i]
-            if name1 == name2:
-                # Same name, join constraints
-                self.constraints[name1] = (
-                    self.constraints[name1] | other.constraints[name2]
-                )
-            else:
-                # Different names, create fresh name
-                fresh = self.constraints.fresh_name()
-                self.constraints[fresh] = (
-                    self.constraints[name1] | other.constraints[name2]
-                )
-                f1.stack.items[i] = fresh
+            self.constraints[name1] = (
+                self.constraints[name1] | other.constraints[name2]
+            )
         # END FOR
         return self
 
