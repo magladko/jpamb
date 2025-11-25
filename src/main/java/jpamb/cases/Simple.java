@@ -112,4 +112,12 @@ public class Simple {
     return 1 / (n - 10054203);
   }
 
+  @Case("(0) -> ok")
+  @Case("(1) -> ok")
+  public static int safeDivByN(int n) { 
+    if (n != 0) {
+      return 1 / n;
+    }
+    return 0;
+  }
 }

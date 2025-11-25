@@ -14,6 +14,15 @@ public class Loops {
 
   @Case("() -> *")
   @Tag({ LOOP })
+  public static void foreverIncrement() {
+    int i = 0;
+    while (true) {
+      i = i + 1; // NOTE: i will overflow
+    }
+  }
+
+  @Case("() -> *")
+  @Tag({ LOOP })
   public static void neverAsserts() {
     int i = 1;
     while (i > 0) {

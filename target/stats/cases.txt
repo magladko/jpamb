@@ -33,6 +33,7 @@ jpamb.cases.Dependent.normalizedDistance:(II)I               (0, 0) -> ok
 jpamb.cases.Dependent.safeDivByN:(I)I                        (0) -> ok
 jpamb.cases.Dependent.safeDivByN:(I)I                        (1) -> ok
 jpamb.cases.Loops.forever:()V                                () -> *
+jpamb.cases.Loops.foreverIncrement:()V                       () -> *
 jpamb.cases.Loops.neverAsserts:()V                           () -> *
 jpamb.cases.Loops.neverDivides:()I                           () -> *
 jpamb.cases.Loops.terminates:()V                             () -> assertion error
@@ -63,5 +64,7 @@ jpamb.cases.Simple.justReturn:()I                            () -> ok
 jpamb.cases.Simple.justReturnNothing:()V                     () -> ok
 jpamb.cases.Simple.multiError:(Z)I                           (false) -> assertion error
 jpamb.cases.Simple.multiError:(Z)I                           (true) -> divide by zero
+jpamb.cases.Simple.safeDivByN:(I)I                           (0) -> ok
+jpamb.cases.Simple.safeDivByN:(I)I                           (1) -> ok
 jpamb.cases.Tricky.collatz:(I)V                              (0) -> assertion error
 jpamb.cases.Tricky.collatz:(I)V                              (24) -> ok
