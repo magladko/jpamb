@@ -178,5 +178,14 @@ class Abstraction[T: jvm.Type](ABC):
         pass
 
     @abstractmethod
+    def i2s_cast(self) -> Self:
+        """
+        Model int-to-short cast with truncation and sign-extension.
+
+        The i2s instruction truncates to 16 bits (modulo 2^16) then sign-extends.
+        Result range: [-32768, 32767]
+        """
+
+    @abstractmethod
     def __str__(self) -> str:
         pass

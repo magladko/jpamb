@@ -4,8 +4,7 @@ from dataclasses import dataclass, field
 from typing import Self, cast
 
 from abstractions.abstraction import Abstraction, Comparison
-from abstractions.interval import Interval
-from abstractions.signset import SignSet  # noqa: F401
+from abstractions.signset import SignSet
 from interpreter import PC, Bytecode, Stack
 from loguru import logger
 
@@ -615,8 +614,22 @@ def step[AV: Abstraction](
             state.frames.push(new_frame)
             return [state]
 
-        # case jvm.Cast(from_=from_, to_=to_):
-        # Casts cannot be done safely
+        case jvm.Cast(from_=from_, to_=to_):
+            match (from_, to_):
+                case (jvm.Int(), jvm.Short()):
+                    # i2s instruction
+                    value_name = frame.stack.pop()
+                    value = state.constraints[value_name]
+                    result_value = value.i2s_cast()
+                    result_name = state.constraints.fresh_name()
+                    state.constraints[result_name] = result_value
+                    frame.stack.push(result_name)
+                    frame.pc = frame.pc + 1
+                    return [state]
+                case _:
+                    raise NotImplementedError(
+                        f"Cast from {from_} to {to_} not implemented"
+                    )
 
         case a:
             a.help()

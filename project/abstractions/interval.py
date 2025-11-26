@@ -350,6 +350,53 @@ class Interval(Abstraction[JvmNumberAbs]):
 
         return Interval(new_min, new_max)
 
+    def i2s_cast(self) -> Self:
+        """
+        Model int-to-short cast for Interval (precise wrapping).
+
+        The i2s instruction truncates to 16 bits and sign-extends:
+        - Range: -32768 to 32767
+        - Values outside this range wrap around (modulo 2^16)
+
+        Algorithm:
+        1. If interval entirely within [-32768, 32767] → no change
+        2. If interval spans ≥65536 → return full short range
+        3. Otherwise, compute wrapped bounds with modulo arithmetic
+        4. Handle wraparound discontinuity (return full range)
+        """
+        short_min, short_max, modulo = -32768, 32767, 65536
+
+        if self.is_bot():
+            return self
+
+        # Handle infinite bounds
+        if self.lower == float("-inf") or self.upper == float("inf"):
+            return type(self)(short_min, short_max)
+
+        lower, upper = int(self.lower), int(self.upper)
+
+        # Case 1: Fully in range
+        if short_min <= lower <= upper <= short_max:
+            return self
+
+        # Case 2: Spans multiple cycles
+        if upper - lower >= modulo:
+            return type(self)(short_min, short_max)
+
+        # Case 3: Compute wrapped bounds
+        def to_short(v: int) -> int:
+            """Convert int to short with wrapping."""
+            normalized = v % modulo
+            return normalized - modulo if normalized > short_max else normalized
+
+        wrapped_lower = to_short(lower)
+        wrapped_upper = to_short(upper)
+
+        # If wraparound boundary crossed, return full range
+        if wrapped_lower <= wrapped_upper:
+            return type(self)(wrapped_lower, wrapped_upper)
+        return type(self)(short_min, short_max)
+
     def __str__(self) -> str:
         """Return string representation of the interval."""
         if self.is_bot():
