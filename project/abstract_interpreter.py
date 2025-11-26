@@ -17,6 +17,7 @@ logger.add(sys.stderr, format="[{level}] {message}", level="DEBUG")
 
 WIDENING_DELAY_LIMIT = 5  # "Bounded" phase limit
 
+
 @dataclass
 class ConstraintStore[AV: Abstraction]:
     """
@@ -128,9 +129,12 @@ class AState[AV: Abstraction]:
     heap_ptr: int = 0
     bc = Bytecode(jpamb.Suite(), {})
 
-    def merge_with(self, other: "AState[AV]",
-              op: Callable[[AV, AV, set[int | float]], AV],
-              k_set: set[int | float]) -> Self:
+    def merge_with(
+        self,
+        other: "AState[AV]",
+        op: Callable[[AV, AV, set[int | float]], AV],
+        k_set: set[int | float],
+    ) -> Self:
         assert isinstance(other, AState), f"expected AState but got {other}"
         # assert (
         #     len(self.frames.items) == len(other.frames.items)
@@ -143,8 +147,8 @@ class AState[AV: Abstraction]:
                 name2 = other.heap[addr]
                 # if name1 == name2:
                 # Same name, join constraints
-                self.constraints[name1] = (
-                    op(self.constraints[name1], other.constraints[name2], k_set)
+                self.constraints[name1] = op(
+                    self.constraints[name1], other.constraints[name2], k_set
                 )
                 # else:
                 #     # Different names, create fresh name
@@ -170,8 +174,8 @@ class AState[AV: Abstraction]:
             if var_idx in f1.locals:
                 name1 = f1.locals[var_idx]
                 name2 = f2.locals[var_idx]
-                self.constraints[name1] = (
-                    op(self.constraints[name1], other.constraints[name2], k_set)
+                self.constraints[name1] = op(
+                    self.constraints[name1], other.constraints[name2], k_set
                 )
             else:
                 f1.locals[var_idx] = f2.locals[var_idx]
@@ -188,7 +192,8 @@ class AState[AV: Abstraction]:
             name1 = f1.stack.items[i]
             name2 = f2.stack.items[i]
             self.constraints[name1] = op(
-                self.constraints[name1], other.constraints[name2], k_set)
+                self.constraints[name1], other.constraints[name2], k_set
+            )
         # END FOR
         return self
 
@@ -293,13 +298,15 @@ class StateSet[AV: Abstraction]:
 
     per_inst: dict[PC, AState[AV]]  # PC -> AState
     needswork: set[PC]  # PCs that need reprocessing
-    K: set[int | float] # K set for widening operator
+    K: set[int | float]  # K set for widening operator
     visit_counts: dict[PC, int] = field(default_factory=dict)
 
     @classmethod
     def initialstate_from_method(
-        cls, methodid: jvm.AbsMethodID, abstraction_cls: type[AV],
-        k_set: set[int | float]
+        cls,
+        methodid: jvm.AbsMethodID,
+        abstraction_cls: type[AV],
+        k_set: set[int | float],
     ) -> Self:
         """
         Create initial state set for analyzing a method.
@@ -364,7 +371,7 @@ class StateSet[AV: Abstraction]:
                 # Phase 1: Bounded / Exact Join
                 # Retains maximum precision
                 new_state = old_state.clone()
-                new_state |= astate # This uses your precise Join logic
+                new_state |= astate  # This uses your precise Join logic
             else:
                 # Phase 2: Unbounded / Widening
                 # Sacrifices precision to guarantee termination
