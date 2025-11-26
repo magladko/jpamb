@@ -5,7 +5,6 @@ from typing import Self, cast
 
 from abstractions.abstraction import Abstraction, Comparison
 from abstractions.interval import Interval
-from abstractions.signset import SignSet
 from interpreter import PC, Bytecode, Stack
 from loguru import logger
 

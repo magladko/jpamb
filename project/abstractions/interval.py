@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from numbers import Number
 from typing import Self
 
+
 from .abstraction import Abstraction
 
 

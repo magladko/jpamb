@@ -8,6 +8,12 @@ from hypothesis.strategies import integers, sampled_from, sets
 
 from project.abstractions.abstraction import Comparison
 from project.abstractions.signset import SignSet
+from project.novel_domains import (
+    DoubleDomain,
+    MachineWordDomain,
+    PolyhedralDomain,
+    StringDomain,
+)
 
 # ============================================================================
 # HYPOTHESIS STRATEGIES
@@ -83,7 +89,108 @@ def test_compare_returns_valid_bool_set_all_ops(
     if len(xs) > 0 and len(ys) > 0:
         assert True in result or False in result
 
-################################################
+
+def test_string_domain_concatenation() -> None:
+    hello = StringDomain.abstract({"he"})
+    world = StringDomain.abstract({"llo"})
+    combined = hello + world
+    assert "hello" in combined
+
+
+def test_string_domain_collapses_to_top_when_exceeding_budget() -> None:
+    strings = {"s0", "s1", "s2", "s3", "s4", "s5"}  # MAX_TRACKED is 5
+    result = StringDomain.abstract(strings)
+    assert result.values is None
+
+
+def test_string_domain_accepts_non_string_literals() -> None:
+    domain = StringDomain.abstract({1, "2"})
+    assert "1" in domain
+    assert "2" in domain
+
+
+def test_string_domain_eq_ne_behavior() -> None:
+    a = StringDomain.abstract({"foo"})
+    b = StringDomain.abstract({"foo"})
+    c = StringDomain.abstract({"bar", "baz"})
+    assert a.compare("eq", b) == {True: (a, b)}
+    assert set(a.compare("eq", c)) == {False}
+    assert set(a.compare("ne", c)) == {True}
+
+
+def test_double_interval_arithmetic() -> None:
+    lo = DoubleDomain.abstract({1.0})
+    hi = DoubleDomain.abstract({2.0})
+    summed = lo + hi
+    expected_sum = 3.0
+    assert expected_sum in summed
+    assert summed <= DoubleDomain.top()
+
+
+def test_double_interval_intersection_and_ordering() -> None:
+    a = DoubleDomain.abstract({-2.0, 0.0})
+    b = DoubleDomain.abstract({-1.0, 1.0})
+    intersection = a & b
+    assert intersection.lower == -1.0
+    assert intersection.upper == 0.0
+    assert intersection <= a
+
+
+def test_double_division_by_interval_crossing_zero_yields_top() -> None:
+    numerator = DoubleDomain.abstract({5.0})
+    denominator = DoubleDomain.abstract({-1.0, 1.0})
+    result = numerator / denominator
+    assert result == DoubleDomain.top()
+
+
+def test_double_comparisons_respect_bounds() -> None:
+    small = DoubleDomain.abstract({-2.0, 0.0})
+    large = DoubleDomain.abstract({5.0, 6.0})
+    assert small.compare("lt", large) == {True: (small, large)}
+    assert large.compare("gt", small) == {True: (large, small)}
+
+
+def test_machine_word_arithmetic_wraps_and_tracks() -> None:
+    mask = (1 << MachineWordDomain.WIDTH) - 1
+    a = MachineWordDomain.abstract({1})
+    b = MachineWordDomain.abstract({mask})
+    wrapped = a + b
+    assert 0 in wrapped
+    assert wrapped <= MachineWordDomain.top()
+
+
+def test_machine_word_equality_partitioning() -> None:
+    value5 = 5
+    value7 = 7
+
+    a = MachineWordDomain.abstract({value5})
+    b = MachineWordDomain.abstract({value5, value7})
+    result = a.compare("eq", b)
+
+    # split assertion into two
+    assert True in result
+    assert False in result
+
+    true_left, true_right = result[True]
+    false_left, false_right = result[False]
+
+    assert value5 in true_left
+    assert value5 in true_right
+    assert value7 in false_right
+    assert value5 in false_left
+
+
+def test_polyhedral_domain_bounds_and_ops() -> None:
+    box_a = PolyhedralDomain.abstract({(0.0, 1.0), (2.0, 3.0)})
+    box_b = PolyhedralDomain.abstract({(1.0, 0.0), (4.0, 2.0)})
+    assert (1.0, 1.0) in box_a
+    summed = box_a + box_b
+    assert (3.0, 3.0) in summed
+    intersection = box_a & box_b
+    assert intersection.bounds == [(1.0, 2.0), (1.0, 2.0)]
+    joined = box_a | box_b
+    assert joined.bounds == [(0.0, 4.0), (0.0, 3.0)]
+
 def test_singset_binary_comparison() -> None:
     s1 = SignSet({"0", "-"})
     s2 = SignSet({"0", "+"})
@@ -107,7 +214,6 @@ def test_singset_binary_comparison() -> None:
         True: (SignSet({"0"}), SignSet({"+"})),
         False: (SignSet({"0"}), SignSet({"0"}))
     }
-################################################
 
 
 # ============================================================================

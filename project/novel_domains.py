@@ -1,10 +1,13 @@
 from __future__ import annotations
-from dataclasses import dataclass
+
 import operator as op
-from typing import Self
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Self
 
-from project.abstraction import Abstraction
+from project.abstractions.abstraction import Abstraction
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 @dataclass
 class StringDomain(Abstraction[str]):
@@ -90,7 +93,7 @@ class StringDomain(Abstraction[str]):
 
     def __str__(self) -> str:
         if self.values is None:
-            return "⊤str"
+            return "⊤str" # noqa: RUF001
         if self.values == set():
             return "⊥str"
         return "{" + ",".join(sorted(self.values)) + "}"
@@ -101,10 +104,10 @@ class StringDomain(Abstraction[str]):
         return {True: (self, other), False: (self, other)}
 
     def _compare_literals(
-        self,
-        other: Self,
-        comparator,
-    ) -> dict[bool, tuple["StringDomain", "StringDomain"]]:
+            self,
+            other: Self,
+            comparator: Callable[[str, str], bool],
+    ) -> dict[bool, tuple[StringDomain, StringDomain]]:
         if self.values is None or other.values is None:
             return self._unknown(other)
         results: dict[bool, tuple[set[str], set[str]]] = {}
@@ -171,7 +174,11 @@ class DoubleDomain(Abstraction[float]):
             return False
         return self.lower <= member <= self.upper
 
-    def _combine(self, other: Self, fn) -> "DoubleDomain":
+    def _combine(
+            self,
+            other: Self,
+            fn: Callable[[float, float], float],
+    ) -> DoubleDomain:
         if self.is_bottom or other.is_bottom:
             return DoubleDomain.bot()
         lows = [fn(self.lower, other.lower), fn(self.lower, other.upper)]
@@ -239,7 +246,7 @@ class DoubleDomain(Abstraction[float]):
         if self.is_bottom:
             return "⊥dbl"
         if self.lower == float("-inf") and self.upper == float("inf"):
-            return "⊤dbl"
+            return "⊤dbl"  # noqa: RUF001
         return f"[{self.lower}, {self.upper}]"
 
     # Helpers
@@ -247,10 +254,14 @@ class DoubleDomain(Abstraction[float]):
     def _unknown(self, other: Self) -> dict[bool, tuple[Self, Self]]:
         return {True: (self, other), False: (self, other)}
 
-    def _truths_to_dict(self, other: Self, truths: set[bool]) -> dict[bool, tuple[Self, Self]]:
+    def _truths_to_dict(
+        self,
+        other: Self,
+        truths: set[bool],
+    ) -> dict[bool, tuple[Self, Self]]:
         if not truths:
             truths = {True, False}
-        return {truth: (self, other) for truth in truths}
+        return dict.fromkeys(truths, (self, other))
 
     def le(self, other: Self) -> dict[bool, tuple[Self, Self]]:
         if self.is_bottom or other.is_bottom:
@@ -294,7 +305,9 @@ class DoubleDomain(Abstraction[float]):
             overlap = DoubleDomain(overlap_low, overlap_high)
             result[True] = (overlap, overlap)
         only_true = (
-            self.lower == self.upper == other.lower == other.upper and self.lower == other.lower
+            self.lower == self.upper
+            == other.lower
+            == other.upper
         )
         if not only_true:
             result[False] = (self, other)
@@ -353,7 +366,11 @@ class MachineWordDomain(Abstraction[int]):
             return True
         return (member & self._mask()) in self.residues
 
-    def _binary_op(self, other: Self, fn) -> "MachineWordDomain":
+    def _binary_op(
+            self,
+            other: Self,
+            fn: Callable[[int, int], int],
+    ) -> MachineWordDomain:
         if self.is_bottom or other.is_bottom:
             return MachineWordDomain.bot()
         if self.residues is None or other.residues is None:
@@ -428,7 +445,7 @@ class MachineWordDomain(Abstraction[int]):
         if self.is_bottom:
             return "⊥word"
         if self.residues is None:
-            return "⊤word"
+            return "⊤word"  # noqa: RUF001
         return "{" + ",".join(str(v) for v in sorted(self.residues)) + "}"
 
     # Helpers
@@ -437,8 +454,10 @@ class MachineWordDomain(Abstraction[int]):
         return {True: (self, other), False: (self, other)}
 
     def _compare_values(
-        self, other: Self, comparator
-    ) -> dict[bool, tuple["MachineWordDomain", "MachineWordDomain"]]:
+            self,
+            other: Self,
+            comparator: Callable[[int, int], bool],
+    ) -> dict[bool, tuple[MachineWordDomain, MachineWordDomain]]:
         if self.is_bottom or other.is_bottom:
             return self._unknown(other)
         if self.residues is None or other.residues is None:
@@ -489,7 +508,7 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
     DEFAULT_DIMENSION = 1
 
     @classmethod
-    def _as_point(cls, value: tuple[float, ...] | float | int) -> tuple[float, ...]:
+    def _as_point(cls, value: tuple[float, ...] | float) -> tuple[float, ...]:
         if isinstance(value, tuple):
             return tuple(float(v) for v in value)
         if isinstance(value, list):
@@ -512,7 +531,7 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
             for idx, value in enumerate(point):
                 mins[idx] = min(mins[idx], value)
                 maxs[idx] = max(maxs[idx], value)
-        bounds = list(zip(mins, maxs))
+        bounds = list(zip(mins, maxs, strict=True))
         return cls(dimension, bounds)
 
     @classmethod
@@ -525,7 +544,7 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
         dim = cls.DEFAULT_DIMENSION if dimension is None else dimension
         return cls(dim, None)
 
-    def __contains__(self, member: tuple[float, ...] | float | int) -> bool:
+    def __contains__(self, member: tuple[float, ...] | float) -> bool:
         if self.is_bottom:
             return False
         if self.bounds is None:
@@ -533,9 +552,10 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
         point = self._as_point(member)
         if len(point) != self.dimension:
             return False
-        return all(lo <= value <= hi for value, (lo, hi) in zip(point, self.bounds))
+        return all(lo <= value <= hi for value, (lo, hi)
+                   in zip(point, self.bounds, strict=True))
 
-    # Helpers 
+    # Helpers
 
     def _preferself_dimension(self, other: Self) -> int:
         """Best-effort dimension choice when collapsing to top/bot."""
@@ -545,7 +565,14 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
             return other.dimension
         return max(self.dimension, other.dimension)
 
-    def _apply_pairwise(self, other: Self, fn) -> "PolyhedralDomain":
+    def _apply_pairwise(
+            self,
+            other: Self,
+            fn: Callable[
+                [tuple[float, float], tuple[float, float]],
+                tuple[float, float]
+            ],
+    ) -> PolyhedralDomain:
         if self.is_bottom or other.is_bottom:
             dim = self._preferself_dimension(other)
             return PolyhedralDomain.bot(dim)
@@ -555,7 +582,7 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
         if self.dimension != other.dimension:
             dim = max(self.dimension, other.dimension)
             return PolyhedralDomain.top(dim)
-        merged = [fn(a, b) for a, b in zip(self.bounds, other.bounds)]
+        merged = [fn(a, b) for a, b in zip(self.bounds, other.bounds,strict=True)]
         return PolyhedralDomain(self.dimension, merged)
 
     def __add__(self, other: Self) -> Self:
@@ -577,7 +604,8 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
             return False
         return all(
             other_lo <= lo and hi <= other_hi
-            for (lo, hi), (other_lo, other_hi) in zip(self.bounds, other.bounds)
+            for (lo, hi), (other_lo, other_hi) in zip(self.bounds, other.bounds,
+                                                      strict=True)
         )
 
     def __eq__(self, other: object) -> bool:
@@ -600,7 +628,7 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
             dim = max(self.dimension, other.dimension)
             return PolyhedralDomain.top(dim)
         intersected = []
-        for (lo1, hi1), (lo2, hi2) in zip(self.bounds, other.bounds):
+        for (lo1, hi1), (lo2, hi2) in zip(self.bounds, other.bounds,strict=True):
             lo = max(lo1, lo2)
             hi = min(hi1, hi2)
             if lo > hi:
@@ -620,7 +648,7 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
             dim = max(self.dimension, other.dimension)
             return PolyhedralDomain.top(dim)
         hull = []
-        for (lo1, hi1), (lo2, hi2) in zip(self.bounds, other.bounds):
+        for (lo1, hi1), (lo2, hi2) in zip(self.bounds, other.bounds, strict=True):
             hull.append((min(lo1, lo2), max(hi1, hi2)))
         return PolyhedralDomain(self.dimension, hull)
 
@@ -628,7 +656,7 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
         if self.is_bottom:
             return "⊥poly"
         if self.bounds is None:
-            return "⊤poly"
+            return "⊤poly" # noqa: RUF001
         parts = [f"{lo}≤x{idx}≤{hi}" for idx, (lo, hi) in enumerate(self.bounds)]
         return "{" + ", ".join(parts) + "}"
 
@@ -664,8 +692,8 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
 
 
 __all__ = [
-    "StringDomain",
     "DoubleDomain",
     "MachineWordDomain",
     "PolyhedralDomain",
+    "StringDomain",
 ]
