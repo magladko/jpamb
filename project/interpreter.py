@@ -217,7 +217,6 @@ def step(state: State) -> State | str:
             return state
         case jvm.ArrayStore(type=type):
             val, idx, ref = frame.stack.pop(), frame.stack.pop(), frame.stack.pop()
-            # TODO(kornel): if ref is null -> throw null_ptr exception
             assert ref.type is jvm.Reference()
             assert val.type is jvm.Int()
             assert idx.type is jvm.Int()
@@ -302,10 +301,32 @@ def step(state: State) -> State | str:
             frame.pc = frame.pc + 1
             return state
         case jvm.Cast(from_=from_, to_=to_):
-            # TODO(kornel): make lossful casts
             v = frame.stack.pop()
             assert v.type is from_, f"Expected type {from_!r}, but got {v.type!r}"
-            v = jvm.Value(to_, v.value)
+
+            # Perform truncation and sign-extension for narrowing casts
+            match (from_, to_):
+                case (jvm.Int(), jvm.Short()):
+                    # i2s: truncate to 16 bits and sign-extend
+                    assert isinstance(v.value, int)
+                    truncated = v.value & 0xFFFF
+                    result = truncated - 65536 if truncated >= 32768 else truncated  # noqa: PLR2004
+                    v = jvm.Value(to_, result)
+                case (jvm.Int(), jvm.Byte()):
+                    assert isinstance(v.value, int)
+                    # i2b: truncate to 8 bits and sign-extend
+                    truncated = v.value & 0xFF
+                    result = truncated - 256 if truncated >= 128 else truncated  # noqa: PLR2004
+                    v = jvm.Value(to_, result)
+                case (jvm.Int(), jvm.Char()):
+                    assert isinstance(v.value, int)
+                    # i2c: truncate to 16 bits (unsigned)
+                    result = v.value & 0xFFFF
+                    v = jvm.Value(to_, result)
+                case _:
+                    # Default: just change type (for widening or unsupported casts)
+                    v = jvm.Value(to_, v.value)
+
             frame.stack.push(v)
             frame.pc = frame.pc + 1
             return state
