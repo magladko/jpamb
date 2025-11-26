@@ -723,8 +723,6 @@ while True:
     # If needswork is empty, we've reached fixed point
     if not sts.needswork:
         logger.debug("Fixed point reached!")
-        # TODO(kornel): fixpoint can be reached even without infinite execution...
-        # final.add("*")
         break
 
 logger.debug(f"Executed lines {lines_executed}")
