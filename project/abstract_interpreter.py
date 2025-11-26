@@ -511,6 +511,30 @@ def step[AV: Abstraction](
             computed_states.append(state)
             return computed_states
 
+        case jvm.Negate(type=tp):
+            name = frame.stack.pop()
+            v = state.constraints[name]
+            assert isinstance(tp, v.get_supported_types()), \
+                f"{abstraction_cls} does not support {tp} negation"
+            result_name = state.constraints.fresh_name()
+            state.constraints[result_name] = -v
+            frame.stack.push(result_name)
+            frame.pc = frame.pc + 1
+            return [state]
+
+        case jvm.Incr(index=idx, amount=amnt):
+            assert isinstance(idx, int), "Unexpected Incr arguments"
+            assert isinstance(amnt, int), "Unexpected Incr arguments"
+            name = frame.locals[idx]
+            result_name = state.constraints.fresh_name()
+
+            new_v = state.constraints[name] + abstraction_cls.abstract({amnt})
+            state.constraints[result_name] = new_v
+
+            frame.locals[idx] = result_name
+            frame.pc = frame.pc + 1
+            return [state]
+
         case jvm.Get(
             static=True,
             field=jvm.AbsFieldID(

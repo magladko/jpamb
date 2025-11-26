@@ -2,11 +2,12 @@ from dataclasses import dataclass
 from numbers import Number
 from typing import Self
 
-from .abstraction import Abstraction
+from .abstraction import Abstraction, JvmNumberAbs
 
 
 @dataclass
-class Interval(Abstraction[int]):
+class Interval(Abstraction[JvmNumberAbs]):
+
     lower: int | float
     upper: int | float
 
@@ -270,6 +271,13 @@ class Interval(Abstraction[int]):
         #     return type(self)(-(max_divisor - 1), 0)
         # # Mixed signs: result in [-(max_divisor - 1), max_divisor - 1]
         # return type(self)(-(max_divisor - 1), max_divisor - 1)
+
+    def __neg__(self) -> Self:
+        # TODO(kornel): Negation overflow for smallest numbers
+        tmp = self.lower
+        self.lower = -self.upper
+        self.upper = -tmp
+        return self
 
     def __le__(self, other: Self) -> bool:
         """Return result of poset ordering (self ⊑ other)."""

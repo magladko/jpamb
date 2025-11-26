@@ -1,11 +1,15 @@
 from abc import ABC, abstractmethod
-from types import get_original_bases
-from typing import Literal, Self, get_args, get_origin
+from types import UnionType, get_original_bases
+from typing import Literal, Self, TypeAliasType, get_args, get_origin
+
+from jpamb import jvm
 
 type Comparison = Literal["le", "eq", "lt", "gt", "ge", "ne"]
+type JvmNumberAbs = (jvm.Int | jvm.Short | jvm.Long | jvm.Byte
+                  | jvm.Float | jvm.Double | jvm.Boolean)
 
 
-class Abstraction[T](ABC):
+class Abstraction[T: jvm.Type](ABC):
     type DivisionResult = (
         Self | Literal["divide by zero"] | tuple[Self, Literal["divide by zero"]]
     )
@@ -22,6 +26,29 @@ class Abstraction[T](ABC):
                 if args:
                     cls.concrete_type = args[0]
                 break
+
+    @classmethod
+    def get_supported_types(cls) -> tuple[type, ...]:
+        """Return tuple of supported types from the generic parameter."""
+        for base in getattr(cls, "__orig_bases__", ()):
+            args = get_args(base)
+            if args:
+                type_arg = args[0]
+
+                # Unwrap TypeAliasType
+                while isinstance(type_arg, TypeAliasType):
+                    type_arg = type_arg.__value__
+
+                # Unwrap __value__ attribute if present
+                while hasattr(type_arg, "__value__"):
+                    type_arg = type_arg.__value__
+
+                # Now extract Union members
+                if get_origin(type_arg) is UnionType:
+                    return get_args(type_arg)
+
+                return (type_arg,)
+        return ()
 
     @classmethod
     @abstractmethod
@@ -110,6 +137,15 @@ class Abstraction[T](ABC):
     @abstractmethod
     def __mod__(self, other: Self) -> DivisionResult:
         pass
+
+    @abstractmethod
+    def __neg__(self) -> Self:
+        """
+        For abstractions not supporting number types, return Self.
+
+        OBS: The negation of the maximum negative int results
+             in that same maximum negative number
+        """
 
     @abstractmethod
     def __le__(self, other: Self) -> bool:
