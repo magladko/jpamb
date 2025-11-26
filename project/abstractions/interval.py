@@ -15,7 +15,7 @@ class Interval(Abstraction[JvmNumberAbs]):
         return self.lower > self.upper
 
     @classmethod
-    def abstract(cls, items: set[int | float]) -> Self:
+    def abstract(cls, items: set[int] | set[float] | set[int | float]) -> Self:
         """Create interval from a set of concrete integers."""
         if not items:
             return cls.bot()
