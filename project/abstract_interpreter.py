@@ -507,7 +507,7 @@ def step[AV: Abstraction](
 
             frame.stack.push(result_name)
 
-            frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
+            frame.pc = frame.pc + 1
             computed_states.append(state)
             return computed_states
 
@@ -546,7 +546,7 @@ def step[AV: Abstraction](
             name = state.constraints.fresh_name()
             state.constraints[name] = abstraction_cls.abstract({0})
             frame.stack.push(name)
-            frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
+            frame.pc = frame.pc + 1
             return [state]
 
         case jvm.New(classname=jvm.ClassName(_as_string="java/lang/AssertionError")):
@@ -562,7 +562,7 @@ def step[AV: Abstraction](
             new_frame = PerVarFrame.from_method(m)
             for i, v in enumerate(args):
                 new_frame.locals[i] = v
-            frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
+            frame.pc = frame.pc + 1
             state.frames.push(new_frame)
             return [state]
 
