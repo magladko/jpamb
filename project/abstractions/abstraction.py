@@ -165,5 +165,9 @@ class Abstraction[T: jvm.Type](ABC):
         """Return result of join operator (self ⊔ other)."""
 
     @abstractmethod
+    def widen(self, other: Self, k_set: set[T]) -> Self:
+        pass
+
+    @abstractmethod
     def __str__(self) -> str:
         pass

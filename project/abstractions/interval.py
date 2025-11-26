@@ -15,7 +15,7 @@ class Interval(Abstraction[JvmNumberAbs]):
         return self.lower > self.upper
 
     @classmethod
-    def abstract(cls, items: set[int]) -> Self:
+    def abstract(cls, items: set[int | float]) -> Self:
         """Create interval from a set of concrete integers."""
         if not items:
             return cls.bot()
@@ -324,6 +324,27 @@ class Interval(Abstraction[JvmNumberAbs]):
         new_lower = min(self.lower, other.lower)
         new_upper = max(self.upper, other.upper)
         return type(self)(new_lower, new_upper)
+
+    def widen(self, other: "Interval", k_set: set[int | float]) -> "Interval":
+        # Standard join first to find the bounds
+        joined = self | other
+
+        new_min = joined.lower
+        new_max = joined.upper
+
+        # If the lower bound is UNSTABLE (it changed/dropped), widen to next K threshold
+        if other.lower < self.lower:
+            # Find largest k in K such that k <= new_min. If none, -infinity.
+            k_candidates = [k for k in k_set if k <= new_min]
+            new_min = max(k_candidates) if k_candidates else -float("inf")
+
+        # If the upper bound is UNSTABLE (it grew), widen to next K threshold
+        if other.upper > self.upper:
+            # Find smallest k in K such that k >= new_max. If none, infinity.
+            k_candidates = [k for k in k_set if k >= new_max]
+            new_max = min(k_candidates) if k_candidates else float("inf")
+
+        return Interval(new_min, new_max)
 
     def __str__(self) -> str:
         """Return string representation of the interval."""

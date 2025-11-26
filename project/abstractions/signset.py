@@ -384,6 +384,10 @@ class SignSet(Abstraction[JvmNumberAbs]):
             return False
         return type(self)(self.signs | other.signs)
 
+    def widen(self, other: Self, _k_set: set[JvmNumberAbs]) -> Self:
+        """As this is a finite-lattice abstraction, it always calls join."""
+        return self.__or__(other)
+
     def __str__(self) -> str:
         return "{" + ",".join(sorted(self.signs)) + "}"
 
