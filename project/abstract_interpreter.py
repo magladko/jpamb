@@ -1,6 +1,6 @@
 import sys
-from collections.abc import Iterable, Iterator
-from dataclasses import dataclass
+from collections.abc import Callable, Iterable, Iterator
+from dataclasses import dataclass, field
 from typing import Self, cast
 
 from abstractions.abstraction import Abstraction, Comparison
@@ -15,6 +15,7 @@ from jpamb import jvm
 logger.remove()
 logger.add(sys.stderr, format="[{level}] {message}", level="DEBUG")
 
+WIDENING_DELAY_LIMIT = 5  # "Bounded" phase limit
 
 @dataclass
 class ConstraintStore[AV: Abstraction]:
@@ -70,6 +71,9 @@ class ConstraintStore[AV: Abstraction]:
     def __iter__(self) -> Iterator[str]:
         return iter(self._constraints)
 
+    def values(self) -> Iterable[AV]:
+        return self._constraints.values()
+
     def __str__(self) -> str:
         return "{" + ", ".join(f"{k}:{v}" for k, v in sorted(self.items())) + "}"
 
@@ -124,15 +128,9 @@ class AState[AV: Abstraction]:
     heap_ptr: int = 0
     bc = Bytecode(jpamb.Suite(), {})
 
-    def __ior__(self, other: "AState[AV]") -> Self:
-        """
-        In-place POINTWISE JOIN operation (⊔) for abstract states.
-
-        With named values:
-        1. If both states have the same name, join their constraints
-        2. If names differ at same position, create fresh name with joined constraint
-        3. Merge constraint stores
-        """
+    def merge_with(self, other: "AState[AV]",
+              op: Callable[[AV, AV, set[int | float]], AV],
+              k_set: set[int | float]) -> Self:
         assert isinstance(other, AState), f"expected AState but got {other}"
         # assert (
         #     len(self.frames.items) == len(other.frames.items)
@@ -143,18 +141,18 @@ class AState[AV: Abstraction]:
             if addr in self.heap:
                 name1 = self.heap[addr]
                 name2 = other.heap[addr]
-                if name1 == name2:
-                    # Same name, join constraints
-                    self.constraints[name1] = (
-                        self.constraints[name1] | other.constraints[name2]
-                    )
-                else:
-                    # Different names, create fresh name
-                    fresh = self.constraints.fresh_name()
-                    self.constraints[fresh] = (
-                        self.constraints[name1] | other.constraints[name2]
-                    )
-                    self.heap[addr] = fresh
+                # if name1 == name2:
+                # Same name, join constraints
+                self.constraints[name1] = (
+                    op(self.constraints[name1], other.constraints[name2], k_set)
+                )
+                # else:
+                #     # Different names, create fresh name
+                #     fresh = self.constraints.fresh_name()
+                #     self.constraints[fresh] = (
+                #         self.constraints[name1] | other.constraints[name2]
+                #     )
+                #     self.heap[addr] = fresh
             else:
                 # New address
                 self.heap[addr] = other.heap[addr]
@@ -173,7 +171,7 @@ class AState[AV: Abstraction]:
                 name1 = f1.locals[var_idx]
                 name2 = f2.locals[var_idx]
                 self.constraints[name1] = (
-                    self.constraints[name1] | other.constraints[name2]
+                    op(self.constraints[name1], other.constraints[name2], k_set)
                 )
             else:
                 f1.locals[var_idx] = f2.locals[var_idx]
@@ -189,9 +187,42 @@ class AState[AV: Abstraction]:
         for i in range(len(f1.stack.items)):
             name1 = f1.stack.items[i]
             name2 = f2.stack.items[i]
-            self.constraints[name1] = self.constraints[name1] | other.constraints[name2]
+            self.constraints[name1] = op(
+                self.constraints[name1], other.constraints[name2], k_set)
         # END FOR
         return self
+
+    def __ior__(self, other: "AState[AV]") -> Self:
+        """
+        In-place POINTWISE JOIN operation (⊔) for abstract states.
+
+        With named values:
+        1. If both states have the same name, join their constraints
+        2. If names differ at same position, create fresh name with joined constraint
+        3. Merge constraint stores
+        """
+        # Lambda adapts 2-arg join to 3-arg template signature
+        # k_set parameter is ignored for join operations
+        return self.merge_with(other, lambda a, b, _: a | b, set())
+
+    def widen(self, other: "AState[AV]", k_set: set[int | float]) -> Self:
+        """
+        WIDENING operation (∇) for abstract states to ensure termination.
+
+        Applies widening to all constraint values using the provided k_set
+        as threshold values for extrapolation.
+
+        Args:
+            other: The state to widen with
+            k_set: Set of threshold values for widening
+
+        Returns:
+            New widened state
+
+        """
+        # Clone first to avoid modifying self
+        # Lambda delegates to the abstraction's widen method
+        return self.clone().merge_with(other, lambda a, b, k: a.widen(b, k), k_set)
 
     def __eq__(self, other: object) -> bool:
         """Check equality of abstract states."""
@@ -241,9 +272,9 @@ class AState[AV: Abstraction]:
     def __str__(self) -> str:
         return f"{self.heap} {self.frames} {self.constraints}"
 
-    def clone(self) -> "AState[AV]":
+    def clone(self) -> Self:
         """Deep copy of the entire state."""
-        return AState(
+        return self.__class__(
             heap=self.heap.copy(),  # shallow copy of heap dict (names are immutable)
             frames=Stack([f.clone() for f in self.frames.items]),  # deep copy frames
             constraints=self.constraints.clone(),  # deep copy constraints
@@ -262,10 +293,13 @@ class StateSet[AV: Abstraction]:
 
     per_inst: dict[PC, AState[AV]]  # PC -> AState
     needswork: set[PC]  # PCs that need reprocessing
+    K: set[int | float] # K set for widening operator
+    visit_counts: dict[PC, int] = field(default_factory=dict)
 
     @classmethod
     def initialstate_from_method(
-        cls, methodid: jvm.AbsMethodID, abstraction_cls: type[AV]
+        cls, methodid: jvm.AbsMethodID, abstraction_cls: type[AV],
+        k_set: set[int | float]
     ) -> Self:
         """
         Create initial state set for analyzing a method.
@@ -291,7 +325,7 @@ class StateSet[AV: Abstraction]:
             frame.locals[i] = name
 
         state = AState[AV]({}, Stack.empty().push(frame), constraints)
-        return cls(per_inst={frame.pc: state}, needswork={frame.pc})
+        return cls(per_inst={frame.pc: state}, needswork={frame.pc}, K=k_set)
 
     def per_instruction(self) -> Iterable[tuple[PC, AState[AV]]]:
         """
@@ -316,22 +350,31 @@ class StateSet[AV: Abstraction]:
         pc = astate.pc
 
         if pc not in self.per_inst:
-            # New PC: add state and mark for processing
             self.per_inst[pc] = astate.clone()
             self.needswork.add(pc)
+            self.visit_counts[pc] = 1
         else:
-            # Existing PC: must JOIN states!
-            old = self.per_inst[pc]
+            old_state = self.per_inst[pc]
+            current_visits = self.visit_counts.get(pc, 0)
 
-            # Create new state by joining
-            new_state = old.clone()
-            new_state |= astate
+            # Might not be needed as long as delay is longer than the lattice heihgt
+            # if (all(c.has_finite_lattice() for c in old_state.constraints.values()) or
+            #     current_visits < WIDENING_DELAY_LIMIT):
+            if current_visits < WIDENING_DELAY_LIMIT:
+                # Phase 1: Bounded / Exact Join
+                # Retains maximum precision
+                new_state = old_state.clone()
+                new_state |= astate # This uses your precise Join logic
+            else:
+                # Phase 2: Unbounded / Widening
+                # Sacrifices precision to guarantee termination
+                new_state = old_state.widen(astate, self.K)
 
-            # Only update if state actually changed
-            if new_state != old:
+            if new_state != old_state:
                 self.per_inst[pc] = new_state
-                self.needswork.add(pc)  # ← Must reprocess this PC
-            # else: fixed point reached at this PC, don't add to needswork
+                self.needswork.add(pc)
+                self.visit_counts[pc] = current_visits + 1
+
         return self
 
     def __str__(self) -> str:
@@ -620,10 +663,10 @@ results: dict[str, int] = {
     "*": 0,
 }
 
-# AV = SignSet
-AV = Interval
+AV = SignSet
+# AV = Interval
 
-MAX_STEPS = 1000
+# MAX_STEPS = 1000
 final: set[str] = set()
 lines_executed: dict[jvm.AbsMethodID, set[int]] = {methodid: set()}
 
@@ -632,12 +675,17 @@ lines_executed: dict[jvm.AbsMethodID, set[int]] = {methodid: set()}
 # logger.info("Waiting for debugger to attach...")
 # debugpy.wait_for_client()
 
+# TODO(kornel): K-set thresholds (placeholder)
+K_SET: set[int | float] = {-100, -10, -1, 0, 1, 10, 100}
+
 # Initialize with entry state
-sts = StateSet[AV].initialstate_from_method(methodid, AV)
+sts = StateSet[AV].initialstate_from_method(methodid, AV, K_SET)
 logger.debug(f"Initial state:\n{sts}")
 
 # Worklist algorithm: iterate until fixed point (or max steps)
-for iteration in range(MAX_STEPS):
+iteration = 0
+while True:
+    iteration += 1
     # Step all states that need processing
     for s in manystep(sts, AV):
         if isinstance(s, str):

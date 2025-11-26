@@ -30,6 +30,10 @@ class SignSet(Abstraction[JvmNumberAbs]):
     def top(cls) -> Self:
         return cls({"+", "-", "0"})
 
+    @classmethod
+    def has_finite_lattice(cls) -> bool:
+        return True
+
     def _binary_comparison(
         self: Self, other: Self, outcome_fn: Callable[[Sign, Sign], set[bool]]
     ) -> dict[bool, tuple[Self, Self]]:

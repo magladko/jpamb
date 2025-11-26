@@ -67,6 +67,15 @@ class Abstraction[T: jvm.Type](ABC):
         pass
 
     @classmethod
+    @abstractmethod
+    def has_finite_lattice(cls) -> bool:
+        """
+        Return true if abstraction is based on a final lattice.
+
+        No widening is necessary in case this method returns True.
+        """
+
+    @classmethod
     def comp_res_str(cls, result: dict[bool, tuple[Self, Self]]) -> str:
         return ", ".join(f"{k}: ({v[0]!s}, {v[1]!s})" for k, v in result.items())
 

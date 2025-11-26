@@ -31,6 +31,10 @@ class Interval(Abstraction[JvmNumberAbs]):
         """Return the top element (all integers)."""
         return cls(float("-inf"), float("inf"))
 
+    @classmethod
+    def has_finite_lattice(cls) -> bool:
+        return False
+
     def le(self, other: Self) -> dict[bool, tuple[Self, Self]]:
         """Less than or equal comparison with refinement."""
         # self <= other
