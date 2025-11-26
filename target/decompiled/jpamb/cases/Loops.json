@@ -212,6 +212,128 @@
             "opr": "push",
             "value": {
               "type": "integer",
+              "value": 0
+            }
+          },
+          {
+            "index": 0,
+            "offset": 1,
+            "opr": "store",
+            "type": "int"
+          },
+          {
+            "index": 0,
+            "offset": 2,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "offset": 3,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 1
+            }
+          },
+          {
+            "offset": 4,
+            "operant": "add",
+            "opr": "binary",
+            "type": "int"
+          },
+          {
+            "index": 0,
+            "offset": 5,
+            "opr": "store",
+            "type": "int"
+          },
+          {
+            "offset": 6,
+            "opr": "goto",
+            "target": 2
+          }
+        ],
+        "exceptions": [],
+        "lines": [
+          {
+            "line": 18,
+            "offset": 0
+          },
+          {
+            "line": 20,
+            "offset": 2
+          }
+        ],
+        "max_locals": 1,
+        "max_stack": 2,
+        "stack_map": [
+          {
+            "index": 2,
+            "info": [
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "append_frame"
+          }
+        ]
+      },
+      "default": null,
+      "exceptions": [],
+      "name": "foreverIncrement",
+      "params": [],
+      "returns": {
+        "annotations": [],
+        "type": null
+      },
+      "typeparams": []
+    },
+    {
+      "access": [
+        "public",
+        "static"
+      ],
+      "annotations": [
+        {
+          "is_runtime_visible": true,
+          "type": "jpamb/utils/Case",
+          "values": {
+            "value": {
+              "type": "string",
+              "value": "() -> *"
+            }
+          }
+        },
+        {
+          "is_runtime_visible": true,
+          "type": "jpamb/utils/Tag",
+          "values": {
+            "value": {
+              "type": "array",
+              "value": [
+                {
+                  "type": "enum",
+                  "value": {
+                    "name": "LOOP",
+                    "type": {
+                      "kind": "class",
+                      "name": "jpamb/utils/Tag$TagType"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "code": {
+        "annotations": [],
+        "bytecode": [
+          {
+            "offset": 0,
+            "opr": "push",
+            "value": {
+              "type": "integer",
               "value": 1
             }
           },
@@ -292,19 +414,19 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 18,
+            "line": 27,
             "offset": 0
           },
           {
-            "line": 19,
+            "line": 28,
             "offset": 2
           },
           {
-            "line": 21,
+            "line": 30,
             "offset": 5
           },
           {
-            "line": 22,
+            "line": 31,
             "offset": 11
           }
         ],
@@ -443,15 +565,15 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 27,
+            "line": 36,
             "offset": 0
           },
           {
-            "line": 28,
+            "line": 37,
             "offset": 2
           },
           {
-            "line": 30,
+            "line": 39,
             "offset": 5
           }
         ],
@@ -653,19 +775,19 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 36,
+            "line": 45,
             "offset": 0
           },
           {
-            "line": 37,
+            "line": 46,
             "offset": 2
           },
           {
-            "line": 39,
+            "line": 48,
             "offset": 10
           },
           {
-            "line": 40,
+            "line": 49,
             "offset": 16
           }
         ],

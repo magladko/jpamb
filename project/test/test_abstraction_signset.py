@@ -13,6 +13,7 @@ from project.abstractions.signset import SignSet
 # HYPOTHESIS STRATEGIES
 # ============================================================================
 
+
 def sign_sets_exhaustive() -> st.SearchStrategy[SignSet]:
     """
     Exhaustive strategy sampling from all 8 possible SignSets.
@@ -83,7 +84,7 @@ def test_compare_returns_valid_bool_set_all_ops(
     if len(xs) > 0 and len(ys) > 0:
         assert True in result or False in result
 
-################################################
+
 def test_singset_binary_comparison() -> None:
     s1 = SignSet({"0", "-"})
     s2 = SignSet({"0", "+"})
@@ -94,7 +95,7 @@ def test_singset_binary_comparison() -> None:
     lt_result = s1.lt(s2)
     assert lt_result == {
         True: (SignSet({"0", "-"}), SignSet({"0", "+"})),
-        False: (SignSet({"0"}), SignSet({"0"}))
+        False: (SignSet({"0"}), SignSet({"0"})),
     }
 
     s1 = SignSet({"0"})
@@ -105,9 +106,8 @@ def test_singset_binary_comparison() -> None:
     lt_result = s1.lt(s2)
     assert lt_result == {
         True: (SignSet({"0"}), SignSet({"+"})),
-        False: (SignSet({"0"}), SignSet({"0"}))
+        False: (SignSet({"0"}), SignSet({"0"})),
     }
-################################################
 
 
 # ============================================================================
@@ -115,6 +115,7 @@ def test_singset_binary_comparison() -> None:
 # ============================================================================
 # TODO(kornel): review tests
 # --- Complementarity Properties ---
+
 
 @given(sign_sets_exhaustive(), sign_sets_exhaustive())
 def test_comparison_complementarity_lt_ge(s1: SignSet, s2: SignSet) -> None:

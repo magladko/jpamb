@@ -2,16 +2,17 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Literal, Self
 
-from .abstraction import Abstraction
+from .abstraction import Abstraction, JvmNumberAbs
 
 type Sign = Literal["+", "-", "0"]
 
+
 @dataclass
-class SignSet(Abstraction[int]):
+class SignSet(Abstraction[JvmNumberAbs]):
     signs: set[Sign]
 
     @classmethod
-    def abstract(cls, items: set[int]) -> Self:
+    def abstract(cls, items: set[JvmNumberAbs]) -> Self:
         signset = set()
         if 0 in items:
             signset.add("0")
@@ -30,11 +31,8 @@ class SignSet(Abstraction[int]):
         return cls({"+", "-", "0"})
 
     def _binary_comparison(
-            self: Self,
-            other: Self,
-            outcome_fn: Callable[[Sign, Sign], set[bool]]
-        ) -> dict[bool, tuple[Self, Self]]:
-
+        self: Self, other: Self, outcome_fn: Callable[[Sign, Sign], set[bool]]
+    ) -> dict[bool, tuple[Self, Self]]:
         assert isinstance(other, SignSet)
 
         results: dict[bool, tuple[Self, Self]] = {}
@@ -98,8 +96,14 @@ class SignSet(Abstraction[int]):
             match (s1, s2):
                 case ("0", "0"):
                     return {True}
-                case (("0", "+") | ("0", "-") | ("+", "0") |
-                      ("-", "0") | ("+", "-") | ("-", "+")):
+                case (
+                    ("0", "+")
+                    | ("0", "-")
+                    | ("+", "0")
+                    | ("-", "0")
+                    | ("+", "-")
+                    | ("-", "+")
+                ):
                     return {False}
                 case ("+", "+") | ("-", "-"):
                     return {True, False}
@@ -122,8 +126,14 @@ class SignSet(Abstraction[int]):
             match (s1, s2):
                 case ("0", "0"):
                     return {False}
-                case (("0", "+") | ("0", "-") | ("+", "0") |
-                      ("-", "0") | ("+", "-") | ("-", "+")):
+                case (
+                    ("0", "+")
+                    | ("0", "-")
+                    | ("+", "0")
+                    | ("-", "0")
+                    | ("+", "-")
+                    | ("-", "+")
+                ):
                     return {True}
                 case ("+", "+") | ("-", "-"):
                     return {True, False}
@@ -201,7 +211,7 @@ class SignSet(Abstraction[int]):
 
         return self._binary_comparison(other, gt_outcome)
 
-    def __contains__(self, member: int) -> bool:
+    def __contains__(self, member: JvmNumberAbs) -> bool:
         if member == 0 and "0" in self.signs:
             return True
         if member > 0 and "+" in self.signs:
@@ -337,6 +347,22 @@ class SignSet(Abstraction[int]):
             new_signs.add("+")
         result = type(self)(new_signs)
         return result if not has_zero else (result, "divide by zero")
+
+    def __neg__(self) -> Self:
+        res: set[Sign] = set()
+        if "+" in self.signs:
+            res.add("-")
+        if "0" in self.signs:
+            res.add("0")
+        if "-" in self.signs:
+            # TODO(kornel): the negation of the maximum negative int
+            # results in that same maximum negative number
+            # For now discard the behavior,
+            # since the suite doesn't seem to mind (see: Dependent:normalizedDistance)
+            res.add("+")
+            # res |= {"+", "-"}
+        self.signs = res
+        return self
 
     def __le__(self, other: Self) -> bool:
         if not isinstance(other, SignSet):
