@@ -7,7 +7,6 @@ from .abstraction import Abstraction, JvmNumberAbs
 
 @dataclass
 class Interval(Abstraction[JvmNumberAbs]):
-
     lower: int | float
     upper: int | float
 

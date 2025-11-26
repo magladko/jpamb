@@ -5,8 +5,9 @@ from typing import Literal, Self, TypeAliasType, get_args, get_origin
 from jpamb import jvm
 
 type Comparison = Literal["le", "eq", "lt", "gt", "ge", "ne"]
-type JvmNumberAbs = (jvm.Int | jvm.Short | jvm.Long | jvm.Byte
-                  | jvm.Float | jvm.Double | jvm.Boolean)
+type JvmNumberAbs = (
+    jvm.Int | jvm.Short | jvm.Long | jvm.Byte | jvm.Float | jvm.Double | jvm.Boolean
+)
 
 
 class Abstraction[T: jvm.Type](ABC):

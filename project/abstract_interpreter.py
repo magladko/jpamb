@@ -189,9 +189,7 @@ class AState[AV: Abstraction]:
         for i in range(len(f1.stack.items)):
             name1 = f1.stack.items[i]
             name2 = f2.stack.items[i]
-            self.constraints[name1] = (
-                self.constraints[name1] | other.constraints[name2]
-            )
+            self.constraints[name1] = self.constraints[name1] | other.constraints[name2]
         # END FOR
         return self
 
@@ -348,7 +346,7 @@ def step[AV: Abstraction](
     state = state.clone()  # Work on a copy
     frame = state.frames.peek()
     opr = state.bc[state.pc]
-    logger.debug(f"STEP {opr} {{{opr.line if opr.line else ""}}}\n{state}")
+    logger.debug(f"STEP {opr} {{{opr.line if opr.line else ''}}}\n{state}")
 
     if opr.line:
         lines_executed.setdefault(state.pc.method, set()).add(opr.line)
@@ -514,8 +512,9 @@ def step[AV: Abstraction](
         case jvm.Negate(type=tp):
             name = frame.stack.pop()
             v = state.constraints[name]
-            assert isinstance(tp, v.get_supported_types()), \
+            assert isinstance(tp, v.get_supported_types()), (
                 f"{abstraction_cls} does not support {tp} negation"
+            )
             result_name = state.constraints.fresh_name()
             state.constraints[result_name] = -v
             frame.stack.push(result_name)
@@ -650,6 +649,7 @@ for iteration in range(MAX_STEPS):
 
     logger.debug(f"Iteration {iteration}: {len(sts.needswork)} PCs need work")
     # logger.debug("Needs work: " + ", ".join(map(str, sts.needswork)))
+    # logger.debug(f"sts:\n{sts}")
     logger.debug(f"Final states: {final}")
 
     # If needswork is empty, we've reached fixed point
