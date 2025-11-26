@@ -212,7 +212,7 @@ class SignSet(Abstraction[JvmNumberAbs]):
 
         return self._binary_comparison(other, gt_outcome)
 
-    def __contains__(self, member: JvmNumberAbs) -> bool:  # noqa: PYI041
+    def __contains__(self, member: JvmNumberAbs) -> bool:
         if member == 0 and "0" in self.signs:
             return True
         if member > 0 and "+" in self.signs:
