@@ -728,6 +728,8 @@ while True:
         break
 
 logger.debug(f"Executed lines {lines_executed}")
+if len(final) == 0:
+    final.add("*")
 
 # Output results
 for result in results:
