@@ -194,6 +194,13 @@ class Interval(Abstraction[int]):
         ]
         return type(self)(min(products), max(products))
 
+    def __neg__(self) -> Self:
+        # TODO(kornel): Negation overflow for smallest numbers
+        tmp = self.lower
+        self.lower = -self.upper
+        self.upper = -tmp
+        return self
+
     def __div__(self, other: Self) -> Abstraction.DivisionResult:
         """Interval division (true division)."""
         if self.is_bot() or other.is_bot():
