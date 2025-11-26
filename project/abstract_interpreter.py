@@ -172,18 +172,9 @@ class AState[AV: Abstraction]:
             if var_idx in f1.locals:
                 name1 = f1.locals[var_idx]
                 name2 = f2.locals[var_idx]
-                if name1 == name2:
-                    # Same name, join constraints
-                    self.constraints[name1] = (
-                        self.constraints[name1] | other.constraints[name2]
-                    )
-                else:
-                    # Different names, create fresh name
-                    fresh = self.constraints.fresh_name()
-                    self.constraints[fresh] = (
-                        self.constraints[name1] | other.constraints[name2]
-                    )
-                    f1.locals[var_idx] = fresh
+                self.constraints[name1] = (
+                    self.constraints[name1] | other.constraints[name2]
+                )
             else:
                 f1.locals[var_idx] = f2.locals[var_idx]
                 self.constraints[f2.locals[var_idx]] = other.constraints[
@@ -198,18 +189,7 @@ class AState[AV: Abstraction]:
         for i in range(len(f1.stack.items)):
             name1 = f1.stack.items[i]
             name2 = f2.stack.items[i]
-            if name1 == name2:
-                # Same name, join constraints
-                self.constraints[name1] = (
-                    self.constraints[name1] | other.constraints[name2]
-                )
-            else:
-                # Different names, create fresh name
-                fresh = self.constraints.fresh_name()
-                self.constraints[fresh] = (
-                    self.constraints[name1] | other.constraints[name2]
-                )
-                f1.stack.items[i] = fresh
+            self.constraints[name1] = self.constraints[name1] | other.constraints[name2]
         # END FOR
         return self
 
@@ -366,7 +346,7 @@ def step[AV: Abstraction](
     state = state.clone()  # Work on a copy
     frame = state.frames.peek()
     opr = state.bc[state.pc]
-    logger.debug(f"STEP {opr}\n{state}")
+    logger.debug(f"STEP {opr} {{{opr.line if opr.line else ''}}}\n{state}")
 
     if opr.line:
         lines_executed.setdefault(state.pc.method, set()).add(opr.line)
@@ -525,9 +505,34 @@ def step[AV: Abstraction](
 
             frame.stack.push(result_name)
 
-            frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
+            frame.pc = frame.pc + 1
             computed_states.append(state)
             return computed_states
+
+        case jvm.Negate(type=tp):
+            name = frame.stack.pop()
+            v = state.constraints[name]
+            assert isinstance(tp, v.get_supported_types()), (
+                f"{abstraction_cls} does not support {tp} negation"
+            )
+            result_name = state.constraints.fresh_name()
+            state.constraints[result_name] = -v
+            frame.stack.push(result_name)
+            frame.pc = frame.pc + 1
+            return [state]
+
+        case jvm.Incr(index=idx, amount=amnt):
+            assert isinstance(idx, int), "Unexpected Incr arguments"
+            assert isinstance(amnt, int), "Unexpected Incr arguments"
+            name = frame.locals[idx]
+            result_name = state.constraints.fresh_name()
+
+            new_v = state.constraints[name] + abstraction_cls.abstract({amnt})
+            state.constraints[result_name] = new_v
+
+            frame.locals[idx] = result_name
+            frame.pc = frame.pc + 1
+            return [state]
 
         case jvm.Get(
             static=True,
@@ -540,7 +545,7 @@ def step[AV: Abstraction](
             name = state.constraints.fresh_name()
             state.constraints[name] = abstraction_cls.abstract({0})
             frame.stack.push(name)
-            frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
+            frame.pc = frame.pc + 1
             return [state]
 
         case jvm.New(classname=jvm.ClassName(_as_string="java/lang/AssertionError")):
@@ -556,7 +561,7 @@ def step[AV: Abstraction](
             new_frame = PerVarFrame.from_method(m)
             for i, v in enumerate(args):
                 new_frame.locals[i] = v
-            frame.pc = PC(frame.pc.method, frame.pc.offset + 1)
+            frame.pc = frame.pc + 1
             state.frames.push(new_frame)
             return [state]
 
@@ -644,6 +649,7 @@ for iteration in range(MAX_STEPS):
 
     logger.debug(f"Iteration {iteration}: {len(sts.needswork)} PCs need work")
     # logger.debug("Needs work: " + ", ".join(map(str, sts.needswork)))
+    # logger.debug(f"sts:\n{sts}")
     logger.debug(f"Final states: {final}")
 
     # If needswork is empty, we've reached fixed point
