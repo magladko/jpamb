@@ -15,7 +15,7 @@ class Interval(Abstraction[JvmNumberAbs]):
         return self.lower > self.upper
 
     @classmethod
-    def abstract(cls, items: set[int]) -> Self:
+    def abstract(cls, items: set[int] | set[float] | set[int | float]) -> Self:
         """Create interval from a set of concrete integers."""
         if not items:
             return cls.bot()
@@ -30,6 +30,10 @@ class Interval(Abstraction[JvmNumberAbs]):
     def top(cls) -> Self:
         """Return the top element (all integers)."""
         return cls(float("-inf"), float("inf"))
+
+    @classmethod
+    def has_finite_lattice(cls) -> bool:
+        return False
 
     def le(self, other: Self) -> dict[bool, tuple[Self, Self]]:
         """Less than or equal comparison with refinement."""
@@ -324,6 +328,74 @@ class Interval(Abstraction[JvmNumberAbs]):
         new_lower = min(self.lower, other.lower)
         new_upper = max(self.upper, other.upper)
         return type(self)(new_lower, new_upper)
+
+    def widen(self, other: "Interval", k_set: set[int | float]) -> "Interval":
+        # Standard join first to find the bounds
+        joined = self | other
+
+        new_min = joined.lower
+        new_max = joined.upper
+
+        # If the lower bound is UNSTABLE (it changed/dropped), widen to next K threshold
+        if other.lower < self.lower:
+            # Find largest k in K such that k <= new_min. If none, -infinity.
+            k_candidates = [k for k in k_set if k <= new_min]
+            new_min = max(k_candidates) if k_candidates else -float("inf")
+
+        # If the upper bound is UNSTABLE (it grew), widen to next K threshold
+        if other.upper > self.upper:
+            # Find smallest k in K such that k >= new_max. If none, infinity.
+            k_candidates = [k for k in k_set if k >= new_max]
+            new_max = min(k_candidates) if k_candidates else float("inf")
+
+        return Interval(new_min, new_max)
+
+    def i2s_cast(self) -> Self:
+        """
+        Model int-to-short cast for Interval (precise wrapping).
+
+        The i2s instruction truncates to 16 bits and sign-extends:
+        - Range: -32768 to 32767
+        - Values outside this range wrap around (modulo 2^16)
+
+        Algorithm:
+        1. If interval entirely within [-32768, 32767] → no change
+        2. If interval spans ≥65536 → return full short range
+        3. Otherwise, compute wrapped bounds with modulo arithmetic
+        4. Handle wraparound discontinuity (return full range)
+        """
+        short_min, short_max, modulo = -32768, 32767, 65536
+
+        if self.is_bot():
+            return self
+
+        # Handle infinite bounds
+        if self.lower == float("-inf") or self.upper == float("inf"):
+            return type(self)(short_min, short_max)
+
+        lower, upper = int(self.lower), int(self.upper)
+
+        # Case 1: Fully in range
+        if short_min <= lower <= upper <= short_max:
+            return self
+
+        # Case 2: Spans multiple cycles
+        if upper - lower >= modulo:
+            return type(self)(short_min, short_max)
+
+        # Case 3: Compute wrapped bounds
+        def to_short(v: int) -> int:
+            """Convert int to short with wrapping."""
+            normalized = v % modulo
+            return normalized - modulo if normalized > short_max else normalized
+
+        wrapped_lower = to_short(lower)
+        wrapped_upper = to_short(upper)
+
+        # If wraparound boundary crossed, return full range
+        if wrapped_lower <= wrapped_upper:
+            return type(self)(wrapped_lower, wrapped_upper)
+        return type(self)(short_min, short_max)
 
     def __str__(self) -> str:
         """Return string representation of the interval."""

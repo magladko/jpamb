@@ -67,6 +67,15 @@ class Abstraction[T: jvm.Type](ABC):
         pass
 
     @classmethod
+    @abstractmethod
+    def has_finite_lattice(cls) -> bool:
+        """
+        Return true if abstraction is based on a final lattice.
+
+        No widening is necessary in case this method returns True.
+        """
+
+    @classmethod
     def comp_res_str(cls, result: dict[bool, tuple[Self, Self]]) -> str:
         return ", ".join(f"{k}: ({v[0]!s}, {v[1]!s})" for k, v in result.items())
 
@@ -163,6 +172,19 @@ class Abstraction[T: jvm.Type](ABC):
     @abstractmethod
     def __or__(self, other: Self) -> Self:
         """Return result of join operator (self ⊔ other)."""
+
+    @abstractmethod
+    def widen(self, other: Self, k_set: set[T]) -> Self:
+        pass
+
+    @abstractmethod
+    def i2s_cast(self) -> Self:
+        """
+        Model int-to-short cast with truncation and sign-extension.
+
+        The i2s instruction truncates to 16 bits (modulo 2^16) then sign-extends.
+        Result range: [-32768, 32767]
+        """
 
     @abstractmethod
     def __str__(self) -> str:

@@ -12,7 +12,7 @@ class SignSet(Abstraction[JvmNumberAbs]):
     signs: set[Sign]
 
     @classmethod
-    def abstract(cls, items: set[JvmNumberAbs]) -> Self:
+    def abstract(cls, items: set[JvmNumberAbs | int | float]) -> Self:
         signset = set()
         if 0 in items:
             signset.add("0")
@@ -29,6 +29,10 @@ class SignSet(Abstraction[JvmNumberAbs]):
     @classmethod
     def top(cls) -> Self:
         return cls({"+", "-", "0"})
+
+    @classmethod
+    def has_finite_lattice(cls) -> bool:
+        return True
 
     def _binary_comparison(
         self: Self, other: Self, outcome_fn: Callable[[Sign, Sign], set[bool]]
@@ -383,6 +387,28 @@ class SignSet(Abstraction[JvmNumberAbs]):
         if not isinstance(other, SignSet):
             return False
         return type(self)(self.signs | other.signs)
+
+    def widen(self, other: Self, _k_set: set[JvmNumberAbs]) -> Self:
+        """As this is a finite-lattice abstraction, it always calls join."""
+        return self.__or__(other)
+
+    def i2s_cast(self) -> Self:
+        """
+        Model int-to-short cast for SignSet (conservative).
+
+        Analysis:
+        - {0} → {0} (zero preserved)
+        - Any non-zero sign set → {+, -, 0} (TOP)
+
+        Rationale: Without value ranges, we can't determine if wrapping occurs.
+        Any positive value could be ≥32768 and wrap to negative.
+        Any negative value could be ≤-32769 and wrap to positive.
+        """
+        if "0" in self.signs and len(self.signs) == 1:
+            return type(self)({"0"})  # Zero preserved
+        if len(self.signs) == 0:
+            return type(self).bot()  # Bottom preserved
+        return type(self).top()  # Conservative: any sign possible
 
     def __str__(self) -> str:
         return "{" + ",".join(sorted(self.signs)) + "}"
