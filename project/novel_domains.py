@@ -17,6 +17,29 @@ class StringDomain(Abstraction[str]):
     MAX_TRACKED = 5
 
     @classmethod
+    def has_finite_lattice(cls) -> bool:
+        """
+        Lattice height is effectively finite because we only track up to
+        MAX_TRACKED concrete strings plus ⊥ and ⊤.
+        """
+        return True
+
+    def widen(self, other: "StringDomain") -> "StringDomain":
+        """
+        Widening operator.
+
+        Since the lattice is finite, plain join is enough.
+        """
+        return self | other
+
+    @classmethod
+    def i2s_cast(cls, value: int) -> "StringDomain":
+        """
+        Cast an int to this abstraction by turning it into a singleton string.
+        """
+        return cls.abstract({value})
+
+    @classmethod
     def abstract(cls, items: set[str | int]) -> Self:
         """Return an abstraction covering the items."""
         if not items:
@@ -55,7 +78,7 @@ class StringDomain(Abstraction[str]):
         return StringDomain.top()
 
     def __neg__(self) -> Self:
-        raise NotImplementedError
+        return self
 
     __mul__ = __div__ = __floordiv__ = __mod__ = __sub__
 
@@ -150,12 +173,53 @@ class StringDomain(Abstraction[str]):
 
 
 @dataclass
+@dataclass
 class DoubleDomain(Abstraction[float]):
     """Interval abstraction for floating-point values."""
 
     lower: float
     upper: float
     is_bottom: bool = False
+
+    # --- New required lattice/utility methods ---
+
+    @classmethod
+    def has_finite_lattice(cls) -> bool:
+        """Intervals over floats form an infinite-height lattice."""
+        return False
+
+    def widen(self, other: "DoubleDomain") -> "DoubleDomain":
+        """
+        Classic interval widening.
+
+        If the new interval grows beyond current bounds, we jump to ±∞
+        in that direction to ensure convergence.
+        """
+        if self.is_bottom:
+            return other
+        if other.is_bottom:
+            return self
+
+        lower = self.lower
+        upper = self.upper
+
+        if other.lower < self.lower:
+            lower = float("-inf")
+        if other.upper > self.upper:
+            upper = float("inf")
+
+        return DoubleDomain(lower, upper)
+
+    @classmethod
+    def i2s_cast(cls, value: int) -> "DoubleDomain":
+        """
+        Cast an integer into this abstraction.
+
+        Represent it as a singleton interval [v, v].
+        """
+        return cls(float(value), float(value))
+
+    # ------------------------------------------------------------------
 
     @classmethod
     def abstract(cls, items: set[float]) -> Self:
@@ -180,8 +244,8 @@ class DoubleDomain(Abstraction[float]):
     def _combine(
             self,
             other: Self,
-            fn: Callable[[float, float], float],
-    ) -> DoubleDomain:
+            fn: "Callable[[float, float], float]",
+    ) -> "DoubleDomain":
         if self.is_bottom or other.is_bottom:
             return DoubleDomain.bot()
         lows = [fn(self.lower, other.lower), fn(self.lower, other.upper)]
@@ -198,7 +262,10 @@ class DoubleDomain(Abstraction[float]):
         return self._combine(other, lambda a, b: a * b)
 
     def __neg__(self) -> Self:
-        raise NotImplementedError
+        """Unary minus: -[a, b] = [-b, -a]."""
+        if self.is_bottom:
+            return DoubleDomain.bot()
+        return DoubleDomain(-self.upper, -self.lower, self.is_bottom)
 
     def __div__(self, other: Self) -> Self:
         if other.lower <= 0 <= other.upper:
@@ -254,7 +321,6 @@ class DoubleDomain(Abstraction[float]):
         if self.lower == float("-inf") and self.upper == float("inf"):
             return "⊤dbl"  # noqa: RUF001
         return f"[{self.lower}, {self.upper}]"
-
     # Helpers
 
     def _unknown(self, other: Self) -> dict[bool, tuple[Self, Self]]:
@@ -330,14 +396,37 @@ class DoubleDomain(Abstraction[float]):
 
 
 @dataclass
+@dataclass
 class MachineWordDomain(Abstraction[int]):
-    """Finite-set abstraction for machine word integers."""
 
     residues: set[int] | None
     is_bottom: bool = False
 
     WIDTH = 32
     MAX_TRACKED = 16
+
+    @classmethod
+    def has_finite_lattice(cls) -> bool:
+        # Machine words are finite (2**WIDTH possibilities)
+        return True
+
+    def widen(self, other: "MachineWordDomain") -> "MachineWordDomain":
+        """
+        Widening operator.
+
+        Since the lattice is finite and height is bounded,
+        simple join is enough to ensure convergence.
+        """
+        return self | other
+
+    @classmethod
+    def i2s_cast(cls, value: int) -> "MachineWordDomain":
+        """
+        Cast an int to this abstraction: track exactly that residue.
+        """
+        return cls.abstract({value})
+
+    # -----------------------------------------
 
     @classmethod
     def _mask(cls) -> int:
@@ -375,8 +464,8 @@ class MachineWordDomain(Abstraction[int]):
     def _binary_op(
             self,
             other: Self,
-            fn: Callable[[int, int], int],
-    ) -> MachineWordDomain:
+            fn: "Callable[[int, int], int]",
+    ) -> "MachineWordDomain":
         if self.is_bottom or other.is_bottom:
             return MachineWordDomain.bot()
         if self.residues is None or other.residues is None:
@@ -448,7 +537,18 @@ class MachineWordDomain(Abstraction[int]):
         return MachineWordDomain(merged)
 
     def __neg__(self) -> Self:
-        raise NotImplementedError
+        """
+        Two's-complement style negation of each residue.
+
+        -x (mod 2**WIDTH)
+        """
+        if self.is_bottom:
+            return MachineWordDomain.bot()
+        if self.residues is None:
+            return MachineWordDomain.top()
+        mask = self._mask()
+        negated = {(-v) & mask for v in self.residues}
+        return MachineWordDomain(negated)
 
     def __str__(self) -> str:
         if self.is_bottom:
@@ -465,8 +565,8 @@ class MachineWordDomain(Abstraction[int]):
     def _compare_values(
             self,
             other: Self,
-            comparator: Callable[[int, int], bool],
-    ) -> dict[bool, tuple[MachineWordDomain, MachineWordDomain]]:
+            comparator: "Callable[[int, int], bool]",
+    ) -> dict[bool, tuple["MachineWordDomain", "MachineWordDomain"]]:
         if self.is_bottom or other.is_bottom:
             return self._unknown(other)
         if self.residues is None or other.residues is None:
@@ -480,7 +580,7 @@ class MachineWordDomain(Abstraction[int]):
                 rhs_set.add(rhs)
         if not results:
             return self._unknown(other)
-        translated: dict[bool, tuple[MachineWordDomain, MachineWordDomain]] = {}
+        translated: dict[bool, tuple["MachineWordDomain", "MachineWordDomain"]] = {}
         for truth, (lhs_vals, rhs_vals) in results.items():
             translated[truth] = (
                 MachineWordDomain(lhs_vals),
@@ -508,6 +608,7 @@ class MachineWordDomain(Abstraction[int]):
 
 
 @dataclass
+@dataclass
 class PolyhedralDomain(Abstraction[tuple[float, ...]]):
 
     dimension: int
@@ -515,6 +616,28 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
     is_bottom: bool = False
 
     DEFAULT_DIMENSION = 1
+
+    @classmethod
+    def has_finite_lattice(cls) -> bool:
+        """
+        Polyhedral/box domain over reals has infinite height,
+        so widening is needed.
+        """
+        return False
+
+    def widen(self, other: "PolyhedralDomain") -> "PolyhedralDomain":
+        """
+        Very simple widening: useing the join (bounding box / hull).
+        """
+        return self | other
+
+    @classmethod
+    def i2s_cast(cls, value: int) -> "PolyhedralDomain":
+        """
+        Cast an int to a 1D polyhedral point interval [v, v].
+        """
+        point = float(value)
+        return cls.abstract({point})
 
     @classmethod
     def _as_point(cls, value: tuple[float, ...] | float) -> tuple[float, ...]:
@@ -618,7 +741,12 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
         )
 
     def __neg__(self) -> Self:
-        raise NotImplementedError
+        if self.is_bottom:
+            return PolyhedralDomain.bot(self.dimension)
+        if self.bounds is None:
+            return PolyhedralDomain.top(self.dimension)
+        neg_bounds = [(-hi, -lo) for (lo, hi) in self.bounds]
+        return PolyhedralDomain(self.dimension, neg_bounds, self.is_bottom)
 
     def __eq__(self, other: object) -> bool:
         return (
@@ -709,7 +837,3 @@ __all__ = [
     "PolyhedralDomain",
     "StringDomain",
 ]
-
-
-
-####### __neg__
