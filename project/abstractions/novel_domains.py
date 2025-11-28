@@ -158,7 +158,6 @@ class StringDomain(Abstraction[str]):
 
 
 @dataclass
-@dataclass
 class DoubleDomain(Abstraction[float]):
     """Interval abstraction for floating-point values."""
 
@@ -381,7 +380,6 @@ class DoubleDomain(Abstraction[float]):
 
 
 @dataclass
-@dataclass
 class MachineWordDomain(Abstraction[int]):
 
     residues: set[int] | None
@@ -584,7 +582,6 @@ class MachineWordDomain(Abstraction[int]):
         return self._compare_values(other, op.ne)
 
 
-@dataclass
 @dataclass
 class PolyhedralDomain(Abstraction[tuple[float, ...]]):
 
