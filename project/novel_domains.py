@@ -18,30 +18,17 @@ class StringDomain(Abstraction[str]):
 
     @classmethod
     def has_finite_lattice(cls) -> bool:
-        """
-        Lattice height is effectively finite because we only track up to
-        MAX_TRACKED concrete strings plus ⊥ and ⊤.
-        """
         return True
 
-    def widen(self, other: "StringDomain") -> "StringDomain":
-        """
-        Widening operator.
-
-        Since the lattice is finite, plain join is enough.
-        """
+    def widen(self, other: StringDomain) -> StringDomain:
         return self | other
 
     @classmethod
-    def i2s_cast(cls, value: int) -> "StringDomain":
-        """
-        Cast an int to this abstraction by turning it into a singleton string.
-        """
+    def i2s_cast(cls, value: int) -> StringDomain:
         return cls.abstract({value})
 
     @classmethod
     def abstract(cls, items: set[str | int]) -> Self:
-        """Return an abstraction covering the items."""
         if not items:
             return cls.bot()
         normalized = {str(item) for item in items}
@@ -188,7 +175,7 @@ class DoubleDomain(Abstraction[float]):
         """Intervals over floats form an infinite-height lattice."""
         return False
 
-    def widen(self, other: "DoubleDomain") -> "DoubleDomain":
+    def widen(self, other: DoubleDomain) -> DoubleDomain:
         """
         Classic interval widening.
 
@@ -211,7 +198,7 @@ class DoubleDomain(Abstraction[float]):
         return DoubleDomain(lower, upper)
 
     @classmethod
-    def i2s_cast(cls, value: int) -> "DoubleDomain":
+    def i2s_cast(cls, value: int) -> DoubleDomain:
         """
         Cast an integer into this abstraction.
 
@@ -244,8 +231,8 @@ class DoubleDomain(Abstraction[float]):
     def _combine(
             self,
             other: Self,
-            fn: "Callable[[float, float], float]",
-    ) -> "DoubleDomain":
+            fn: Callable[[float, float], float],
+    ) -> DoubleDomain:
         if self.is_bottom or other.is_bottom:
             return DoubleDomain.bot()
         lows = [fn(self.lower, other.lower), fn(self.lower, other.upper)]
@@ -410,7 +397,7 @@ class MachineWordDomain(Abstraction[int]):
         # Machine words are finite (2**WIDTH possibilities)
         return True
 
-    def widen(self, other: "MachineWordDomain") -> "MachineWordDomain":
+    def widen(self, other: MachineWordDomain) -> MachineWordDomain:
         """
         Widening operator.
 
@@ -420,10 +407,7 @@ class MachineWordDomain(Abstraction[int]):
         return self | other
 
     @classmethod
-    def i2s_cast(cls, value: int) -> "MachineWordDomain":
-        """
-        Cast an int to this abstraction: track exactly that residue.
-        """
+    def i2s_cast(cls, value: int) -> MachineWordDomain:
         return cls.abstract({value})
 
     # -----------------------------------------
@@ -464,8 +448,8 @@ class MachineWordDomain(Abstraction[int]):
     def _binary_op(
             self,
             other: Self,
-            fn: "Callable[[int, int], int]",
-    ) -> "MachineWordDomain":
+            fn: Callable[[int, int], int],
+    ) -> MachineWordDomain:
         if self.is_bottom or other.is_bottom:
             return MachineWordDomain.bot()
         if self.residues is None or other.residues is None:
@@ -537,11 +521,6 @@ class MachineWordDomain(Abstraction[int]):
         return MachineWordDomain(merged)
 
     def __neg__(self) -> Self:
-        """
-        Two's-complement style negation of each residue.
-
-        -x (mod 2**WIDTH)
-        """
         if self.is_bottom:
             return MachineWordDomain.bot()
         if self.residues is None:
@@ -565,8 +544,8 @@ class MachineWordDomain(Abstraction[int]):
     def _compare_values(
             self,
             other: Self,
-            comparator: "Callable[[int, int], bool]",
-    ) -> dict[bool, tuple["MachineWordDomain", "MachineWordDomain"]]:
+            comparator: Callable[[int, int], bool],
+    ) -> dict[bool, tuple[MachineWordDomain, MachineWordDomain]]:
         if self.is_bottom or other.is_bottom:
             return self._unknown(other)
         if self.residues is None or other.residues is None:
@@ -580,7 +559,7 @@ class MachineWordDomain(Abstraction[int]):
                 rhs_set.add(rhs)
         if not results:
             return self._unknown(other)
-        translated: dict[bool, tuple["MachineWordDomain", "MachineWordDomain"]] = {}
+        translated: dict[bool, tuple[MachineWordDomain, MachineWordDomain]] = {}
         for truth, (lhs_vals, rhs_vals) in results.items():
             translated[truth] = (
                 MachineWordDomain(lhs_vals),
@@ -619,23 +598,15 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
 
     @classmethod
     def has_finite_lattice(cls) -> bool:
-        """
-        Polyhedral/box domain over reals has infinite height,
-        so widening is needed.
-        """
         return False
 
-    def widen(self, other: "PolyhedralDomain") -> "PolyhedralDomain":
-        """
-        Very simple widening: useing the join (bounding box / hull).
-        """
+    def widen(self, other: PolyhedralDomain) -> PolyhedralDomain:
+        """Very simple widening: useing the join (bounding box / hull)."""
         return self | other
 
     @classmethod
-    def i2s_cast(cls, value: int) -> "PolyhedralDomain":
-        """
-        Cast an int to a 1D polyhedral point interval [v, v].
-        """
+    def i2s_cast(cls, value: int) -> PolyhedralDomain:
+        """Cast an int to a 1D polyhedral point interval [v, v]."""
         point = float(value)
         return cls.abstract({point})
 
