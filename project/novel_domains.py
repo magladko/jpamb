@@ -1,13 +1,11 @@
-from __future__ import annotations
 
 import operator as op
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Self
+from typing import Self
 
-from project.abstractions.abstraction import Abstraction
+from abstractions.abstraction import Abstraction
 
-if TYPE_CHECKING:
-    from collections.abc import Callable
 
 @dataclass
 class StringDomain(Abstraction[str]):
@@ -20,11 +18,11 @@ class StringDomain(Abstraction[str]):
     def has_finite_lattice(cls) -> bool:
         return True
 
-    def widen(self, other: StringDomain) -> StringDomain:
+    def widen(self, other: Self) -> Self:
         return self | other
 
     @classmethod
-    def i2s_cast(cls, value: int) -> StringDomain:
+    def i2s_cast(cls, value: int) -> Self:
         return cls.abstract({value})
 
     @classmethod
@@ -53,16 +51,16 @@ class StringDomain(Abstraction[str]):
 
     def __add__(self, other: Self) -> Self:
         if self.values == set() or other.values == set():
-            return StringDomain.bot()
+            return self.bot()
         if self.values is None or other.values is None:
-            return StringDomain.top()
+            return self.top()
         acc = {str(a) + str(b) for a in self.values for b in other.values}
         if len(acc) > self.MAX_TRACKED:
-            return StringDomain.top()
-        return StringDomain(acc)
+            return self.top()
+        return self.__class__(acc)
 
     def __sub__(self, other: Self) -> Self:
-        return StringDomain.top()
+        return self.top()
 
     def __neg__(self) -> Self:
         return self
@@ -85,24 +83,24 @@ class StringDomain(Abstraction[str]):
 
     def __and__(self, other: Self) -> Self:
         if self.values == set() or other.values == set():
-            return StringDomain.bot()
+            return self.bot()
         if self.values is None:
             return other
         if other.values is None:
             return self
-        return StringDomain(self.values & other.values)
+        return self.__class__(self.values & other.values)
 
     def __or__(self, other: Self) -> Self:
         if self.values is None or other.values is None:
-            return StringDomain.top()
+            return self.top()
         if self.values == set():
             return other
         if other.values == set():
             return self
         merged = self.values | other.values
         if len(merged) > self.MAX_TRACKED:
-            return StringDomain.top()
-        return StringDomain(merged)
+            return self.top()
+        return self.__class__(merged)
 
     def __str__(self) -> str:
         if self.values is None:
@@ -120,7 +118,7 @@ class StringDomain(Abstraction[str]):
             self,
             other: Self,
             comparator: Callable[[str, str], bool],
-    ) -> dict[bool, tuple[StringDomain, StringDomain]]:
+    ) -> dict[bool, tuple[Self, Self]]:
         if self.values is None or other.values is None:
             return self._unknown(other)
         results: dict[bool, tuple[set[str], set[str]]] = {}
@@ -132,9 +130,9 @@ class StringDomain(Abstraction[str]):
                 rhs_set.add(rhs)
         if not results:
             return self._unknown(other)
-        translated: dict[bool, tuple[StringDomain, StringDomain]] = {}
+        translated: dict[bool, tuple[Self, Self]] = {}
         for truth, (lhs_vals, rhs_vals) in results.items():
-            translated[truth] = (StringDomain(lhs_vals), StringDomain(rhs_vals))
+            translated[truth] = (self.__class__(lhs_vals), self.__class__(rhs_vals))
         return translated
 
     def le(self, other: Self) -> dict[bool, tuple[Self, Self]]:
@@ -175,7 +173,7 @@ class DoubleDomain(Abstraction[float]):
         """Intervals over floats form an infinite-height lattice."""
         return False
 
-    def widen(self, other: DoubleDomain) -> DoubleDomain:
+    def widen(self, other: Self) -> Self:
         """
         Classic interval widening.
 
@@ -195,10 +193,10 @@ class DoubleDomain(Abstraction[float]):
         if other.upper > self.upper:
             upper = float("inf")
 
-        return DoubleDomain(lower, upper)
+        return self.__class__(lower, upper)
 
     @classmethod
-    def i2s_cast(cls, value: int) -> DoubleDomain:
+    def i2s_cast(cls, value: int) -> Self:
         """
         Cast an integer into this abstraction.
 
@@ -232,12 +230,12 @@ class DoubleDomain(Abstraction[float]):
             self,
             other: Self,
             fn: Callable[[float, float], float],
-    ) -> DoubleDomain:
+    ) -> Self:
         if self.is_bottom or other.is_bottom:
-            return DoubleDomain.bot()
+            return self.bot()
         lows = [fn(self.lower, other.lower), fn(self.lower, other.upper)]
         highs = [fn(self.upper, other.lower), fn(self.upper, other.upper)]
-        return DoubleDomain(min(lows + highs), max(lows + highs))
+        return self.__class__(min(lows + highs), max(lows + highs))
 
     def __add__(self, other: Self) -> Self:
         return self._combine(other, lambda a, b: a + b)
@@ -251,12 +249,12 @@ class DoubleDomain(Abstraction[float]):
     def __neg__(self) -> Self:
         """Unary minus: -[a, b] = [-b, -a]."""
         if self.is_bottom:
-            return DoubleDomain.bot()
-        return DoubleDomain(-self.upper, -self.lower, self.is_bottom)
+            return self.bot()
+        return self.__class__(-self.upper, -self.lower, self.is_bottom)
 
     def __div__(self, other: Self) -> Self:
         if other.lower <= 0 <= other.upper:
-            return DoubleDomain.top()
+            return self.top()
         return self._combine(other, lambda a, b: a / b)
 
     __truediv__ = __div__
@@ -265,7 +263,7 @@ class DoubleDomain(Abstraction[float]):
         return self.__div__(other)
 
     def __mod__(self, other: Self) -> Self:
-        return DoubleDomain.top()
+        return self.top()
 
     def __le__(self, other: Self) -> bool:
         if self.is_bottom:
@@ -286,12 +284,12 @@ class DoubleDomain(Abstraction[float]):
 
     def __and__(self, other: Self) -> Self:
         if self.is_bottom or other.is_bottom:
-            return DoubleDomain.bot()
+            return self.bot()
         lower = max(self.lower, other.lower)
         upper = min(self.upper, other.upper)
         if lower > upper:
-            return DoubleDomain.bot()
-        return DoubleDomain(lower, upper)
+            return self.bot()
+        return self.__class__(lower, upper)
 
     def __or__(self, other: Self) -> Self:
         if self.is_bottom:
@@ -300,7 +298,7 @@ class DoubleDomain(Abstraction[float]):
             return self
         lower = min(self.lower, other.lower)
         upper = max(self.upper, other.upper)
-        return DoubleDomain(lower, upper)
+        return self.__class__(lower, upper)
 
     def __str__(self) -> str:
         if self.is_bottom:
@@ -357,11 +355,11 @@ class DoubleDomain(Abstraction[float]):
     def eq(self, other: Self) -> dict[bool, tuple[Self, Self]]:
         if self.is_bottom or other.is_bottom:
             return self._unknown(other)
-        result: dict[bool, tuple[DoubleDomain, DoubleDomain]] = {}
+        result: dict[bool, tuple[Self, Self]] = {}
         overlap_low = max(self.lower, other.lower)
         overlap_high = min(self.upper, other.upper)
         if overlap_low <= overlap_high:
-            overlap = DoubleDomain(overlap_low, overlap_high)
+            overlap = self.__class__(overlap_low, overlap_high)
             result[True] = (overlap, overlap)
         only_true = (
             self.lower == self.upper
@@ -397,7 +395,7 @@ class MachineWordDomain(Abstraction[int]):
         # Machine words are finite (2**WIDTH possibilities)
         return True
 
-    def widen(self, other: MachineWordDomain) -> MachineWordDomain:
+    def widen(self, other: Self) -> Self:
         """
         Widening operator.
 
@@ -407,7 +405,7 @@ class MachineWordDomain(Abstraction[int]):
         return self | other
 
     @classmethod
-    def i2s_cast(cls, value: int) -> MachineWordDomain:
+    def i2s_cast(cls, value: int) -> Self:
         return cls.abstract({value})
 
     # -----------------------------------------
@@ -449,16 +447,16 @@ class MachineWordDomain(Abstraction[int]):
             self,
             other: Self,
             fn: Callable[[int, int], int],
-    ) -> MachineWordDomain:
+    ) -> Self:
         if self.is_bottom or other.is_bottom:
-            return MachineWordDomain.bot()
+            return self.bot()
         if self.residues is None or other.residues is None:
-            return MachineWordDomain.top()
+            return self.top()
         mask = self._mask()
         acc = {fn(a, b) & mask for a in self.residues for b in other.residues}
         if len(acc) > self.MAX_TRACKED:
-            return MachineWordDomain.top()
-        return MachineWordDomain(acc)
+            return self.top()
+        return self.__class__(acc)
 
     def __add__(self, other: Self) -> Self:
         return self._binary_op(other, lambda a, b: a + b)
@@ -471,11 +469,11 @@ class MachineWordDomain(Abstraction[int]):
 
     def __div__(self, other: Self) -> Self:
         if other.is_bottom:
-            return MachineWordDomain.bot()
+            return self.bot()
         if other.residues is None:
-            return MachineWordDomain.top()
+            return self.top()
         if 0 in other.residues:
-            return MachineWordDomain.top()
+            return self.top()
         return self._binary_op(other, lambda a, b: a // b)
 
     __floordiv__ = __div__
@@ -501,12 +499,12 @@ class MachineWordDomain(Abstraction[int]):
 
     def __and__(self, other: Self) -> Self:
         if self.is_bottom or other.is_bottom:
-            return MachineWordDomain.bot()
+            return self.bot()
         if self.residues is None:
             return other
         if other.residues is None:
             return self
-        return MachineWordDomain(self.residues & other.residues)
+        return self.__class__(self.residues & other.residues)
 
     def __or__(self, other: Self) -> Self:
         if self.is_bottom:
@@ -514,20 +512,20 @@ class MachineWordDomain(Abstraction[int]):
         if other.is_bottom:
             return self
         if self.residues is None or other.residues is None:
-            return MachineWordDomain.top()
+            return self.top()
         merged = self.residues | other.residues
         if len(merged) > self.MAX_TRACKED:
-            return MachineWordDomain.top()
-        return MachineWordDomain(merged)
+            return self.top()
+        return self.__class__(merged)
 
     def __neg__(self) -> Self:
         if self.is_bottom:
-            return MachineWordDomain.bot()
+            return self.bot()
         if self.residues is None:
-            return MachineWordDomain.top()
+            return self.top()
         mask = self._mask()
         negated = {(-v) & mask for v in self.residues}
-        return MachineWordDomain(negated)
+        return self.__class__(negated)
 
     def __str__(self) -> str:
         if self.is_bottom:
@@ -545,7 +543,7 @@ class MachineWordDomain(Abstraction[int]):
             self,
             other: Self,
             comparator: Callable[[int, int], bool],
-    ) -> dict[bool, tuple[MachineWordDomain, MachineWordDomain]]:
+    ) -> dict[bool, tuple[Self, Self]]:
         if self.is_bottom or other.is_bottom:
             return self._unknown(other)
         if self.residues is None or other.residues is None:
@@ -559,11 +557,11 @@ class MachineWordDomain(Abstraction[int]):
                 rhs_set.add(rhs)
         if not results:
             return self._unknown(other)
-        translated: dict[bool, tuple[MachineWordDomain, MachineWordDomain]] = {}
+        translated: dict[bool, tuple[Self, Self]] = {}
         for truth, (lhs_vals, rhs_vals) in results.items():
             translated[truth] = (
-                MachineWordDomain(lhs_vals),
-                MachineWordDomain(rhs_vals),
+                self.__class__(lhs_vals),
+                self.__class__(rhs_vals),
             )
         return translated
 
@@ -600,12 +598,12 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
     def has_finite_lattice(cls) -> bool:
         return False
 
-    def widen(self, other: PolyhedralDomain) -> PolyhedralDomain:
+    def widen(self, other: Self) -> Self:
         """Very simple widening: useing the join (bounding box / hull)."""
         return self | other
 
     @classmethod
-    def i2s_cast(cls, value: int) -> PolyhedralDomain:
+    def i2s_cast(cls, value: int) -> Self:
         """Cast an int to a 1D polyhedral point interval [v, v]."""
         point = float(value)
         return cls.abstract({point})
@@ -675,18 +673,18 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
                 [tuple[float, float], tuple[float, float]],
                 tuple[float, float]
             ],
-    ) -> PolyhedralDomain:
+    ) -> Self:
         if self.is_bottom or other.is_bottom:
             dim = self._preferself_dimension(other)
-            return PolyhedralDomain.bot(dim)
+            return self.bot(dim)
         if self.bounds is None or other.bounds is None:
             dim = self._preferself_dimension(other)
-            return PolyhedralDomain.top(dim)
+            return self.top(dim)
         if self.dimension != other.dimension:
             dim = max(self.dimension, other.dimension)
-            return PolyhedralDomain.top(dim)
+            return self.top(dim)
         merged = [fn(a, b) for a, b in zip(self.bounds, other.bounds,strict=True)]
-        return PolyhedralDomain(self.dimension, merged)
+        return self.__class__(self.dimension, merged)
 
     def __add__(self, other: Self) -> Self:
         return self._apply_pairwise(other, lambda a, b: (a[0] + b[0], a[1] + b[1]))
@@ -713,11 +711,11 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
 
     def __neg__(self) -> Self:
         if self.is_bottom:
-            return PolyhedralDomain.bot(self.dimension)
+            return self.bot(self.dimension)
         if self.bounds is None:
-            return PolyhedralDomain.top(self.dimension)
+            return self.top(self.dimension)
         neg_bounds = [(-hi, -lo) for (lo, hi) in self.bounds]
-        return PolyhedralDomain(self.dimension, neg_bounds, self.is_bottom)
+        return self.__class__(self.dimension, neg_bounds, self.is_bottom)
 
     def __eq__(self, other: object) -> bool:
         return (
@@ -730,22 +728,22 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
     def __and__(self, other: Self) -> Self:
         if self.is_bottom or other.is_bottom:
             dim = self._preferself_dimension(other)
-            return PolyhedralDomain.bot(dim)
+            return self.bot(dim)
         if self.bounds is None:
             return other
         if other.bounds is None:
             return self
         if self.dimension != other.dimension:
             dim = max(self.dimension, other.dimension)
-            return PolyhedralDomain.top(dim)
+            return self.top(dim)
         intersected = []
         for (lo1, hi1), (lo2, hi2) in zip(self.bounds, other.bounds,strict=True):
             lo = max(lo1, lo2)
             hi = min(hi1, hi2)
             if lo > hi:
-                return PolyhedralDomain.bot(self.dimension)
+                return self.bot(self.dimension)
             intersected.append((lo, hi))
-        return PolyhedralDomain(self.dimension, intersected)
+        return self.__class__(self.dimension, intersected)
 
     def __or__(self, other: Self) -> Self:
         if self.is_bottom:
@@ -754,14 +752,14 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
             return self
         if self.bounds is None or other.bounds is None:
             dim = self._preferself_dimension(other)
-            return PolyhedralDomain.top(dim)
+            return self.top(dim)
         if self.dimension != other.dimension:
             dim = max(self.dimension, other.dimension)
-            return PolyhedralDomain.top(dim)
+            return self.top(dim)
         hull = []
         for (lo1, hi1), (lo2, hi2) in zip(self.bounds, other.bounds, strict=True):
             hull.append((min(lo1, lo2), max(hi1, hi2)))
-        return PolyhedralDomain(self.dimension, hull)
+        return self.__class__(self.dimension, hull)
 
     def __str__(self) -> str:
         if self.is_bottom:

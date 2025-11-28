@@ -8,11 +8,12 @@ type Sign = Literal["+", "-", "0"]
 
 
 @dataclass
-class SignSet(Abstraction[JvmNumberAbs]):
+class SignSet(Abstraction[int | float]):
+
     signs: set[Sign]
 
     @classmethod
-    def abstract(cls, items: set[JvmNumberAbs | int | float]) -> Self:
+    def abstract(cls, items: set[int | float]) -> Self:
         signset = set()
         if 0 in items:
             signset.add("0")
