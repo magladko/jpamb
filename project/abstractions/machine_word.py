@@ -8,7 +8,6 @@ from .abstraction import Abstraction
 
 @dataclass
 class MachineWordDomain(Abstraction[int]):
-
     residues: set[int] | None
     is_bottom: bool = False
 
@@ -69,9 +68,9 @@ class MachineWordDomain(Abstraction[int]):
         return (member & self._mask()) in self.residues
 
     def _binary_op(
-            self,
-            other: Self,
-            fn: Callable[[int, int], int],
+        self,
+        other: Self,
+        fn: Callable[[int, int], int],
     ) -> Self:
         if self.is_bottom or other.is_bottom:
             return self.bot()
@@ -165,9 +164,9 @@ class MachineWordDomain(Abstraction[int]):
         return {True: (self, other), False: (self, other)}
 
     def _compare_values(
-            self,
-            other: Self,
-            comparator: Callable[[int, int], bool],
+        self,
+        other: Self,
+        comparator: Callable[[int, int], bool],
     ) -> dict[bool, tuple[Self, Self]]:
         if self.is_bottom or other.is_bottom:
             return self._unknown(other)

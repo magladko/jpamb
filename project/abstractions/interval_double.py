@@ -74,9 +74,9 @@ class DoubleDomain(Abstraction[float]):
         return self.lower <= member <= self.upper
 
     def _combine(
-            self,
-            other: Self,
-            fn: Callable[[float, float], float],
+        self,
+        other: Self,
+        fn: Callable[[float, float], float],
     ) -> Self:
         if self.is_bottom or other.is_bottom:
             return self.bot()
@@ -153,6 +153,7 @@ class DoubleDomain(Abstraction[float]):
         if self.lower == float("-inf") and self.upper == float("inf"):
             return "⊤dbl"  # noqa: RUF001
         return f"[{self.lower}, {self.upper}]"
+
     # Helpers
 
     def _unknown(self, other: Self) -> dict[bool, tuple[Self, Self]]:
@@ -208,11 +209,7 @@ class DoubleDomain(Abstraction[float]):
         if overlap_low <= overlap_high:
             overlap = self.__class__(overlap_low, overlap_high)
             result[True] = (overlap, overlap)
-        only_true = (
-            self.lower == self.upper
-            == other.lower
-            == other.upper
-        )
+        only_true = self.lower == self.upper == other.lower == other.upper
         if not only_true:
             result[False] = (self, other)
         return result or self._unknown(other)

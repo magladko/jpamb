@@ -9,7 +9,6 @@ type Sign = Literal["+", "-", "0"]
 
 @dataclass
 class SignSet(Abstraction[int | float]):
-
     signs: set[Sign]
 
     @classmethod

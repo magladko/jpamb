@@ -31,4 +31,3 @@ def test_machine_word_equality_partitioning() -> None:
     assert value5 in true_right
     assert value7 in false_right
     assert value5 in false_left
-

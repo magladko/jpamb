@@ -10,6 +10,7 @@ def test_double_interval_arithmetic() -> None:
     expected_sum = 3.0
     assert expected_sum in summed
 
+
 def test_double_interval_intersection_and_ordering() -> None:
     a = DoubleDomain.abstract({-2.0, 0.0})
     b = DoubleDomain.abstract({-1.0, 1.0})
@@ -17,6 +18,7 @@ def test_double_interval_intersection_and_ordering() -> None:
     assert intersection.lower == -1.0
     assert intersection.upper == 0.0
     assert intersection <= a
+
 
 def test_double_division_by_interval_crossing_zero_yields_top() -> None:
     numerator = DoubleDomain.abstract({5.0})

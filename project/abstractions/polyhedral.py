@@ -7,7 +7,6 @@ from .abstraction import Abstraction
 
 @dataclass
 class PolyhedralDomain(Abstraction[tuple[float, ...]]):
-
     dimension: int
     bounds: list[tuple[float, float]] | None
     is_bottom: bool = False
@@ -73,8 +72,10 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
         point = self._as_point(member)
         if len(point) != self.dimension:
             return False
-        return all(lo <= value <= hi for value, (lo, hi)
-                   in zip(point, self.bounds, strict=True))
+        return all(
+            lo <= value <= hi
+            for value, (lo, hi) in zip(point, self.bounds, strict=True)
+        )
 
     # Helpers
 
@@ -87,12 +88,9 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
         return max(self.dimension, other.dimension)
 
     def _apply_pairwise(
-            self,
-            other: Self,
-            fn: Callable[
-                [tuple[float, float], tuple[float, float]],
-                tuple[float, float]
-            ],
+        self,
+        other: Self,
+        fn: Callable[[tuple[float, float], tuple[float, float]], tuple[float, float]],
     ) -> Self:
         if self.is_bottom or other.is_bottom:
             dim = self._preferself_dimension(other)
@@ -103,7 +101,7 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
         if self.dimension != other.dimension:
             dim = max(self.dimension, other.dimension)
             return self.top(dim)
-        merged = [fn(a, b) for a, b in zip(self.bounds, other.bounds,strict=True)]
+        merged = [fn(a, b) for a, b in zip(self.bounds, other.bounds, strict=True)]
         return self.__class__(self.dimension, merged)
 
     def __add__(self, other: Self) -> Self:
@@ -125,8 +123,9 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
             return False
         return all(
             other_lo <= lo and hi <= other_hi
-            for (lo, hi), (other_lo, other_hi) in zip(self.bounds, other.bounds,
-                                                      strict=True)
+            for (lo, hi), (other_lo, other_hi) in zip(
+                self.bounds, other.bounds, strict=True
+            )
         )
 
     def __neg__(self) -> Self:
@@ -157,7 +156,7 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
             dim = max(self.dimension, other.dimension)
             return self.top(dim)
         intersected = []
-        for (lo1, hi1), (lo2, hi2) in zip(self.bounds, other.bounds,strict=True):
+        for (lo1, hi1), (lo2, hi2) in zip(self.bounds, other.bounds, strict=True):
             lo = max(lo1, lo2)
             hi = min(hi1, hi2)
             if lo > hi:
@@ -185,7 +184,7 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
         if self.is_bottom:
             return "⊥poly"
         if self.bounds is None:
-            return "⊤poly" # noqa: RUF001
+            return "⊤poly"  # noqa: RUF001
         parts = [f"{lo}≤x{idx}≤{hi}" for idx, (lo, hi) in enumerate(self.bounds)]
         return "{" + ", ".join(parts) + "}"
 

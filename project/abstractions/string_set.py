@@ -103,7 +103,7 @@ class StringDomain(Abstraction[str]):
 
     def __str__(self) -> str:
         if self.values is None:
-            return "⊤str" # noqa: RUF001
+            return "⊤str"  # noqa: RUF001
         if self.values == set():
             return "⊥str"
         return "{" + ",".join(sorted(self.values)) + "}"
@@ -114,9 +114,9 @@ class StringDomain(Abstraction[str]):
         return {True: (self, other), False: (self, other)}
 
     def _compare_literals(
-            self,
-            other: Self,
-            comparator: Callable[[str, str], bool],
+        self,
+        other: Self,
+        comparator: Callable[[str, str], bool],
     ) -> dict[bool, tuple[Self, Self]]:
         if self.values is None or other.values is None:
             return self._unknown(other)
