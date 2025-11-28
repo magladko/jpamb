@@ -1,3 +1,7 @@
+
+.idea/
+**/.DS_Store
+
 target/generated-sources/
 target/maven-status/
 target/test-classes/
