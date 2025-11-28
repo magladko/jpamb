@@ -218,11 +218,3 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
         if True in result and len(result) == 1:
             return {False: result[True]}
         return self._unknown(other)
-
-
-__all__ = [
-    "DoubleDomain",
-    "MachineWordDomain",
-    "PolyhedralDomain",
-    "StringDomain",
-]
