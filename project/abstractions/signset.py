@@ -13,7 +13,7 @@ class SignSet(Abstraction[int | float]):
     signs: set[Sign]
 
     @classmethod
-    def abstract(cls, items: set[int | float]) -> Self:
+    def abstract(cls, items: set[int] | set[float] | set[int | float]) -> Self:
         signset = set()
         if 0 in items:
             signset.add("0")
@@ -216,7 +216,7 @@ class SignSet(Abstraction[int | float]):
 
         return self._binary_comparison(other, gt_outcome)
 
-    def __contains__(self, member: JvmNumberAbs) -> bool:
+    def __contains__(self, member: int | float) -> bool:  # noqa: PYI041
         if member == 0 and "0" in self.signs:
             return True
         if member > 0 and "+" in self.signs:

@@ -1,4 +1,4 @@
-from project.novel_domains import (
+from project.abstractions.novel_domains import (
     MachineWordDomain,
 )
 
