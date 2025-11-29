@@ -12,7 +12,9 @@ class SyntacticHelper:
     JAVA_LANGUAGE = tree_sitter.Language(tree_sitter_java.language())
     parser = tree_sitter.Parser(JAVA_LANGUAGE)
 
-    def find_interesting_values(self, methodid: jvm.AbsMethodID) -> set[jvm.Value]:
+    def find_interesting_values(
+        self, methodid: jvm.AbsMethodID
+    ) -> set[jvm.Value]:
         self.tree = self.parse_source_file(self.parser, methodid)
         self.simple_classname = str(methodid.classname.name)
 
@@ -162,3 +164,125 @@ class SyntacticHelper:
             # TODO(kornel): Add more sophisticated type checking here
 
         return True
+
+    def check_triviality(self, methodid: jvm.AbsMethodID) -> dict:
+        """
+        Check if a method is trivial (no parameters, loops, or recursion).
+
+        A method is trivial if it has:
+        - No method parameters
+        - No loops (while, for, do-while)
+        - No recursive calls
+
+        Returns:
+            dict with keys: 'is_trivial', 'has_parameters', 'has_loops',
+                           'has_recursion', 'justification'
+
+        """
+        # Check for parameters
+        has_parameters = len(methodid.extension.params) > 0
+
+        # Check for loops (AST-based)
+        has_loops = self._detect_loops(methodid)
+
+        # Check for recursion
+        has_recursion = self._detect_recursion(methodid)
+
+        is_trivial = not (has_parameters or has_loops or has_recursion)
+
+        # Build justification
+        reasons = []
+        if has_parameters:
+            reasons.append("has parameters")
+        if has_loops:
+            reasons.append("contains loops")
+        if has_recursion:
+            reasons.append("has recursive calls")
+
+        justification = (
+            "Trivial: no parameters, loops, or recursion"
+            if is_trivial
+            else f"Non-trivial: {', '.join(reasons)}"
+        )
+
+        return {
+            "is_trivial": is_trivial,
+            "has_parameters": has_parameters,
+            "has_loops": has_loops,
+            "has_recursion": has_recursion,
+            "justification": justification,
+        }
+
+    def _detect_loops(self, methodid: jvm.AbsMethodID) -> bool:
+        """Detect loops in method using both bytecode and AST analysis."""
+        # First, check bytecode for backward goto jumps
+        suite = jpamb.Suite()
+        try:
+            opcodes = list(suite.method_opcodes(methodid))
+            for i, op in enumerate(opcodes):
+                if isinstance(op, jvm.Goto):
+                    if op.target < i:  # Backward jump = loop
+                        return True
+        except Exception:
+            pass  # If bytecode check fails, rely on AST
+
+        # Also check AST for loop constructs
+        tree = self.parse_source_file(self.parser, methodid)
+        simple_classname = str(methodid.classname.name)
+        class_node = self.find_class_node(tree, simple_classname)
+        if not class_node:
+            return False
+
+        method_node = self.find_method_node(class_node, methodid)
+        if not method_node:
+            return False
+
+        # Query for all loop types
+        loop_query = tree_sitter.Query(
+            self.JAVA_LANGUAGE,
+            """
+            [
+                (while_statement) @loop
+                (for_statement) @loop
+                (do_statement) @loop
+                (enhanced_for_statement) @loop
+            ]
+            """,
+        )
+
+        captures = tree_sitter.QueryCursor(loop_query).captures(method_node)
+        return len(captures.get("loop", [])) > 0
+
+    def _detect_recursion(self, methodid: jvm.AbsMethodID) -> bool:
+        """Detect recursive method calls in the AST."""
+        method_name = methodid.extension.name
+
+        tree = self.parse_source_file(self.parser, methodid)
+        simple_classname = str(methodid.classname.name)
+        class_node = self.find_class_node(tree, simple_classname)
+        if not class_node:
+            return False
+
+        method_node = self.find_method_node(class_node, methodid)
+        if not method_node:
+            return False
+
+        # Query for method invocations
+        call_query = tree_sitter.Query(
+            self.JAVA_LANGUAGE,
+            """
+            (method_invocation
+                name: (identifier) @method_name
+            )
+            """,
+        )
+
+        captures = tree_sitter.QueryCursor(call_query).captures(method_node)
+        called_methods = captures.get("method_name", [])
+
+        # Check if any call matches this method's name
+        for call in called_methods:
+            if call.text and call.text.decode() == method_name:
+                return True
+
+        return False
