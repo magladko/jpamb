@@ -9,10 +9,13 @@ from .abstraction import Abstraction
 @dataclass
 class MachineWordDomain(Abstraction[int]):
     residues: set[int] | None
-    is_bottom: bool = False
 
     WIDTH = 32
     MAX_TRACKED = 16
+
+    def is_bot(self) -> bool:
+        """Bottom is represented by an empty residue set."""
+        return self.residues == set()
 
     @classmethod
     def has_finite_lattice(cls) -> bool:
@@ -54,14 +57,14 @@ class MachineWordDomain(Abstraction[int]):
 
     @classmethod
     def bot(cls) -> Self:
-        return cls(set(), True)
+        return cls(set())
 
     @classmethod
     def top(cls) -> Self:
         return cls(None)
 
     def __contains__(self, member: int) -> bool:
-        if self.is_bottom:
+        if self.is_bot():
             return False
         if self.residues is None:
             return True
@@ -72,7 +75,7 @@ class MachineWordDomain(Abstraction[int]):
         other: Self,
         fn: Callable[[int, int], int],
     ) -> Self:
-        if self.is_bottom or other.is_bottom:
+        if self.is_bot() or other.is_bot():
             return self.bot()
         if self.residues is None or other.residues is None:
             return self.top()
@@ -92,7 +95,7 @@ class MachineWordDomain(Abstraction[int]):
         return self._binary_op(other, lambda a, b: a * b)
 
     def __div__(self, other: Self) -> Self:
-        if other.is_bottom:
+        if other.is_bot():
             return self.bot()
         if other.residues is None:
             return self.top()
@@ -104,25 +107,21 @@ class MachineWordDomain(Abstraction[int]):
     __mod__ = __div__
 
     def __le__(self, other: Self) -> bool:
-        if self.is_bottom:
+        if self.is_bot():
             return True
         if other.residues is None:
             return True
         if self.residues is None:
             return other.residues is None
-        if other.is_bottom:
+        if other.is_bot():
             return False
         return self.residues <= other.residues
 
     def __eq__(self, other: object) -> bool:
-        return (
-            isinstance(other, MachineWordDomain)
-            and self.residues == other.residues
-            and self.is_bottom == other.is_bottom
-        )
+        return isinstance(other, MachineWordDomain) and self.residues == other.residues
 
     def __and__(self, other: Self) -> Self:
-        if self.is_bottom or other.is_bottom:
+        if self.is_bot() or other.is_bot():
             return self.bot()
         if self.residues is None:
             return other
@@ -131,9 +130,9 @@ class MachineWordDomain(Abstraction[int]):
         return self.__class__(self.residues & other.residues)
 
     def __or__(self, other: Self) -> Self:
-        if self.is_bottom:
+        if self.is_bot():
             return other
-        if other.is_bottom:
+        if other.is_bot():
             return self
         if self.residues is None or other.residues is None:
             return self.top()
@@ -143,7 +142,7 @@ class MachineWordDomain(Abstraction[int]):
         return self.__class__(merged)
 
     def __neg__(self) -> Self:
-        if self.is_bottom:
+        if self.is_bot():
             return self.bot()
         if self.residues is None:
             return self.top()
@@ -152,7 +151,7 @@ class MachineWordDomain(Abstraction[int]):
         return self.__class__(negated)
 
     def __str__(self) -> str:
-        if self.is_bottom:
+        if self.is_bot():
             return "⊥word"
         if self.residues is None:
             return "⊤word"  # noqa: RUF001
@@ -161,6 +160,8 @@ class MachineWordDomain(Abstraction[int]):
     # Helpers
 
     def _unknown(self, other: Self) -> dict[bool, tuple[Self, Self]]:
+        if self.is_bot() or other.is_bot():
+            return {}
         return {True: (self, other), False: (self, other)}
 
     def _compare_values(
@@ -168,8 +169,8 @@ class MachineWordDomain(Abstraction[int]):
         other: Self,
         comparator: Callable[[int, int], bool],
     ) -> dict[bool, tuple[Self, Self]]:
-        if self.is_bottom or other.is_bottom:
-            return self._unknown(other)
+        if self.is_bot() or other.is_bot():
+            return {}
         if self.residues is None or other.residues is None:
             return self._unknown(other)
         results: dict[bool, tuple[set[int], set[int]]] = {}

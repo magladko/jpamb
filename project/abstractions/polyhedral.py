@@ -9,9 +9,12 @@ from .abstraction import Abstraction
 class PolyhedralDomain(Abstraction[tuple[float, ...]]):
     dimension: int
     bounds: list[tuple[float, float]] | None
-    is_bottom: bool = False
 
     DEFAULT_DIMENSION = 1
+
+    def is_bot(self) -> bool:
+        """Bottom is represented by an empty bounds list."""
+        return self.bounds == []
 
     @classmethod
     def has_finite_lattice(cls) -> bool:
@@ -57,7 +60,7 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
     @classmethod
     def bot(cls, dimension: int | None = None) -> Self:
         dim = cls.DEFAULT_DIMENSION if dimension is None else dimension
-        return cls(dim, None, True)
+        return cls(dim, [])
 
     @classmethod
     def top(cls, dimension: int | None = None) -> Self:
@@ -65,7 +68,7 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
         return cls(dim, None)
 
     def __contains__(self, member: tuple[float, ...] | float) -> bool:
-        if self.is_bottom:
+        if self.is_bot():
             return False
         if self.bounds is None:
             return True
@@ -81,9 +84,9 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
 
     def _preferself_dimension(self, other: Self) -> int:
         """Best-effort dimension choice when collapsing to top/bot."""
-        if self.bounds is not None or self.is_bottom:
+        if self.bounds not in (None, []):
             return self.dimension
-        if other.bounds is not None or other.is_bottom:
+        if other.bounds not in (None, []):
             return other.dimension
         return max(self.dimension, other.dimension)
 
@@ -92,7 +95,7 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
         other: Self,
         fn: Callable[[tuple[float, float], tuple[float, float]], tuple[float, float]],
     ) -> Self:
-        if self.is_bottom or other.is_bottom:
+        if self.is_bot() or other.is_bot():
             dim = self._preferself_dimension(other)
             return self.bot(dim)
         if self.bounds is None or other.bounds is None:
@@ -113,7 +116,7 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
     __mul__ = __div__ = __floordiv__ = __mod__ = __sub__
 
     def __le__(self, other: Self) -> bool:
-        if self.is_bottom:
+        if self.is_bot():
             return True
         if other.bounds is None:
             return True
@@ -129,23 +132,22 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
         )
 
     def __neg__(self) -> Self:
-        if self.is_bottom:
+        if self.is_bot():
             return self.bot(self.dimension)
         if self.bounds is None:
             return self.top(self.dimension)
         neg_bounds = [(-hi, -lo) for (lo, hi) in self.bounds]
-        return self.__class__(self.dimension, neg_bounds, self.is_bottom)
+        return self.__class__(self.dimension, neg_bounds)
 
     def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, PolyhedralDomain)
             and self.dimension == other.dimension
             and self.bounds == other.bounds
-            and self.is_bottom == other.is_bottom
         )
 
     def __and__(self, other: Self) -> Self:
-        if self.is_bottom or other.is_bottom:
+        if self.is_bot() or other.is_bot():
             dim = self._preferself_dimension(other)
             return self.bot(dim)
         if self.bounds is None:
@@ -165,9 +167,9 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
         return self.__class__(self.dimension, intersected)
 
     def __or__(self, other: Self) -> Self:
-        if self.is_bottom:
+        if self.is_bot():
             return other
-        if other.is_bottom:
+        if other.is_bot():
             return self
         if self.bounds is None or other.bounds is None:
             dim = self._preferself_dimension(other)
@@ -181,7 +183,7 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
         return self.__class__(self.dimension, hull)
 
     def __str__(self) -> str:
-        if self.is_bottom:
+        if self.is_bot():
             return "⊥poly"
         if self.bounds is None:
             return "⊤poly"  # noqa: RUF001
@@ -191,14 +193,20 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
     # Helpers
 
     def _unknown(self, other: Self) -> dict[bool, tuple[Self, Self]]:
+        if self.is_bot() or other.is_bot():
+            return {}
         return {True: (self, other), False: (self, other)}
 
     def le(self, other: Self) -> dict[bool, tuple[Self, Self]]:
+        if self.is_bot() or other.is_bot():
+            return {}
         if self <= other:
             return {True: (self, other)}
         return self._unknown(other)
 
     def lt(self, other: Self) -> dict[bool, tuple[Self, Self]]:
+        if self.is_bot() or other.is_bot():
+            return {}
         return self._unknown(other)
 
     def ge(self, other: Self) -> dict[bool, tuple[Self, Self]]:
@@ -208,7 +216,9 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
         return other.lt(self)
 
     def eq(self, other: Self) -> dict[bool, tuple[Self, Self]]:
-        if self == other and not self.is_bottom:
+        if self.is_bot() or other.is_bot():
+            return {}
+        if self == other:
             return {True: (self, other)}
         return self._unknown(other)
 
