@@ -1001,9 +1001,9 @@ def debloat(suite, source_dir, target, filter, with_python):
 
     from debloat_orchestrator import DebloatOrchestrator  # type: ignore[import-not-found]
 
-    import debugpy
-    debugpy.listen(5678)
-    debugpy.wait_for_client()
+    # import debugpy
+    # debugpy.listen(5678)
+    # debugpy.wait_for_client()
 
     orch = DebloatOrchestrator(suite, Path(source_dir), Path(target))
     results = orch.run(filter_pattern=filter)
