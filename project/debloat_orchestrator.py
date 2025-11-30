@@ -2,11 +2,12 @@
 
 import json
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
 import abstract_interpreter
-from abstractions.signset import SignSet
+from abstractions.interval import Interval
 from code_rewriter import CodeRewriter, RewriteResult
 from debloat_config import generate_k_set
 from interpreter import Frame, Stack, State, lines_executed, step
@@ -21,7 +22,6 @@ from jpamb import jvm
 class DebloatingResult:
     """Result of debloating a single test case."""
 
-    case: jpamb.model.Case
     success: bool
     methodid: jvm.AbsMethodID
     triviality: dict
@@ -57,34 +57,34 @@ class DebloatOrchestrator:
 
     def run(self, filter_pattern: re.Pattern | None = None) -> list[DebloatingResult]:
         """
-        Run debloating pipeline on all cases.
+        Run debloating pipeline on all methods.
 
         Args:
             filter_pattern: Optional regex to filter cases
 
         Returns:
-            List of DebloatingResult for each case
+            List of DebloatingResult for each method
 
         """
         # Apply filter FIRST to get subset of cases to debloat
         cases = self._filter_cases(filter_pattern)
+        methodids = {jpamb.parse_methodid(case.methodid.encode()) for case in cases}
 
-        # Group filtered cases by source file
-        cases_by_file = self._group_cases_by_source_file(cases)
-
+        # Group filtered methods by source file
+        methods_by_file = self._group_methods_by_source_file(methodids)
         results = []
-        for file_cases in cases_by_file.values():
-            file_results = self._debloat_source_file(file_cases)
+        for file_methods in methods_by_file.values():
+            file_results = self._debloat_source_file(file_methods)
             results.extend(file_results)
 
         return results
 
-    def debloat_case(self, case: jpamb.model.Case) -> DebloatingResult:
+    def debloat_method(self, absmethodid: jvm.AbsMethodID) -> DebloatingResult:
         """
-        Debloat a single test case.
+        Debloat a single method.
 
-        This method is preserved for backward compatibility and single-case use.
-        For multiple cases, use run() which groups them by source file efficiently.
+        This method is preserved for backward compatibility and single-method use.
+        For multiple methods, use run() which groups them by source file efficiently.
 
         Pipeline:
         1. Syntactic analysis (triviality check, K_SET generation)
@@ -92,12 +92,12 @@ class DebloatOrchestrator:
         3. Code rewriting
         4. Persist
         """
-        # Delegate to _debloat_source_file with a single case
-        results = self._debloat_source_file([case])
+        # Delegate to _debloat_source_file with a single method
+        results = self._debloat_source_file([absmethodid])
         return results[0]
 
     def _run_concrete(
-        self, methodid: jvm.AbsMethodID, m_input: jpamb.model.Input
+        self, methodid: jvm.AbsMethodID, m_input: jpamb.model.Input | None
     ) -> set[int]:
         """
         Run concrete interpreter to get coverage.
@@ -112,8 +112,9 @@ class DebloatOrchestrator:
         state = State({}, Stack.empty().push(frame))
 
         # Initialize parameters from input
-        for i, val in enumerate(m_input.values):
-            frame.locals[i] = val
+        if m_input:
+            for i, val in enumerate(m_input.values):
+                frame.locals[i] = val
 
         # Execute up to max steps
         max_steps = 1000
@@ -129,8 +130,8 @@ class DebloatOrchestrator:
         self, methodid: jvm.AbsMethodID, k_set: set[int | float]
     ) -> set[int]:
         """Run abstract interpreter to get coverage."""
-        return abstract_interpreter.AbsInterpreter().analyze_coverage(
-            methodid, {SignSet}, k_set
+        return abstract_interpreter.AbsInterpreter(debloater=True).analyze_coverage(
+            methodid, {Interval}, k_set
         )
 
     def _persist_code(self, methodid: jvm.AbsMethodID, source: str) -> None:
@@ -152,22 +153,22 @@ class DebloatOrchestrator:
 
     def _save_intermediate_artifacts(
         self,
-        case: jpamb.model.Case,
+        absmethodid: jvm.AbsMethodID,
         triviality: dict,
         lines_executed: set[int],
         rewrite_result: RewriteResult,
     ) -> None:
         """Save all intermediate artifacts for debugging/analysis."""
         # Create case-specific directory
-        case_dir = self.intermediate_dir / str(case.methodid).replace("/", "_")
-        case_dir.mkdir(parents=True, exist_ok=True)
+        method_dir = self.intermediate_dir / str(absmethodid.methodid).replace("/", "_")
+        method_dir.mkdir(parents=True, exist_ok=True)
 
         # Save triviality check result
-        with Path.open(case_dir / "triviality.json", "w") as f:
+        with Path.open(method_dir / "triviality.json", "w") as f:
             json.dump(triviality, f, indent=2)
 
         # Save coverage information
-        with Path.open(case_dir / "coverage.json", "w") as f:
+        with Path.open(method_dir / "coverage.json", "w") as f:
             json.dump(
                 {
                     "lines_executed": sorted(lines_executed),
@@ -178,13 +179,13 @@ class DebloatOrchestrator:
             )
 
         # Save rewrite result
-        with Path.open(case_dir / "original.java", "w") as f:
+        with Path.open(method_dir / "original.java", "w") as f:
             f.write(rewrite_result.original_source)
 
-        with Path.open(case_dir / "debloated.java", "w") as f:
+        with Path.open(method_dir / "debloated.java", "w") as f:
             f.write(rewrite_result.debloated_source)
 
-        with Path.open(case_dir / "rewrite_summary.json", "w") as f:
+        with Path.open(method_dir / "rewrite_summary.json", "w") as f:
             json.dump(
                 {
                     "lines_removed": rewrite_result.lines_removed,
@@ -203,48 +204,46 @@ class DebloatOrchestrator:
             ]
         return list(self.suite.cases)
 
-    def _group_cases_by_source_file(
-        self, cases: list[jpamb.model.Case]
-    ) -> dict[Path, list[jpamb.model.Case]]:
+    def _group_methods_by_source_file(
+        self, absmethodids: Iterable[jvm.AbsMethodID]
+    ) -> dict[Path, list[jvm.AbsMethodID]]:
         """
-        Group cases by their source file path.
+        Group methods by their source file path.
 
         This ensures all methods from the same Java file are processed together,
         allowing incremental rewrites without overwriting previous changes.
-        Only groups the filtered cases passed as input.
+        Only groups the filtered methods passed as input.
         """
         grouped = {}
-        for case in cases:
-            methodid = jpamb.parse_methodid(case.methodid.encode())
+        for methodid in absmethodids:
             source_file = self.suite.sourcefile(methodid.classname)
             if source_file not in grouped:
                 grouped[source_file] = []
-            grouped[source_file].append(case)
+            grouped[source_file].append(methodid)
         return grouped
 
     def _debloat_source_file(
-        self, cases: list[jpamb.model.Case]
+        self, absmethodids: Iterable[jvm.AbsMethodID]
     ) -> list[DebloatingResult]:
         """
         Debloat all methods in a single source file.
 
-        This method processes all cases in two phases:
+        This method processes all methods in two phases:
         1. Analysis phase: Analyze each method against the ORIGINAL source
         2. Rewrite phase: Apply all line removals at once to avoid line number shifts
 
         Args:
-            cases: List of cases to process for this file
+            absmethodids: Method IDs for methods to be analyzed
 
         Returns:
-            List of DebloatingResult for each case
+            List of DebloatingResult for each method
 
         """
         results = []
 
         # Phase 1: Analyze all methods against original source
         analysis_results = []
-        for case in cases:
-            methodid = jpamb.parse_methodid(case.methodid.encode())
+        for methodid in absmethodids:
             try:
                 # Stage 1: Syntactic analysis
                 triviality = self.syntactic_helper.check_triviality(methodid)
@@ -254,14 +253,14 @@ class DebloatOrchestrator:
 
                 # Stage 2: Coverage analysis
                 if triviality["is_trivial"]:
-                    lines_executed_set = self._run_concrete(methodid, case.input)
+                    # NOTE: Trivial case should not have any arguments
+                    lines_executed_set = self._run_concrete(methodid, None)
                 else:
                     k_set = generate_k_set(interesting_vals)
                     lines_executed_set = self._run_abstract(methodid, k_set)
 
                 analysis_results.append(
                     {
-                        "case": case,
                         "methodid": methodid,
                         "triviality": triviality,
                         "lines_executed": lines_executed_set,
@@ -271,7 +270,6 @@ class DebloatOrchestrator:
             except Exception as e:  # noqa: BLE001
                 results.append(
                     DebloatingResult(
-                        case=case,
                         success=False,
                         methodid=methodid,
                         triviality={},
@@ -286,7 +284,6 @@ class DebloatOrchestrator:
         original_source = None
 
         for analysis in analysis_results:
-            case = analysis["case"]
             methodid = analysis["methodid"]
             triviality = analysis["triviality"]
             lines_executed_set = analysis["lines_executed"]
@@ -306,12 +303,11 @@ class DebloatOrchestrator:
 
                 # Save intermediate artifacts (shows per-method analysis)
                 self._save_intermediate_artifacts(
-                    case, triviality, lines_executed_set, rewrite_result
+                    methodid, triviality, lines_executed_set, rewrite_result
                 )
 
                 results.append(
                     DebloatingResult(
-                        case=case,
                         success=True,
                         methodid=methodid,
                         triviality=triviality,
@@ -324,7 +320,6 @@ class DebloatOrchestrator:
             except Exception as e:  # noqa: BLE001
                 results.append(
                     DebloatingResult(
-                        case=case,
                         success=False,
                         methodid=methodid,
                         triviality={},
@@ -347,7 +342,7 @@ class DebloatOrchestrator:
 
         # Stage 4: Persist once per file (after all methods processed)
         if current_source and any(r.success for r in results):
-            # Use first successful case's methodid to get source file path
+            # Use first successful method's methodid to get source file path
             successful_result = next(r for r in results if r.success)
             self._persist_code(successful_result.methodid, current_source)
 
