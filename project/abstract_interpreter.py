@@ -389,8 +389,9 @@ class StateSet[AV: Abstraction]:
 
 
 class AbsInterpreter:
-    def __init__(self) -> None:
+    def __init__(self, debloater: bool = False) -> None:  # noqa: FBT001, FBT002
         self.lines_executed: set[int] = set()
+        self.debloater = debloater
 
     def step[AV: Abstraction](
         self, state: AState[AV], abstraction_cls: type[AV]
@@ -644,6 +645,9 @@ class AbsInterpreter:
                         )
 
             case a:
+                if self.debloater:
+                    logger.warning(f"Skipping debloat: {a.help()}")
+                    raise NotImplementedError
                 a.help()
                 sys.exit(-1)
 
