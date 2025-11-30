@@ -12,6 +12,8 @@ from syntactic_helper import SyntacticHelper
 import jpamb
 import jpamb.model
 from jpamb import jvm
+from project import abstract_interpreter
+from project.abstractions.signset import SignSet
 
 
 @dataclass
@@ -103,12 +105,11 @@ class DebloatOrchestrator:
             interesting_vals = self.syntactic_helper.find_interesting_values(
                 methodid
             )
-            k_set = generate_k_set(interesting_vals)
-
             # Stage 2: Coverage analysis
             if triviality["is_trivial"]:
                 lines_executed = self._run_concrete(methodid, case.input)
             else:
+                k_set = generate_k_set(interesting_vals)
                 lines_executed = self._run_abstract(methodid, k_set)
 
             # Stage 3: Code rewriting
@@ -177,29 +178,8 @@ class DebloatOrchestrator:
     def _run_abstract(
         self, methodid: jvm.AbsMethodID, k_set: set[int | float]
     ) -> set[int]:
-        """
-        Run abstract interpreter to get coverage.
-
-        TODO: For Phase 1, we use concrete interpreter as fallback.
-        Phase 2 will properly integrate abstract interpreter.
-        """
-        # For Phase 1: Use concrete interpreter even for non-trivial cases
-        # This avoids the import issues with abstract_interpreter.py's standalone code
-        # TODO: Properly integrate abstract interpreter in Phase 2
-
-        # Get first test case input for this method
-        case_input = None
-        for case in self.suite.cases:
-            if case.methodid == methodid:
-                case_input = case.input
-                break
-
-        if case_input is None:
-            # No test case found, return empty set
-            return set()
-
-        # Run concrete interpreter as fallback
-        return self._run_concrete(methodid, case_input)
+        """Run abstract interpreter to get coverage."""
+        return abstract_interpreter.analyze_coverage(methodid, {SignSet}, k_set)
 
     def _persist_code(
         self, methodid: jvm.AbsMethodID, source: str

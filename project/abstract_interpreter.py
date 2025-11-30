@@ -656,83 +656,116 @@ def manystep[AV: Abstraction](
         states.extend(res)
     return states
 
+def analyze_coverage(methodid: jvm.AbsMethodID, abstractions: set[type[Abstraction]], k_set: set[int | float] = {-100, -10, -1, 0, 1, 10, 100}) -> set[int]:
 
-# ============================================================================
-# Main Analysis
-# ============================================================================
+    lines_executed: dict[jvm.AbsMethodID, set[int]] = {methodid: set()}
+    total_lines_executed: set[int] = set()
+    for av in abstractions:
+        # Initialize with entry state
+        sts = StateSet[av].initialstate_from_method(methodid, av, k_set)
 
-methodid = jpamb.getmethodid(
-    "Abstract Interpreter",
-    "0.1",
-    "The Garbage Spillers",
-    ["abstract interpretation", "sign analysis", "python"],
-    for_science=True,
-)
+        iteration = 0
+        while True:
+            iteration += 1
+            # Step all states that need processing
+            for s in manystep(sts, av):
+                if isinstance(s, str):
+                    # Terminal state (ok/error)
+                    final.add(s)
+                else:
+                    # Successor state: join into per_inst
+                    sts |= s
 
-if methodid is None:
-    logger.error("Method ID not found")
-    methodid, case_input = jpamb.getcase()
-else:
-    params = methodid.extension.params
+            logger.debug(f"Iteration {iteration}: {len(sts.needswork)} PCs need work")
+            # logger.debug("Needs work: " + ", ".join(map(str, sts.needswork)))
+            # logger.debug(f"sts:\n{sts}")
+            logger.debug(f"Final states: {final}")
 
-results: dict[str, int] = {
-    "ok": 0,
-    "assertion error": 0,
-    "divide by zero": 0,
-    "out of bounds": 0,
-    "null pointer": 0,
-    "*": 0,
-}
+            # If needswork is empty, we've reached fixed point
+            if not sts.needswork:
+                logger.debug("Fixed point reached!")
+                break
+        logger.debug(f"Executed lines {lines_executed}")
+        total_lines_executed &= lines_executed[methodid]
 
-AV = SignSet
-_ = Interval
+    logger.debug(f"[final] Executed lines {total_lines_executed}")
+    return total_lines_executed
 
-# MAX_STEPS = 1000
-final: set[str] = set()
-lines_executed: dict[jvm.AbsMethodID, set[int]] = {methodid: set()}
 
-# import debugpy
-# debugpy.listen(5678)
-# logger.info("Waiting for debugger to attach...")
-# debugpy.wait_for_client()
+if __name__ == "__main__":
 
-# TODO(kornel): K-set thresholds (placeholder)
-K_SET: set[int | float] = {-100, -10, -1, 0, 1, 10, 100}
+    methodid = jpamb.getmethodid(
+        "Abstract Interpreter",
+        "0.1",
+        "The Garbage Spillers",
+        ["abstract interpretation", "sign analysis", "python"],
+        for_science=True,
+    )
 
-# Initialize with entry state
-sts = StateSet[AV].initialstate_from_method(methodid, AV, K_SET)
-logger.debug(f"Initial state:\n{sts}")
-
-# Worklist algorithm: iterate until fixed point (or max steps)
-iteration = 0
-while True:
-    iteration += 1
-    # Step all states that need processing
-    for s in manystep(sts, AV):
-        if isinstance(s, str):
-            # Terminal state (ok/error)
-            final.add(s)
-        else:
-            # Successor state: join into per_inst
-            sts |= s
-
-    logger.debug(f"Iteration {iteration}: {len(sts.needswork)} PCs need work")
-    # logger.debug("Needs work: " + ", ".join(map(str, sts.needswork)))
-    # logger.debug(f"sts:\n{sts}")
-    logger.debug(f"Final states: {final}")
-
-    # If needswork is empty, we've reached fixed point
-    if not sts.needswork:
-        logger.debug("Fixed point reached!")
-        break
-
-logger.debug(f"Executed lines {lines_executed}")
-if len(final) == 0:
-    final.add("*")
-
-# Output results
-for result in results:
-    if result in final:
-        print(f"{result};100%")
+    if methodid is None:
+        logger.error("Method ID not found")
+        methodid, case_input = jpamb.getcase()
     else:
-        print(f"{result};0%")
+        params = methodid.extension.params
+
+    results: dict[str, int] = {
+        "ok": 0,
+        "assertion error": 0,
+        "divide by zero": 0,
+        "out of bounds": 0,
+        "null pointer": 0,
+        "*": 0,
+    }
+
+    AV = SignSet
+    _ = Interval
+
+    # MAX_STEPS = 1000
+    final: set[str] = set()
+    lines_executed: dict[jvm.AbsMethodID, set[int]] = {methodid: set()}
+
+    # import debugpy
+    # debugpy.listen(5678)
+    # logger.info("Waiting for debugger to attach...")
+    # debugpy.wait_for_client()
+
+    # TODO(kornel): K-set thresholds (placeholder)
+    K_SET: set[int | float] = {-100, -10, -1, 0, 1, 10, 100}
+
+    # Initialize with entry state
+    sts = StateSet[AV].initialstate_from_method(methodid, AV, K_SET)
+    logger.debug(f"Initial state:\n{sts}")
+
+    # Worklist algorithm: iterate until fixed point (or max steps)
+    iteration = 0
+    while True:
+        iteration += 1
+        # Step all states that need processing
+        for s in manystep(sts, AV):
+            if isinstance(s, str):
+                # Terminal state (ok/error)
+                final.add(s)
+            else:
+                # Successor state: join into per_inst
+                sts |= s
+
+        logger.debug(f"Iteration {iteration}: {len(sts.needswork)} PCs need work")
+        # logger.debug("Needs work: " + ", ".join(map(str, sts.needswork)))
+        # logger.debug(f"sts:\n{sts}")
+        logger.debug(f"Final states: {final}")
+
+        # If needswork is empty, we've reached fixed point
+        if not sts.needswork:
+            logger.debug("Fixed point reached!")
+            break
+
+    logger.debug(f"Executed lines {lines_executed}")
+    if len(final) == 0:
+        final.add("*")
+
+    # Output results
+    for result in results:
+        if result in final:
+            print(f"{result};100%")
+        else:
+            print(f"{result};0%")

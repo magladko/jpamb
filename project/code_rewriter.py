@@ -98,4 +98,6 @@ class CodeRewriter:
             "/*",
             "*/",
         ]
+        # TODO(kornel): this should work 90% of the time,
+        # but we should refine the check for non-trivial cases
         return any(line.startswith(kw) for kw in structural_keywords) or line == ""
