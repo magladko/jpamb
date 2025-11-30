@@ -228,6 +228,10 @@ class DebloatOrchestrator:
         """
         Debloat all methods in a single source file.
 
+        This method processes all cases in two phases:
+        1. Analysis phase: Analyze each method against the ORIGINAL source
+        2. Rewrite phase: Apply all line removals at once to avoid line number shifts
+
         Args:
             cases: List of cases to process for this file
 
@@ -236,8 +240,9 @@ class DebloatOrchestrator:
 
         """
         results = []
-        current_source = None  # Track the evolving source
 
+        # Phase 1: Analyze all methods against original source
+        analysis_results = []
         for case in cases:
             methodid = jpamb.parse_methodid(case.methodid.encode())
             try:
@@ -254,13 +259,52 @@ class DebloatOrchestrator:
                     k_set = generate_k_set(interesting_vals)
                     lines_executed_set = self._run_abstract(methodid, k_set)
 
-                # Stage 3: Code rewriting (with current state)
-                rewrite_result = self.code_rewriter.rewrite_incremental(
-                    methodid, lines_executed_set, current_source
+                analysis_results.append(
+                    {
+                        "case": case,
+                        "methodid": methodid,
+                        "triviality": triviality,
+                        "lines_executed": lines_executed_set,
+                    }
                 )
-                current_source = rewrite_result.debloated_source  # Update state
 
-                # Save intermediate artifacts
+            except Exception as e:  # noqa: BLE001
+                results.append(
+                    DebloatingResult(
+                        case=case,
+                        success=False,
+                        methodid=methodid,
+                        triviality={},
+                        lines_executed=set(),
+                        rewrite_result=None,
+                        error=str(e),
+                    )
+                )
+
+        # Phase 2: Collect lines to remove from all methods
+        accumulated_lines_to_remove = set()
+        original_source = None
+
+        for analysis in analysis_results:
+            case = analysis["case"]
+            methodid = analysis["methodid"]
+            triviality = analysis["triviality"]
+            lines_executed_set = analysis["lines_executed"]
+
+            try:
+                # Analyze against original source to get lines to remove
+                rewrite_result = self.code_rewriter.rewrite_incremental(
+                    methodid, lines_executed_set, current_source=None
+                )
+
+                # Save the original source from first method
+                if original_source is None:
+                    original_source = rewrite_result.original_source
+
+                # Accumulate lines to remove across all methods
+                accumulated_lines_to_remove.update(rewrite_result.lines_removed_set)
+
+                # Save intermediate artifacts (shows per-method analysis)
                 self._save_intermediate_artifacts(
                     case, triviality, lines_executed_set, rewrite_result
                 )
@@ -289,6 +333,17 @@ class DebloatOrchestrator:
                         error=str(e),
                     )
                 )
+
+        # Phase 3: Apply all accumulated line removals at once
+        current_source = None
+        if original_source and accumulated_lines_to_remove:
+            # Apply all line removals to original source
+            current_source = self.code_rewriter.apply_line_removals(
+                original_source, accumulated_lines_to_remove
+            )
+        elif original_source:
+            # No lines to remove
+            current_source = original_source
 
         # Stage 4: Persist once per file (after all methods processed)
         if current_source and any(r.success for r in results):
