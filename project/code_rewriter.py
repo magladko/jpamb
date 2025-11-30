@@ -230,7 +230,8 @@ class CodeRewriter:
                             self._extract_statements_recursive(alternative, statements)
                         elif alternative.type == "if_statement":
                             # else-if case: the alternative is itself an if_statement
-                            # It will be processed in the main loop, so no need to recurse
+                            # It will be processed in the main loop,
+                            # so no need to recurse
                             pass
 
     def _is_executed(self, stmt: StatementInfo, lines_executed: set[int]) -> bool:
