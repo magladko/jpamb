@@ -304,7 +304,9 @@ def test_logical_relationship_gt_implies_ge(i1: DoubleDomain, i2: DoubleDomain) 
 
 @given(intervals(), intervals())
 @example(DoubleDomain(5, 5), DoubleDomain(5, 5))
-def test_logical_relationship_eq_implies_le_and_ge(i1: DoubleDomain, i2: DoubleDomain) -> None:
+def test_logical_relationship_eq_implies_le_and_ge(
+    i1: DoubleDomain, i2: DoubleDomain
+) -> None:
     """Property: x == y implies x <= y and x >= y."""
     eq_result = i1.eq(i2)
     le_result = i1.le(i2)
@@ -320,7 +322,9 @@ def test_logical_relationship_eq_implies_le_and_ge(i1: DoubleDomain, i2: DoubleD
 # ============================================================================
 
 
-def compute_concrete_outcomes(i1: DoubleDomain, i2: DoubleDomain, op: Comparison) -> set[bool]:
+def compute_concrete_outcomes(
+    i1: DoubleDomain, i2: DoubleDomain, op: Comparison
+) -> set[bool]:
     """Oracle: compute concrete outcomes for intervals by sampling."""
     if i1.is_bot() or i2.is_bot():
         return set()
@@ -446,13 +450,17 @@ def test_join_commutativity(i1: DoubleDomain, i2: DoubleDomain) -> None:
 
 
 @given(intervals(), intervals(), intervals())
-def test_meet_associativity(i1: DoubleDomain, i2: DoubleDomain, i3: DoubleDomain) -> None:
+def test_meet_associativity(
+    i1: DoubleDomain, i2: DoubleDomain, i3: DoubleDomain
+) -> None:
     """Property: Meet is associative ((i1 ⊓ i2) ⊓ i3 = i1 ⊓ (i2 ⊓ i3))."""
     assert ((i1 & i2) & i3) == (i1 & (i2 & i3))
 
 
 @given(intervals(), intervals(), intervals())
-def test_join_associativity(i1: DoubleDomain, i2: DoubleDomain, i3: DoubleDomain) -> None:
+def test_join_associativity(
+    i1: DoubleDomain, i2: DoubleDomain, i3: DoubleDomain
+) -> None:
     """Property: Join is associative ((i1 ⊔ i2) ⊔ i3 = i1 ⊔ (i2 ⊔ i3))."""
     assert ((i1 | i2) | i3) == (i1 | (i2 | i3))
 
@@ -664,9 +672,10 @@ def test_top_with_top_operations() -> None:
     # assert (top % top)
 
 
-#==================================================
+# ==================================================
 # i2s
-#==================================================
+# ==================================================
+
 
 def test_interval_i2s_in_range() -> None:
     """Values in short range remain unchanged."""

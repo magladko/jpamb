@@ -1,4 +1,4 @@
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from typing import Self
 
@@ -41,7 +41,7 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
         raise TypeError(f"Unsupported value for PolyhedralDomain: {value!r}")
 
     @classmethod
-    def abstract(cls, items: set[tuple[float, ...] | float | int]) -> Self:
+    def abstract(cls, items: Iterable[tuple[float, ...] | float | int]) -> Self:
         if not items:
             return cls.bot()
         normalized = [cls._as_point(point) for point in items]

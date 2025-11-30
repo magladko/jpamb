@@ -25,7 +25,9 @@ class StringDomain(Abstraction[str]):
         return cls.abstract({value})
 
     @classmethod
-    def abstract(cls, items: set[str] | set[int] | set[str | int]) -> Self:
+    def abstract(
+        cls, items: set[str] | set[int] | set[str | int] | set[str | int | float]
+    ) -> Self:
         if not items:
             return cls.bot()
         normalized = {str(item) for item in items}
