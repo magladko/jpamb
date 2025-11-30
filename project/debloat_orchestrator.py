@@ -5,15 +5,16 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+import abstract_interpreter
+from abstractions.signset import SignSet
 from code_rewriter import CodeRewriter, RewriteResult
 from debloat_config import generate_k_set
+from interpreter import Frame, Stack, State, lines_executed, step
 from syntactic_helper import SyntacticHelper
 
 import jpamb
 import jpamb.model
 from jpamb import jvm
-from project import abstract_interpreter
-from project.abstractions.signset import SignSet
 
 
 @dataclass
@@ -38,7 +39,7 @@ class DebloatOrchestrator:
         source_dir: Path,
         target_dir: Path,
         timeout: float = 5.0,
-    ):
+    ) -> None:
         self.suite = suite
         self.source_dir = source_dir
         self.target_dir = target_dir
@@ -72,7 +73,7 @@ class DebloatOrchestrator:
             try:
                 result = self.debloat_case(case)
                 results.append(result)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 # Log error and continue
                 results.append(
                     DebloatingResult(
@@ -102,9 +103,7 @@ class DebloatOrchestrator:
         try:
             # Stage 1: Syntactic analysis
             triviality = self.syntactic_helper.check_triviality(methodid)
-            interesting_vals = self.syntactic_helper.find_interesting_values(
-                methodid
-            )
+            interesting_vals = self.syntactic_helper.find_interesting_values(methodid)
             # Stage 2: Coverage analysis
             if triviality["is_trivial"]:
                 lines_executed = self._run_concrete(methodid, case.input)
@@ -133,7 +132,7 @@ class DebloatOrchestrator:
                 error=None,
             )
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             return DebloatingResult(
                 case=case,
                 success=False,
@@ -145,15 +144,13 @@ class DebloatOrchestrator:
             )
 
     def _run_concrete(
-        self, methodid: jvm.AbsMethodID, input: jpamb.model.Input
+        self, methodid: jvm.AbsMethodID, m_input: jpamb.model.Input
     ) -> set[int]:
         """
         Run concrete interpreter to get coverage.
 
         Uses interpreter.py which now tracks lines_executed.
         """
-        from interpreter import Frame, Stack, State, lines_executed, step
-
         # Clear previous execution tracking
         lines_executed.clear()
 
@@ -162,7 +159,7 @@ class DebloatOrchestrator:
         state = State({}, Stack.empty().push(frame))
 
         # Initialize parameters from input
-        for i, val in enumerate(input.values):
+        for i, val in enumerate(m_input.values):
             frame.locals[i] = val
 
         # Execute up to max steps
@@ -179,11 +176,11 @@ class DebloatOrchestrator:
         self, methodid: jvm.AbsMethodID, k_set: set[int | float]
     ) -> set[int]:
         """Run abstract interpreter to get coverage."""
-        return abstract_interpreter.analyze_coverage(methodid, {SignSet}, k_set)
+        return abstract_interpreter.AbsInterpreter().analyze_coverage(
+            methodid, {SignSet}, k_set
+        )
 
-    def _persist_code(
-        self, methodid: jvm.AbsMethodID, source: str
-    ) -> None:
+    def _persist_code(self, methodid: jvm.AbsMethodID, source: str) -> None:
         """Persist debloated code to final output directory."""
         source_file = self.suite.sourcefile(methodid.classname)
 

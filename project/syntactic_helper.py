@@ -12,9 +12,7 @@ class SyntacticHelper:
     JAVA_LANGUAGE = tree_sitter.Language(tree_sitter_java.language())
     parser = tree_sitter.Parser(JAVA_LANGUAGE)
 
-    def find_interesting_values(
-        self, methodid: jvm.AbsMethodID
-    ) -> set[jvm.Value]:
+    def find_interesting_values(self, methodid: jvm.AbsMethodID) -> set[jvm.Value]:
         self.tree = self.parse_source_file(self.parser, methodid)
         self.simple_classname = str(methodid.classname.name)
 
@@ -220,10 +218,9 @@ class SyntacticHelper:
         try:
             opcodes = list(suite.method_opcodes(methodid))
             for i, op in enumerate(opcodes):
-                if isinstance(op, jvm.Goto):
-                    if op.target < i:  # Backward jump = loop
-                        return True
-        except Exception:
+                if isinstance(op, jvm.Goto) and op.target < i:  # Backward jump = loop
+                    return True
+        except Exception:  # noqa: BLE001, S110
             pass  # If bytecode check fails, rely on AST
 
         # Also check AST for loop constructs

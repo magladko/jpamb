@@ -388,312 +388,331 @@ class StateSet[AV: Abstraction]:
         return "\n".join(f"{pc}: {state}" for pc, state in self.per_inst.items())
 
 
-def step[AV: Abstraction](
-    state: AState[AV], abstraction_cls: type[AV]
-) -> Iterable[AState[AV] | str]:
-    """Execute ONE instruction in the abstract domain."""
-    assert isinstance(state, AState), f"expected AState but got {state}"
-    state = state.clone()  # Work on a copy
-    frame = state.frames.peek()
-    opr = state.bc[state.pc]
-    logger.debug(f"STEP {opr} {{{opr.line if opr.line else ''}}}\n{state}")
+class AbsInterpreter:
+    def __init__(self) -> None:
+        self.lines_executed: set[int] = set()
 
-    if opr.line:
-        lines_executed.setdefault(state.pc.method, set()).add(opr.line)
+    def step[AV: Abstraction](
+        self, state: AState[AV], abstraction_cls: type[AV]
+    ) -> Iterable[AState[AV] | str]:
+        """Execute ONE instruction in the abstract domain."""
+        assert isinstance(state, AState), f"expected AState but got {state}"
+        state = state.clone()  # Work on a copy
+        frame = state.frames.peek()
+        opr = state.bc[state.pc]
+        logger.debug(f"STEP {opr} {{{opr.line if opr.line else ''}}}\n{state}")
 
-    match opr:
-        case jvm.Push(value=v):
-            assert isinstance(v.value, int), f"Unsupported value type: {v.value!r}"
-            # Create fresh named value for constant
-            name = state.constraints.fresh_name()
-            state.constraints[name] = abstraction_cls.abstract({v.value})
-            frame.stack.push(name)
-            frame.pc = frame.pc + 1
-            return [state]
+        if opr.line:
+            # lines_executed.setdefault(state.pc.method, set()).add(opr.line)
+            self.lines_executed.add(opr.line)
 
-        case jvm.Store(type=_type, index=index):
-            v = frame.stack.pop()
-            # if v and v.value is not None:
-            #     assert isinstance(v.value, int), (
-            #         f"Expected type {int}, but got {v.value!r}"
-            #     )
-            frame.locals[index] = v
-            frame.pc = frame.pc + 1
-            return [state]
-
-        case jvm.Load(type=_type, index=i):
-            assert i in frame.locals, f"Local variable {i} not initialized"
-            # Push the NAME to create dependency
-            frame.stack.push(frame.locals[i])
-            frame.pc = frame.pc + 1
-            return [state]
-
-        case jvm.Ifz(condition=c, target=t):
-            # Compare ONE value to zero
-            # Stack: [..., value] -> [...]
-            # Pop the NAME being tested
-            value_name = frame.stack.pop()
-            # Look up the constraint
-            v1 = state.constraints[value_name]
-            v2 = abstraction_cls.abstract({0})
-
-            res = v1.compare(cast("Comparison", c), v2)
-            logger.debug(f"ifz compare: {v1.comp_res_str(res)}")
-
-            computed_states = []
-            if True in res:
-                # True branch: jump to target
-                true_state = state.clone()
-                true_state.frames.peek().pc = PC(frame.pc.method, t)
-                # REFINE constraint: condition is TRUE
-                constrained = res[True][0]
-                true_state.constraints[value_name] = constrained
-                computed_states.append(true_state)
-
-            if False in res:
-                # False branch: continue to next instruction
-                false_state = state.clone()
-                false_state.frames.peek().pc = frame.pc + 1
-                # REFINE constraint: condition is FALSE
-                constrained = res[False][0]
-                false_state.constraints[value_name] = constrained
-                computed_states.append(false_state)
-
-            assert len(computed_states) > 0, "At least one path must be possible"
-            return computed_states
-
-        case jvm.If(condition=c, target=t):
-            # {0} < {0, +}
-            # True: {0} ... {0, +}
-            # False: {0}
-
-            # x = {0}
-            # y = {0, +}
-            # If x < y
-            #   x: {0}, y: {+}
-            #   if y == 0:
-            #       assert false # unreachable
-
-            # Compare TWO values
-            # Stack: [..., value1, value2] -> [...]
-            name2, name1 = frame.stack.pop(), frame.stack.pop()
-            # Look up constraints
-            v1 = state.constraints[name1]
-            v2 = state.constraints[name2]
-
-            # Evaluate comparison with current constraints
-            res = v1.compare(cast("Comparison", c), v2)
-            logger.debug(f"if compare: {v1.comp_res_str(res)}")
-
-            computed_states = []
-            if True in res:
-                # True branch: jump to target
-                true_state = state.clone()
-                true_state.frames.peek().pc = PC(frame.pc.method, t)
-                # REFINE constraint: condition is TRUE
-                # For two-value comparison, constrain the first value
-                self_constrained = res[True][0]
-                other_constrained = res[True][1]
-                true_state.constraints[name1] = self_constrained
-                true_state.constraints[name2] = other_constrained
-                computed_states.append(true_state)
-
-            if False in res:
-                # False branch: continue to next instruction
-                false_state = state.clone()
-                false_state.frames.peek().pc = frame.pc + 1
-                # REFINE constraint: condition is FALSE
-                self_constrained = res[False][0]
-                other_constrained = res[False][1]
-                false_state.constraints[name1] = self_constrained
-                false_state.constraints[name2] = other_constrained
-                computed_states.append(false_state)
-
-            return computed_states
-
-        case jvm.Return(type=tp):
-            return_value_name = frame.stack.pop() if tp is not None else None
-            state.frames.pop()
-            if state.frames:
-                if return_value_name is not None:
-                    state.frames.peek().stack.push(return_value_name)
+        match opr:
+            case jvm.Push(value=v):
+                assert isinstance(v.value, int), f"Unsupported value type: {v.value!r}"
+                # Create fresh named value for constant
+                name = state.constraints.fresh_name()
+                state.constraints[name] = abstraction_cls.abstract({v.value})
+                frame.stack.push(name)
+                frame.pc = frame.pc + 1
                 return [state]
-            return ["ok"]
 
-        case jvm.Binary(type=jvm.Int(), operant=operant):
-            # Pop names and look up constraints
-            name2, name1 = frame.stack.pop(), frame.stack.pop()
-            v1 = state.constraints[name1]
-            v2 = state.constraints[name2]
+            case jvm.Store(type=_type, index=index):
+                v = frame.stack.pop()
+                # if v and v.value is not None:
+                #     assert isinstance(v.value, int), (
+                #         f"Expected type {int}, but got {v.value!r}"
+                #     )
+                frame.locals[index] = v
+                frame.pc = frame.pc + 1
+                return [state]
 
-            # Compute result with abstract values
-            match operant:
-                case jvm.BinaryOpr.Div:
-                    result_value = v1 // v2
-                case jvm.BinaryOpr.Rem:
-                    result_value = v1 % v2
-                case jvm.BinaryOpr.Sub:
-                    result_value = v1 - v2
-                case jvm.BinaryOpr.Mul:
-                    result_value = v1 * v2
-                case jvm.BinaryOpr.Add:
-                    result_value = v1 + v2
-                case _:
-                    raise NotImplementedError(f"Operand '{operant!r}' not implemented.")
+            case jvm.Load(type=_type, index=i):
+                assert i in frame.locals, f"Local variable {i} not initialized"
+                # Push the NAME to create dependency
+                frame.stack.push(frame.locals[i])
+                frame.pc = frame.pc + 1
+                return [state]
 
-            # Create fresh named value for result
-            result_name = state.constraints.fresh_name()
-            computed_states = []
-            match result_value:
-                case "divide by zero":
-                    return ["divide by zero"]
-                case (value, "divide by zero"):
-                    computed_states.append("divide by zero")
-                    state.constraints[result_name] = value
-                case value:
-                    state.constraints[result_name] = value
+            case jvm.Ifz(condition=c, target=t):
+                # Compare ONE value to zero
+                # Stack: [..., value] -> [...]
+                # Pop the NAME being tested
+                value_name = frame.stack.pop()
+                # Look up the constraint
+                v1 = state.constraints[value_name]
+                v2 = abstraction_cls.abstract({0})
 
-            frame.stack.push(result_name)
+                res = v1.compare(cast("Comparison", c), v2)
+                logger.debug(f"ifz compare: {v1.comp_res_str(res)}")
 
-            frame.pc = frame.pc + 1
-            computed_states.append(state)
-            return computed_states
+                computed_states = []
+                if True in res:
+                    # True branch: jump to target
+                    true_state = state.clone()
+                    true_state.frames.peek().pc = PC(frame.pc.method, t)
+                    # REFINE constraint: condition is TRUE
+                    constrained = res[True][0]
+                    true_state.constraints[value_name] = constrained
+                    computed_states.append(true_state)
 
-        case jvm.Negate(type=tp):
-            name = frame.stack.pop()
-            v = state.constraints[name]
-            assert isinstance(tp, v.get_supported_types()), (
-                f"{abstraction_cls} does not support {tp} negation"
-            )
-            result_name = state.constraints.fresh_name()
-            state.constraints[result_name] = -v
-            frame.stack.push(result_name)
-            frame.pc = frame.pc + 1
-            return [state]
+                if False in res:
+                    # False branch: continue to next instruction
+                    false_state = state.clone()
+                    false_state.frames.peek().pc = frame.pc + 1
+                    # REFINE constraint: condition is FALSE
+                    constrained = res[False][0]
+                    false_state.constraints[value_name] = constrained
+                    computed_states.append(false_state)
 
-        case jvm.Incr(index=idx, amount=amnt):
-            assert isinstance(idx, int), "Unexpected Incr arguments"
-            assert isinstance(amnt, int), "Unexpected Incr arguments"
-            name = frame.locals[idx]
-            result_name = state.constraints.fresh_name()
+                assert len(computed_states) > 0, "At least one path must be possible"
+                return computed_states
 
-            new_v = state.constraints[name] + abstraction_cls.abstract({amnt})
-            state.constraints[result_name] = new_v
+            case jvm.If(condition=c, target=t):
+                # {0} < {0, +}
+                # True: {0} ... {0, +}
+                # False: {0}
 
-            frame.locals[idx] = result_name
-            frame.pc = frame.pc + 1
-            return [state]
+                # x = {0}
+                # y = {0, +}
+                # If x < y
+                #   x: {0}, y: {+}
+                #   if y == 0:
+                #       assert false # unreachable
 
-        case jvm.Get(
-            static=True,
-            field=jvm.AbsFieldID(
-                classname=_,
-                extension=jvm.FieldID(name="$assertionsDisabled", type=jvm.Boolean()),
-            ),
-        ):
-            # Create named value for assertions disabled flag (always 0/false)
-            name = state.constraints.fresh_name()
-            state.constraints[name] = abstraction_cls.abstract({0})
-            frame.stack.push(name)
-            frame.pc = frame.pc + 1
-            return [state]
+                # Compare TWO values
+                # Stack: [..., value1, value2] -> [...]
+                name2, name1 = frame.stack.pop(), frame.stack.pop()
+                # Look up constraints
+                v1 = state.constraints[name1]
+                v2 = state.constraints[name2]
 
-        case jvm.New(classname=jvm.ClassName(_as_string="java/lang/AssertionError")):
-            return ["assertion error"]
+                # Evaluate comparison with current constraints
+                res = v1.compare(cast("Comparison", c), v2)
+                logger.debug(f"if compare: {v1.comp_res_str(res)}")
 
-        case jvm.Goto(target=t):
-            frame.pc = PC(frame.pc.method, t)
-            return [state]
+                computed_states = []
+                if True in res:
+                    # True branch: jump to target
+                    true_state = state.clone()
+                    true_state.frames.peek().pc = PC(frame.pc.method, t)
+                    # REFINE constraint: condition is TRUE
+                    # For two-value comparison, constrain the first value
+                    self_constrained = res[True][0]
+                    other_constrained = res[True][1]
+                    true_state.constraints[name1] = self_constrained
+                    true_state.constraints[name2] = other_constrained
+                    computed_states.append(true_state)
 
-        case jvm.InvokeStatic(method=m):
-            nargs = len(m.extension.params)
-            args = [frame.stack.pop() for _ in range(nargs)][::-1]
-            new_frame = PerVarFrame.from_method(m)
-            for i, v in enumerate(args):
-                new_frame.locals[i] = v
-            frame.pc = frame.pc + 1
-            state.frames.push(new_frame)
-            return [state]
+                if False in res:
+                    # False branch: continue to next instruction
+                    false_state = state.clone()
+                    false_state.frames.peek().pc = frame.pc + 1
+                    # REFINE constraint: condition is FALSE
+                    self_constrained = res[False][0]
+                    other_constrained = res[False][1]
+                    false_state.constraints[name1] = self_constrained
+                    false_state.constraints[name2] = other_constrained
+                    computed_states.append(false_state)
 
-        case jvm.Cast(from_=from_, to_=to_):
-            match (from_, to_):
-                case (jvm.Int(), jvm.Short()):
-                    # i2s instruction
-                    value_name = frame.stack.pop()
-                    value = state.constraints[value_name]
-                    result_value = value.i2s_cast()
-                    result_name = state.constraints.fresh_name()
-                    state.constraints[result_name] = result_value
-                    frame.stack.push(result_name)
-                    frame.pc = frame.pc + 1
+                return computed_states
+
+            case jvm.Return(type=tp):
+                return_value_name = frame.stack.pop() if tp is not None else None
+                state.frames.pop()
+                if state.frames:
+                    if return_value_name is not None:
+                        state.frames.peek().stack.push(return_value_name)
                     return [state]
-                case _:
-                    raise NotImplementedError(
-                        f"Cast from {from_} to {to_} not implemented"
-                    )
+                return ["ok"]
 
-        case a:
-            a.help()
-            sys.exit(-1)
+            case jvm.Binary(type=jvm.Int(), operant=operant):
+                # Pop names and look up constraints
+                name2, name1 = frame.stack.pop(), frame.stack.pop()
+                v1 = state.constraints[name1]
+                v2 = state.constraints[name2]
 
+                # Compute result with abstract values
+                match operant:
+                    case jvm.BinaryOpr.Div:
+                        result_value = v1 // v2
+                    case jvm.BinaryOpr.Rem:
+                        result_value = v1 % v2
+                    case jvm.BinaryOpr.Sub:
+                        result_value = v1 - v2
+                    case jvm.BinaryOpr.Mul:
+                        result_value = v1 * v2
+                    case jvm.BinaryOpr.Add:
+                        result_value = v1 + v2
+                    case _:
+                        raise NotImplementedError(
+                            f"Operand '{operant!r}' not implemented."
+                        )
 
-def manystep[AV: Abstraction](
-    sts: StateSet[AV], abstraction_cls: type[AV]
-) -> Iterable[AState[AV] | str]:
-    """
-    Process all states in the worklist.
+                # Create fresh named value for result
+                result_name = state.constraints.fresh_name()
+                computed_states = []
+                match result_value:
+                    case "divide by zero":
+                        return ["divide by zero"]
+                    case (value, "divide by zero"):
+                        computed_states.append("divide by zero")
+                        state.constraints[result_name] = value
+                    case value:
+                        state.constraints[result_name] = value
 
-    For each state that needs work:
-    1. Step it (execute one instruction)
-    2. Collect all successor states
+                frame.stack.push(result_name)
 
-    Returns all successor states (to be joined back into StateSet).
-    """
-    states = []
-    for _pc, state in sts.per_instruction():
-        res = step(state, abstraction_cls)
-        logger.debug("RESULT\n" + "\n".join(map(str, res)))
-        states.extend(res)
-    return states
+                frame.pc = frame.pc + 1
+                computed_states.append(state)
+                return computed_states
 
-def analyze_coverage(methodid: jvm.AbsMethodID, abstractions: set[type[Abstraction]], k_set: set[int | float] = {-100, -10, -1, 0, 1, 10, 100}) -> set[int]:
+            case jvm.Negate(type=tp):
+                name = frame.stack.pop()
+                v = state.constraints[name]
+                assert isinstance(tp, v.get_supported_types()), (
+                    f"{abstraction_cls} does not support {tp} negation"
+                )
+                result_name = state.constraints.fresh_name()
+                state.constraints[result_name] = -v
+                frame.stack.push(result_name)
+                frame.pc = frame.pc + 1
+                return [state]
 
-    lines_executed: dict[jvm.AbsMethodID, set[int]] = {methodid: set()}
-    total_lines_executed: set[int] = set()
-    for av in abstractions:
-        # Initialize with entry state
-        sts = StateSet[av].initialstate_from_method(methodid, av, k_set)
+            case jvm.Incr(index=idx, amount=amnt):
+                assert isinstance(idx, int), "Unexpected Incr arguments"
+                assert isinstance(amnt, int), "Unexpected Incr arguments"
+                name = frame.locals[idx]
+                result_name = state.constraints.fresh_name()
 
-        iteration = 0
-        while True:
-            iteration += 1
-            # Step all states that need processing
-            for s in manystep(sts, av):
-                if isinstance(s, str):
-                    # Terminal state (ok/error)
-                    final.add(s)
-                else:
-                    # Successor state: join into per_inst
-                    sts |= s
+                new_v = state.constraints[name] + abstraction_cls.abstract({amnt})
+                state.constraints[result_name] = new_v
 
-            logger.debug(f"Iteration {iteration}: {len(sts.needswork)} PCs need work")
-            # logger.debug("Needs work: " + ", ".join(map(str, sts.needswork)))
-            # logger.debug(f"sts:\n{sts}")
-            logger.debug(f"Final states: {final}")
+                frame.locals[idx] = result_name
+                frame.pc = frame.pc + 1
+                return [state]
 
-            # If needswork is empty, we've reached fixed point
-            if not sts.needswork:
-                logger.debug("Fixed point reached!")
-                break
-        logger.debug(f"Executed lines {lines_executed}")
-        total_lines_executed &= lines_executed[methodid]
+            case jvm.Get(
+                static=True,
+                field=jvm.AbsFieldID(
+                    classname=_,
+                    extension=jvm.FieldID(
+                        name="$assertionsDisabled", type=jvm.Boolean()
+                    ),
+                ),
+            ):
+                # Create named value for assertions disabled flag (always 0/false)
+                name = state.constraints.fresh_name()
+                state.constraints[name] = abstraction_cls.abstract({0})
+                frame.stack.push(name)
+                frame.pc = frame.pc + 1
+                return [state]
 
-    logger.debug(f"[final] Executed lines {total_lines_executed}")
-    return total_lines_executed
+            case jvm.New(
+                classname=jvm.ClassName(_as_string="java/lang/AssertionError")
+            ):
+                return ["assertion error"]
+
+            case jvm.Goto(target=t):
+                frame.pc = PC(frame.pc.method, t)
+                return [state]
+
+            case jvm.InvokeStatic(method=m):
+                nargs = len(m.extension.params)
+                args = [frame.stack.pop() for _ in range(nargs)][::-1]
+                new_frame = PerVarFrame.from_method(m)
+                for i, v in enumerate(args):
+                    new_frame.locals[i] = v
+                frame.pc = frame.pc + 1
+                state.frames.push(new_frame)
+                return [state]
+
+            case jvm.Cast(from_=from_, to_=to_):
+                match (from_, to_):
+                    case (jvm.Int(), jvm.Short()):
+                        # i2s instruction
+                        value_name = frame.stack.pop()
+                        value = state.constraints[value_name]
+                        result_value = value.i2s_cast()
+                        result_name = state.constraints.fresh_name()
+                        state.constraints[result_name] = result_value
+                        frame.stack.push(result_name)
+                        frame.pc = frame.pc + 1
+                        return [state]
+                    case _:
+                        raise NotImplementedError(
+                            f"Cast from {from_} to {to_} not implemented"
+                        )
+
+            case a:
+                a.help()
+                sys.exit(-1)
+
+    def manystep[AV: Abstraction](
+        self, sts: StateSet[AV], abstraction_cls: type[AV]
+    ) -> Iterable[AState[AV] | str]:
+        """
+        Process all states in the worklist.
+
+        For each state that needs work:
+        1. Step it (execute one instruction)
+        2. Collect all successor states
+
+        Returns all successor states (to be joined back into StateSet).
+        """
+        states = []
+        for _pc, state in sts.per_instruction():
+            res = self.step(state, abstraction_cls)
+            logger.debug("RESULT\n" + "\n".join(map(str, res)))
+            states.extend(res)
+        return states
+
+    def analyze_coverage(
+        self,
+        methodid: jvm.AbsMethodID,
+        abstractions: set[type[Abstraction]],
+        k_set: set[int | float] | None = None,
+    ) -> set[int]:
+        if not k_set:
+            k_set = {-100, -10, -1, 0, 1, 10, 100}
+
+        final: set[str] = set()
+        lines_executed = {methodid: set()}
+        total_lines_executed = set()
+        for av in abstractions:
+            # Initialize with entry state
+            sts = StateSet[av].initialstate_from_method(methodid, av, k_set)
+
+            iteration = 0
+            while True:
+                iteration += 1
+                # Step all states that need processing
+                for s in self.manystep(sts, av):
+                    if isinstance(s, str):
+                        # Terminal state (ok/error)
+                        final.add(s)
+                    else:
+                        # Successor state: join into per_inst
+                        sts |= s
+
+                logger.debug(
+                    f"Iteration {iteration}: {len(sts.needswork)} PCs need work"
+                )
+                # logger.debug("Needs work: " + ", ".join(map(str, sts.needswork)))
+                # logger.debug(f"sts:\n{sts}")
+                logger.debug(f"Final states: {final}")
+
+                # If needswork is empty, we've reached fixed point
+                if not sts.needswork:
+                    logger.debug("Fixed point reached!")
+                    break
+            logger.debug(f"Executed lines {lines_executed}")
+            total_lines_executed |= lines_executed[methodid]
+
+        logger.debug(f"[final] Executed lines {total_lines_executed}")
+        return total_lines_executed
 
 
 if __name__ == "__main__":
-
     methodid = jpamb.getmethodid(
         "Abstract Interpreter",
         "0.1",
@@ -733,6 +752,7 @@ if __name__ == "__main__":
     K_SET: set[int | float] = {-100, -10, -1, 0, 1, 10, 100}
 
     # Initialize with entry state
+    interpreter = AbsInterpreter()
     sts = StateSet[AV].initialstate_from_method(methodid, AV, K_SET)
     logger.debug(f"Initial state:\n{sts}")
 
@@ -741,7 +761,7 @@ if __name__ == "__main__":
     while True:
         iteration += 1
         # Step all states that need processing
-        for s in manystep(sts, AV):
+        for s in interpreter.manystep(sts, AV):
             if isinstance(s, str):
                 # Terminal state (ok/error)
                 final.add(s)
