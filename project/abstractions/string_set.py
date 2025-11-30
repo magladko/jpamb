@@ -5,13 +5,19 @@ from typing import Self
 
 from .abstraction import Abstraction
 
-
 @dataclass
 class StringDomain(Abstraction[str]):
     """Finite-set abstraction for string values."""
 
     values: set[str] | None
     MAX_TRACKED = 5
+
+    def is_bot(self) -> bool:
+        return self.values == set()
+
+    @classmethod
+    def has_finite_lattice(cls) -> bool:
+        return True
 
     @classmethod
     def has_finite_lattice(cls) -> bool:
@@ -66,7 +72,10 @@ class StringDomain(Abstraction[str]):
     def __neg__(self) -> Self:
         return self
 
-    __mul__ = __div__ = __floordiv__ = __mod__ = __sub__
+    def __truediv__(self, other: Self) -> Self:
+        return self.__sub__(other)
+    __mul__ = __floordiv__ = __mod__ = __sub__
+    __div__ = __truediv__
 
     def __le__(self, other: Self) -> bool:
         if self.values == set():
@@ -111,8 +120,10 @@ class StringDomain(Abstraction[str]):
         return "{" + ",".join(sorted(self.values)) + "}"
 
     # Helpers
-
     def _unknown(self, other: Self) -> dict[bool, tuple[Self, Self]]:
+        # If either side is ⊥, no information
+        if self.is_bot() or other.is_bot():
+            return {}
         return {True: (self, other), False: (self, other)}
 
     def _compare_literals(
@@ -120,8 +131,14 @@ class StringDomain(Abstraction[str]):
         other: Self,
         comparator: Callable[[str, str], bool],
     ) -> dict[bool, tuple[Self, Self]]:
+        # If either is ⊥, no outcomes
+        if self.is_bot() or other.is_bot():
+            return {}
+
+        # If either is ⊤, we can’t refine -> unknown
         if self.values is None or other.values is None:
             return self._unknown(other)
+
         results: dict[bool, tuple[set[str], set[str]]] = {}
         for lhs in self.values:
             for rhs in other.values:
@@ -129,8 +146,11 @@ class StringDomain(Abstraction[str]):
                 lhs_set, rhs_set = results.setdefault(truth, (set(), set()))
                 lhs_set.add(lhs)
                 rhs_set.add(rhs)
+
         if not results:
+            # finite but no pairs (shouldn’t really happen now, but keep fallback)
             return self._unknown(other)
+
         translated: dict[bool, tuple[Self, Self]] = {}
         for truth, (lhs_vals, rhs_vals) in results.items():
             translated[truth] = (self.__class__(lhs_vals), self.__class__(rhs_vals))
@@ -156,3 +176,4 @@ class StringDomain(Abstraction[str]):
 
     def ne(self, other: Self) -> dict[bool, tuple[Self, Self]]:
         return self._compare_literals(other, op.ne)
+

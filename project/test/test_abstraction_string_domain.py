@@ -1,5 +1,5 @@
 from project.abstractions.string_set import (
-    StringDomain,
+    StringDomain
 )
 
 
