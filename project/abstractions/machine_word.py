@@ -13,9 +13,15 @@ class MachineWordDomain(Abstraction[int]):
     WIDTH = 32
     MAX_TRACKED = 16
 
+    def __post_init__(self) -> None:
+        #Normalize residues modulo 2**WIDTH on construction  - not top
+        if self.residues is not None:
+            mask = self._mask()
+            self.residues = {value & mask for value in self.residues}
+
     def is_bot(self) -> bool:
-        """Bottom is represented by an empty residue set."""
-        return len(self.residues) == 0
+        #Bottom is represented by an empty residue set.
+        return self.residues == set()
 
     @classmethod
     def has_finite_lattice(cls) -> bool:
@@ -95,14 +101,21 @@ class MachineWordDomain(Abstraction[int]):
         return self._binary_op(other, lambda a, b: a * b)
 
     def __div__(self, other: Self) -> Self:
+        # If the dividend is ⊥, same RUF003
+        if self.is_bot():
+            return self.bot()
+        # If the divisor is ⊥, same RUF003
         if other.is_bot():
             return self.bot()
         if other.residues is None:
             return self.top()
         if 0 in other.residues:
             return self.top()
+
+        # Normal div
         return self._binary_op(other, lambda a, b: a // b)
 
+    __truediv__ = __div__
     __floordiv__ = __div__
     __mod__ = __div__
 
