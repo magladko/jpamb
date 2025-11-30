@@ -156,23 +156,16 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, PolyhedralDomain):
             return False
-        # Both bottom: equal regardless of dimension
+
+        # All bottoms are equal, regardless of dimension
         if self.is_bot() and other.is_bot():
             return True
 
-        # Both top (any flavour): equal regardless of dimension
+        # All tops are equal, regardless of dimension
         if self.bounds is None and other.bounds is None:
             return True
 
-        # One bot, one not
-        if self.is_bot() != other.is_bot():
-            return False
-
-        # One top, one not
-        if (self.bounds is None) != (other.bounds is None):
-            return False
-
-        # Both proper boxes: require same dimension and bounds
+        # Otherwise, must match in both dimension and bounds
         return self.dimension == other.dimension and self.bounds == other.bounds
 
     # Meet and Join
@@ -183,17 +176,16 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
         dim1, dim2 = self.dimension, other.dimension
         maxdim = max(dim1, dim2)
 
-        # 1. ⊥ is absorbing
-        if self.is_bot() and other.is_bot():
-            return type(self).bot(dimension=maxdim)
+        # 1. ⊥ is absorbing, keep its own dimension
         if self.is_bot():
-            return type(self).bot(dimension=maxdim)
+            return self
         if other.is_bot():
-            return type(self).bot(dimension=maxdim)
+            return other
 
         # 2. ⊤ handling
         if self.bounds is None and other.bounds is None:
-            # top ∧ top = top (with max dimension)
+            # top ∧ top = top (in higher dimension, but dimension doesn't matter
+            # logically; this keeps things symmetric)
             return type(self).top(dimension=maxdim)
         if self.bounds is None:
             # top ∧ x = x
@@ -203,47 +195,20 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
             return self
 
         # 3. Both are proper boxes (non-top, non-bot)
-        if dim1 == dim2:
-            # Same dimension: coordinate-wise intersection
-            intersected: list[tuple[float, float]] = []
-            for (lo1, hi1), (lo2, hi2) in zip(self.bounds, other.bounds, strict=True):
-                lo = max(lo1, lo2)
-                hi = min(hi1, hi2)
-                if lo > hi:
-                    return type(self).bot(dimension=dim1)
-                intersected.append((lo, hi))
-            return type(self)(dim1, intersected)
+        if dim1 != dim2:
+            # Different dimensions -> lose precision, go to ⊤ in higher dim
+            return type(self).top(dimension=maxdim)
 
-        # 4. Different dimensions, both proper boxes
-        #    Work on the overlapping coordinates, then decide:
-        #    - if intersection empty -> ⊥(maxdim)
-        #    - if intersection equals the smaller box on those coords -> smaller box
-        #    - else -> ⊤(maxdim) (lose precision)
-        common_dim = min(dim1, dim2)
-
-        intersection: list[tuple[float, float]] = []
-        for i in range(common_dim):
-            lo = max(self.bounds[i][0], other.bounds[i][0])
-            hi = min(self.bounds[i][1], other.bounds[i][1])
+        # Same dimension: coordinate-wise intersection
+        intersected: list[tuple[float, float]] = []
+        for (lo1, hi1), (lo2, hi2) in zip(self.bounds, other.bounds, strict=True):
+            lo = max(lo1, lo2)
+            hi = min(hi1, hi2)
             if lo > hi:
-                # Empty intersection in projected space -> bottom
-                return type(self).bot(dimension=maxdim)
-            intersection.append((lo, hi))
-
-        # Decide which is the "smaller" (lower-dimensional) box
-        small = self if dim1 < dim2 else other
-
-        # Check if the intersection exactly matches the smaller box
-        same_as_small = all(
-            intersection[i] == small.bounds[i] for i in range(common_dim)
-        )
-
-        if same_as_small:
-            # Return the smaller box (keeps its dimension)
-            return type(self)(small.dimension, list(small.bounds))
-
-        # Otherwise, we lose precision and go to top in the larger dimension
-        return type(self).top(dimension=maxdim)
+                # Empty intersection -> ⊥ in this dimension
+                return type(self).bot(dimension=dim1)
+            intersected.append((lo, hi))
+        return type(self)(dim1, intersected)
 
     def __or__(self, other: Self) -> Self:
         """Lattice join (hull).
