@@ -7,6 +7,9 @@ from loguru import logger
 import jpamb
 from jpamb import jvm
 
+# Global lines_executed tracking (similar to abstract_interpreter.py)
+lines_executed: dict[jvm.AbsMethodID, set[int]] = {}
+
 # methodid, input = jpamb.getcase()
 
 
@@ -101,6 +104,11 @@ def step(state: State) -> State | str:
     frame = state.frames.peek()
     opr = state.bc[frame.pc]
     logger.debug(f"STEP {opr}\n{state}")
+
+    # Track executed lines (similar to abstract_interpreter.py)
+    if opr.line:
+        lines_executed.setdefault(frame.pc.method, set()).add(opr.line)
+
     match opr:
         case jvm.Push(value=v):
             if isinstance(v.type, jvm.Array):

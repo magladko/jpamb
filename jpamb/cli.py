@@ -962,5 +962,80 @@ def plot(ctx, report, directory):
         plot_scores(scores, times, labels, classes)
 
 
+@cli.command()
+@click.option(
+    "--with-python/--no-with-python",
+    "-W/-noW",
+    help="the analysis is a python script, which should run in the same interpreter as jpamb.",
+    default=None,
+)
+@click.option(
+    "--filter",
+    "-f",
+    help="A regular expression which filter the methods to run on.",
+    callback=re_parser,
+)
+@click.option(
+    "--target",
+    type=click.Path(file_okay=False, path_type=Path),
+    default="target/debloated",
+    help="Output directory for debloated code.",
+)
+@click.option(
+    "--in",
+    "source_dir",
+    type=click.Path(exists=True, file_okay=False, path_type=Path),
+    default="src/main/java/jpamb/cases/",
+    help="Source code location.",
+)
+@click.pass_obj
+def debloat(suite, source_dir, target, filter, with_python):
+    """Debloat Java source files by removing dead code."""
+    from pathlib import Path
+    import sys
+
+    # Add project directory to path for imports
+    project_dir = Path(__file__).parent.parent / "project"
+    if str(project_dir) not in sys.path:
+        sys.path.insert(0, str(project_dir))
+
+    from debloat_orchestrator import DebloatOrchestrator  # type: ignore[import-not-found]
+
+    # import debugpy
+    # debugpy.listen(5678)
+    # debugpy.wait_for_client()
+
+    orch = DebloatOrchestrator(suite, Path(source_dir), Path(target))
+    results = orch.run(filter_pattern=filter)
+
+    # Print summary
+    log.info(f"\n{'='*60}")
+    log.info("Debloating Summary")
+    log.info(f"{'='*60}")
+
+    successful = sum(1 for r in results if r.success)
+    failed = len(results) - successful
+
+    log.info(f"Total cases processed: {len(results)}")
+    log.info(f"Successful: {successful}")
+    log.info(f"Failed: {failed}")
+
+    for result in results:
+        if result.success:
+            log.info(f"\n✓ {result.methodid}")
+            log.info(f"  Triviality: {result.triviality['justification']}")
+            log.info(f"  Lines executed: {len(result.lines_executed)}")
+            if result.rewrite_result:
+                log.info(f"  Transformations: {result.rewrite_result.transformations}")
+        else:
+            log.error(f"\n✗ {result.methodid}")
+            log.error(f"  Error: {result.error}")
+
+    log.info(f"\n{'='*60}")
+    log.info(f"Debloated files saved to: {target}")
+    log.info(f"Intermediate artifacts saved to: {target / 'intermediate'}")
+    log.info(f"{'='*60}\n")
+
+
 if __name__ == "__main__":
     cli()
