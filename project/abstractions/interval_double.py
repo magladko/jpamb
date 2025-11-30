@@ -257,4 +257,4 @@ class DoubleDomain(Abstraction[float]):
             return {False: eq_result[True]}
         if truths == {False}:
             return {True: eq_result[False]}
-        return {True: (self, other), False: (self, other)}
+        return {True: eq_result[False], False: eq_result[True]}

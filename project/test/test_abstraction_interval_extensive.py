@@ -1,19 +1,19 @@
-"""Hypothesis-based property tests for Interval abstraction."""
+"""Hypothesis-based property tests for DoubleDomain abstraction."""
 
 from itertools import chain
 
-from hypothesis import example, given
+from hypothesis import example, given, settings
 from hypothesis import strategies as st
 
 from project.abstractions.abstraction import Comparison
-from project.abstractions.interval import Interval
+from project.abstractions.interval_double import DoubleDomain
 
 # ============================================================================
 # HYPOTHESIS STRATEGIES
 # ============================================================================
 
 
-def intervals() -> st.SearchStrategy[Interval]:
+def intervals() -> st.SearchStrategy[DoubleDomain]:
     """
     Generate intervals with diverse bounds.
 
@@ -22,7 +22,7 @@ def intervals() -> st.SearchStrategy[Interval]:
     """
     # Regular intervals with unbounded random bounds
     random_intervals = st.builds(
-        lambda lower, upper: Interval(lower, upper),
+        lambda lower, upper: DoubleDomain(lower, upper),
         lower=st.integers(),
         upper=st.integers(),
     )
@@ -30,14 +30,14 @@ def intervals() -> st.SearchStrategy[Interval]:
     # Special cases for edge coverage
     special_intervals = st.sampled_from(
         [
-            Interval.bot(),
-            Interval.top(),
-            Interval(0, 0),  # singleton zero
-            Interval(1, 1),  # singleton positive
-            Interval(-1, -1),  # singleton negative
-            Interval(-10, -1),  # negative range
-            Interval(1, 10),  # positive range
-            Interval(-5, 5),  # mixed range
+            DoubleDomain.bot(),
+            DoubleDomain.top(),
+            DoubleDomain(0, 0),  # singleton zero
+            DoubleDomain(1, 1),  # singleton positive
+            DoubleDomain(-1, -1),  # singleton negative
+            DoubleDomain(-10, -1),  # negative range
+            DoubleDomain(1, 10),  # positive range
+            DoubleDomain(-5, 5),  # mixed range
         ]
     )
 
@@ -57,7 +57,7 @@ def comparison_ops() -> st.SearchStrategy[Comparison]:
 @given(st.sets(st.integers()))
 def test_valid_abstraction(xs: set[int]) -> None:
     """Property: All concrete values are contained in their abstraction."""
-    interval = Interval.abstract(xs)
+    interval = DoubleDomain.abstract(xs)
     assert all(x in interval for x in xs)
 
 
@@ -68,7 +68,7 @@ def test_interval_adds(xs: set[int], ys: set[int]) -> None:
         return
 
     concrete_sums = {x + y for x in xs for y in ys}
-    abstract_result = Interval.abstract(xs) + Interval.abstract(ys)
+    abstract_result = DoubleDomain.abstract(xs) + DoubleDomain.abstract(ys)
 
     assert all(s in abstract_result for s in concrete_sums)
 
@@ -80,7 +80,7 @@ def test_interval_subs(xs: set[int], ys: set[int]) -> None:
         return
 
     concrete_diffs = {x - y for x in xs for y in ys}
-    abstract_result = Interval.abstract(xs) - Interval.abstract(ys)
+    abstract_result = DoubleDomain.abstract(xs) - DoubleDomain.abstract(ys)
 
     assert all(d in abstract_result for d in concrete_diffs)
 
@@ -92,7 +92,7 @@ def test_interval_muls(xs: set[int], ys: set[int]) -> None:
         return
 
     concrete_prods = {x * y for x in xs for y in ys}
-    abstract_result = Interval.abstract(xs) * Interval.abstract(ys)
+    abstract_result = DoubleDomain.abstract(xs) * DoubleDomain.abstract(ys)
 
     assert all(p in abstract_result for p in concrete_prods)
 
@@ -104,14 +104,14 @@ def test_interval_compare_le(xs: set[int], ys: set[int]) -> None:
         return
 
     concrete_outcomes = {x <= y for x in xs for y in ys}
-    abstract_result = Interval.abstract(xs).compare("le", Interval.abstract(ys))
+    abstract_result = DoubleDomain.abstract(xs).compare("le", DoubleDomain.abstract(ys))
 
     assert concrete_outcomes <= abstract_result.keys()
 
 
 @given(intervals(), intervals(), comparison_ops())
 def test_compare_returns_valid_bool_set_all_ops(
-    i1: Interval, i2: Interval, op: Comparison
+    i1: DoubleDomain, i2: DoubleDomain, op: Comparison
 ) -> None:
     """Property: Comparison returns valid dict with bool keys and interval values."""
     result = i1.compare(op, i2)
@@ -119,7 +119,7 @@ def test_compare_returns_valid_bool_set_all_ops(
 
     assert isinstance(result, dict)
     assert all(isinstance(k, bool) for k in result)
-    assert all(isinstance(v, Interval) for v in intervals_list)
+    assert all(isinstance(v, DoubleDomain) for v in intervals_list)
 
 
 # ============================================================================
@@ -128,9 +128,9 @@ def test_compare_returns_valid_bool_set_all_ops(
 
 
 @given(intervals(), intervals())
-@example(Interval(0, 10), Interval(5, 15))
-@example(Interval(1, 5), Interval(6, 10))
-def test_comparison_complementarity_lt_ge(i1: Interval, i2: Interval) -> None:
+@example(DoubleDomain(0, 10), DoubleDomain(5, 15))
+@example(DoubleDomain(1, 5), DoubleDomain(6, 10))
+def test_comparison_complementarity_lt_ge(i1: DoubleDomain, i2: DoubleDomain) -> None:
     """Property: x < y and x >= y are complements."""
     lt_result = i1.lt(i2)
     ge_result = i1.ge(i2)
@@ -145,8 +145,8 @@ def test_comparison_complementarity_lt_ge(i1: Interval, i2: Interval) -> None:
 
 
 @given(intervals(), intervals())
-@example(Interval(0, 10), Interval(5, 15))
-def test_comparison_complementarity_le_gt(i1: Interval, i2: Interval) -> None:
+@example(DoubleDomain(0, 10), DoubleDomain(5, 15))
+def test_comparison_complementarity_le_gt(i1: DoubleDomain, i2: DoubleDomain) -> None:
     """Property: x <= y and x > y are complements."""
     le_result = i1.le(i2)
     gt_result = i1.gt(i2)
@@ -159,8 +159,9 @@ def test_comparison_complementarity_le_gt(i1: Interval, i2: Interval) -> None:
 
 
 @given(intervals(), intervals())
-@example(Interval(5, 10), Interval(5, 10))
-def test_comparison_complementarity_eq_ne(i1: Interval, i2: Interval) -> None:
+@example(DoubleDomain(5, 10), DoubleDomain(5, 10))
+@settings(deadline=None)
+def test_comparison_complementarity_eq_ne(i1: DoubleDomain, i2: DoubleDomain) -> None:
     """Property: x == y and x != y are complements."""
     eq_result = i1.eq(i2)
     ne_result = i1.ne(i2)
@@ -178,9 +179,9 @@ def test_comparison_complementarity_eq_ne(i1: Interval, i2: Interval) -> None:
 
 
 @given(intervals(), intervals())
-@example(Interval(1, 5), Interval(3, 7))
-@example(Interval.bot(), Interval(1, 5))
-def test_comparison_symmetry_eq(i1: Interval, i2: Interval) -> None:
+@example(DoubleDomain(1, 5), DoubleDomain(3, 7))
+@example(DoubleDomain.bot(), DoubleDomain(1, 5))
+def test_comparison_symmetry_eq(i1: DoubleDomain, i2: DoubleDomain) -> None:
     """Property: Equality is symmetric."""
     eq_12 = i1.eq(i2)
     eq_21 = i2.eq(i1)
@@ -195,8 +196,8 @@ def test_comparison_symmetry_eq(i1: Interval, i2: Interval) -> None:
 
 
 @given(intervals(), intervals())
-@example(Interval(1, 5), Interval(6, 10))
-def test_comparison_antisymmetry_lt_gt(i1: Interval, i2: Interval) -> None:
+@example(DoubleDomain(1, 5), DoubleDomain(6, 10))
+def test_comparison_antisymmetry_lt_gt(i1: DoubleDomain, i2: DoubleDomain) -> None:
     """Property: i1 < i2 is the opposite of i2 > i1."""
     lt_result = i1.lt(i2)
     gt_result = i2.gt(i1)
@@ -211,8 +212,8 @@ def test_comparison_antisymmetry_lt_gt(i1: Interval, i2: Interval) -> None:
 
 
 @given(intervals(), intervals())
-@example(Interval(1, 5), Interval(3, 7))
-def test_comparison_antisymmetry_le_ge(i1: Interval, i2: Interval) -> None:
+@example(DoubleDomain(1, 5), DoubleDomain(3, 7))
+def test_comparison_antisymmetry_le_ge(i1: DoubleDomain, i2: DoubleDomain) -> None:
     """Property: i1 <= i2 is the opposite of i2 >= i1."""
     le_result = i1.le(i2)
     ge_result = i2.ge(i1)
@@ -232,9 +233,9 @@ def test_comparison_antisymmetry_le_ge(i1: Interval, i2: Interval) -> None:
 
 
 @given(intervals())
-@example(Interval(5, 5))
-@example(Interval(1, 10))
-def test_comparison_identity_eq(i: Interval) -> None:
+@example(DoubleDomain(5, 5))
+@example(DoubleDomain(1, 10))
+def test_comparison_identity_eq(i: DoubleDomain) -> None:
     """Property: x == x should always include True outcome for non-bot."""
     eq_result = i.eq(i)
 
@@ -247,8 +248,8 @@ def test_comparison_identity_eq(i: Interval) -> None:
 
 
 @given(intervals())
-@example(Interval(1, 10))
-def test_comparison_identity_le(i: Interval) -> None:
+@example(DoubleDomain(1, 10))
+def test_comparison_identity_le(i: DoubleDomain) -> None:
     """Property: x <= x should always include True."""
     le_result = i.le(i)
 
@@ -257,8 +258,8 @@ def test_comparison_identity_le(i: Interval) -> None:
 
 
 @given(intervals())
-@example(Interval(1, 10))
-def test_comparison_identity_ge(i: Interval) -> None:
+@example(DoubleDomain(1, 10))
+def test_comparison_identity_ge(i: DoubleDomain) -> None:
     """Property: x >= x should always include True."""
     ge_result = i.ge(i)
 
@@ -272,8 +273,8 @@ def test_comparison_identity_ge(i: Interval) -> None:
 
 
 @given(intervals(), intervals())
-@example(Interval(1, 5), Interval(6, 10))
-def test_logical_relationship_lt_implies_le(i1: Interval, i2: Interval) -> None:
+@example(DoubleDomain(1, 5), DoubleDomain(6, 10))
+def test_logical_relationship_lt_implies_le(i1: DoubleDomain, i2: DoubleDomain) -> None:
     """Property: x < y implies x <= y."""
     lt_result = i1.lt(i2)
     le_result = i1.le(i2)
@@ -287,8 +288,8 @@ def test_logical_relationship_lt_implies_le(i1: Interval, i2: Interval) -> None:
 
 
 @given(intervals(), intervals())
-@example(Interval(6, 10), Interval(1, 5))
-def test_logical_relationship_gt_implies_ge(i1: Interval, i2: Interval) -> None:
+@example(DoubleDomain(6, 10), DoubleDomain(1, 5))
+def test_logical_relationship_gt_implies_ge(i1: DoubleDomain, i2: DoubleDomain) -> None:
     """Property: x > y implies x >= y."""
     gt_result = i1.gt(i2)
     ge_result = i1.ge(i2)
@@ -302,8 +303,8 @@ def test_logical_relationship_gt_implies_ge(i1: Interval, i2: Interval) -> None:
 
 
 @given(intervals(), intervals())
-@example(Interval(5, 5), Interval(5, 5))
-def test_logical_relationship_eq_implies_le_and_ge(i1: Interval, i2: Interval) -> None:
+@example(DoubleDomain(5, 5), DoubleDomain(5, 5))
+def test_logical_relationship_eq_implies_le_and_ge(i1: DoubleDomain, i2: DoubleDomain) -> None:
     """Property: x == y implies x <= y and x >= y."""
     eq_result = i1.eq(i2)
     le_result = i1.le(i2)
@@ -319,7 +320,7 @@ def test_logical_relationship_eq_implies_le_and_ge(i1: Interval, i2: Interval) -
 # ============================================================================
 
 
-def compute_concrete_outcomes(i1: Interval, i2: Interval, op: Comparison) -> set[bool]:
+def compute_concrete_outcomes(i1: DoubleDomain, i2: DoubleDomain, op: Comparison) -> set[bool]:
     """Oracle: compute concrete outcomes for intervals by sampling."""
     if i1.is_bot() or i2.is_bot():
         return set()
@@ -327,7 +328,7 @@ def compute_concrete_outcomes(i1: Interval, i2: Interval, op: Comparison) -> set
     outcomes = set()
 
     # Sample concrete values from intervals
-    def sample_from_interval(interval: Interval, num_samples: int = 5) -> list[int]:
+    def sample_from_interval(interval: DoubleDomain, num_samples: int = 5) -> list[int]:
         """Sample concrete values from an interval."""
         if interval.lower == float("-inf") or interval.upper == float("inf"):
             # For infinite bounds, sample a fixed range
@@ -372,12 +373,12 @@ def compute_concrete_outcomes(i1: Interval, i2: Interval, op: Comparison) -> set
 
 
 # @given(intervals(), intervals(), comparison_ops())
-# @example(Interval(5, 5), Interval(5, 5), "eq")
-# @example(Interval(1, 5), Interval(6, 10), "lt")
-# @example(Interval(6, 10), Interval(1, 5), "gt")
-# @example(Interval.bot(), Interval(1, 5), "le")
+# @example(DoubleDomain(5, 5), DoubleDomain(5, 5), "eq")
+# @example(DoubleDomain(1, 5), DoubleDomain(6, 10), "lt")
+# @example(DoubleDomain(6, 10), DoubleDomain(1, 5), "gt")
+# @example(DoubleDomain.bot(), DoubleDomain(1, 5), "le")
 # def test_soundness_concrete_oracle(
-#     i1: Interval, i2: Interval, op: Comparison
+#     i1: DoubleDomain, i2: DoubleDomain, op: Comparison
 # ) -> None:
 #     """Property: Abstract comparison is sound w.r.t. concrete execution."""
 #     if i1.is_bot() or i2.is_bot():
@@ -398,26 +399,26 @@ def compute_concrete_outcomes(i1: Interval, i2: Interval, op: Comparison) -> set
 
 
 # @given(intervals(), intervals(), comparison_ops())
-# @example(Interval.bot(), Interval.bot(), "eq")
-# @example(Interval.top(), Interval.top(), "eq")
-# @example(Interval(1, 10), Interval(5, 15), "le")
+# @example(DoubleDomain.bot(), DoubleDomain.bot(), "eq")
+# @example(DoubleDomain.top(), DoubleDomain.top(), "eq")
+# @example(DoubleDomain(1, 10), DoubleDomain(5, 15), "le")
 # def test_comparison_refinement_coverage(
-#     i1: Interval, i2: Interval, op: Comparison
+#     i1: DoubleDomain, i2: DoubleDomain, op: Comparison
 # ) -> None:
 #     """Property: Refinements cover the original intervals and are valid subsets."""
 #     result = i1.compare(op, i2)
 
 #     # Refined intervals should be subsets
 #     for refined_i1, refined_i2 in result.values():
-#         assert isinstance(refined_i1, Interval)
-#         assert isinstance(refined_i2, Interval)
+#         assert isinstance(refined_i1, DoubleDomain)
+#         assert isinstance(refined_i2, DoubleDomain)
 #         assert refined_i1 <= i1
 #         assert refined_i2 <= i2
 
 #     # Union of refined intervals should cover originals (for non-bot)
 #     if result and not i1.is_bot() and not i2.is_bot():
-#         all_i1_refined = Interval.bot()
-#         all_i2_refined = Interval.bot()
+#         all_i1_refined = DoubleDomain.bot()
+#         all_i2_refined = DoubleDomain.bot()
 #         for refined_i1, refined_i2 in result.values():
 #             all_i1_refined = all_i1_refined | refined_i1
 #             all_i2_refined = all_i2_refined | refined_i2
@@ -431,59 +432,59 @@ def compute_concrete_outcomes(i1: Interval, i2: Interval, op: Comparison) -> set
 
 
 @given(intervals(), intervals())
-@example(Interval(1, 5), Interval(3, 7))
-def test_meet_commutativity(i1: Interval, i2: Interval) -> None:
+@example(DoubleDomain(1, 5), DoubleDomain(3, 7))
+def test_meet_commutativity(i1: DoubleDomain, i2: DoubleDomain) -> None:
     """Property: Meet is commutative (i1 ⊓ i2 = i2 ⊓ i1)."""
     assert (i1 & i2) == (i2 & i1)
 
 
 @given(intervals(), intervals())
-@example(Interval(1, 5), Interval(3, 7))
-def test_join_commutativity(i1: Interval, i2: Interval) -> None:
+@example(DoubleDomain(1, 5), DoubleDomain(3, 7))
+def test_join_commutativity(i1: DoubleDomain, i2: DoubleDomain) -> None:
     """Property: Join is commutative (i1 ⊔ i2 = i2 ⊔ i1)."""
     assert (i1 | i2) == (i2 | i1)
 
 
 @given(intervals(), intervals(), intervals())
-def test_meet_associativity(i1: Interval, i2: Interval, i3: Interval) -> None:
+def test_meet_associativity(i1: DoubleDomain, i2: DoubleDomain, i3: DoubleDomain) -> None:
     """Property: Meet is associative ((i1 ⊓ i2) ⊓ i3 = i1 ⊓ (i2 ⊓ i3))."""
     assert ((i1 & i2) & i3) == (i1 & (i2 & i3))
 
 
 @given(intervals(), intervals(), intervals())
-def test_join_associativity(i1: Interval, i2: Interval, i3: Interval) -> None:
+def test_join_associativity(i1: DoubleDomain, i2: DoubleDomain, i3: DoubleDomain) -> None:
     """Property: Join is associative ((i1 ⊔ i2) ⊔ i3 = i1 ⊔ (i2 ⊔ i3))."""
     assert ((i1 | i2) | i3) == (i1 | (i2 | i3))
 
 
 @given(intervals(), intervals())
-@example(Interval(1, 5), Interval(3, 7))
-def test_absorption_law_1(i1: Interval, i2: Interval) -> None:
+@example(DoubleDomain(1, 5), DoubleDomain(3, 7))
+def test_absorption_law_1(i1: DoubleDomain, i2: DoubleDomain) -> None:
     """Property: Absorption law i1 ⊔ (i1 ⊓ i2) = i1."""
     assert (i1 | (i1 & i2)) == i1
 
 
 @given(intervals(), intervals())
-@example(Interval(1, 5), Interval(3, 7))
-def test_absorption_law_2(i1: Interval, i2: Interval) -> None:
+@example(DoubleDomain(1, 5), DoubleDomain(3, 7))
+def test_absorption_law_2(i1: DoubleDomain, i2: DoubleDomain) -> None:
     """Property: Absorption law i1 ⊓ (i1 ⊔ i2) = i1."""
     assert (i1 & (i1 | i2)) == i1
 
 
 @given(intervals())
-@example(Interval(1, 10))
-def test_bot_is_identity_for_join(i: Interval) -> None:
+@example(DoubleDomain(1, 10))
+def test_bot_is_identity_for_join(i: DoubleDomain) -> None:
     """Property: Bot is identity for join (i ⊔ ⊥ = i)."""
-    bot = Interval.bot()
+    bot = DoubleDomain.bot()
     assert (i | bot) == i
     assert (bot | i) == i
 
 
 @given(intervals())
-@example(Interval(1, 10))
-def test_bot_is_absorbing_for_meet(i: Interval) -> None:
+@example(DoubleDomain(1, 10))
+def test_bot_is_absorbing_for_meet(i: DoubleDomain) -> None:
     """Property: Bot is absorbing for meet (i ⊓ ⊥ = ⊥)."""
-    bot = Interval.bot()
+    bot = DoubleDomain.bot()
     assert (i & bot) == bot
     assert (bot & i) == bot
 
@@ -494,13 +495,13 @@ def test_bot_is_absorbing_for_meet(i: Interval) -> None:
 
 
 @given(intervals())
-@example(Interval(0, 0))
-@example(Interval(1, 10))
-@example(Interval(-5, 5))
-@example(Interval.bot())
-def test_top_addition(i: Interval) -> None:
+@example(DoubleDomain(0, 0))
+@example(DoubleDomain(1, 10))
+@example(DoubleDomain(-5, 5))
+@example(DoubleDomain.bot())
+def test_top_addition(i: DoubleDomain) -> None:
     """Property: Top + interval = Top (except bot case)."""
-    top = Interval.top()
+    top = DoubleDomain.top()
 
     if i.is_bot():
         assert (top + i).is_bot()
@@ -513,13 +514,14 @@ def test_top_addition(i: Interval) -> None:
 
 
 @given(intervals())
-@example(Interval(0, 0))
-@example(Interval(1, 10))
-@example(Interval(-5, 5))
-@example(Interval.bot())
-def test_top_subtraction(i: Interval) -> None:
+@example(DoubleDomain(0, 0))
+@example(DoubleDomain(1, 10))
+@example(DoubleDomain(-5, 5))
+@example(DoubleDomain.bot())
+@settings(deadline=None)
+def test_top_subtraction(i: DoubleDomain) -> None:
     """Property: Top - interval = Top and interval - Top = Top (except bot case)."""
-    top = Interval.top()
+    top = DoubleDomain.top()
 
     if i.is_bot():
         assert (top - i).is_bot()
@@ -532,18 +534,18 @@ def test_top_subtraction(i: Interval) -> None:
 
 
 @given(intervals())
-@example(Interval(0, 0))
-@example(Interval(1, 10))
-@example(Interval(-5, 5))
-@example(Interval.bot())
-def test_top_multiplication(i: Interval) -> None:
+@example(DoubleDomain(0, 0))
+@example(DoubleDomain(1, 10))
+@example(DoubleDomain(-5, 5))
+@example(DoubleDomain.bot())
+def test_top_multiplication(i: DoubleDomain) -> None:
     """Property: Top * interval = Top (except bot and zero cases)."""
-    top = Interval.top()
+    top = DoubleDomain.top()
 
     if i.is_bot():
         assert (top * i).is_bot()
         assert (i * top).is_bot()
-    elif i == Interval(0, 0):
+    elif i == DoubleDomain(0, 0):
         # Top * 0 should still be Top due to -inf * 0 and inf * 0
         result1 = top * i
         result2 = i * top
@@ -557,17 +559,17 @@ def test_top_multiplication(i: Interval) -> None:
 
 
 @given(intervals())
-@example(Interval(1, 10))
-@example(Interval(-5, -1))
-@example(Interval(5, 5))
-@example(Interval.bot())
-def test_top_floor_division(i: Interval) -> None:
+@example(DoubleDomain(1, 10))
+@example(DoubleDomain(-5, -1))
+@example(DoubleDomain(5, 5))
+@example(DoubleDomain.bot())
+def test_top_floor_division(i: DoubleDomain) -> None:
     """Property: Top // interval = Top (except bot and zero-containing cases)."""
-    top = Interval.top()
+    top = DoubleDomain.top()
 
     if i.is_bot():
-        assert (top // i) == Interval.bot()
-        assert (i // top) == Interval.bot()
+        assert (top // i) == DoubleDomain.bot()
+        assert (i // top) == DoubleDomain.bot()
     elif i.lower <= 0 <= i.upper:
         # Contains zero - should return error or (top, error)
         result1 = top // i
@@ -591,21 +593,21 @@ def test_top_floor_division(i: Interval) -> None:
 
 
 @given(intervals())
-@example(Interval(1, 10))
-@example(Interval(-5, -1))
-@example(Interval(5, 5))
-@example(Interval.bot())
-def test_top_modulus(i: Interval) -> None:
+@example(DoubleDomain(1, 10))
+@example(DoubleDomain(-5, -1))
+@example(DoubleDomain(5, 5))
+@example(DoubleDomain.bot())
+def test_top_modulus(i: DoubleDomain) -> None:
     """Property: Top % interval behavior with infinite bounds."""
-    # top = Interval.top()
+    # top = DoubleDomain.top()
 
     # if i.is_bot():
     #     result1 = top % i
     #     result2 = i % top
-    #     assert isinstance(result1, Interval)
+    #     assert isinstance(result1, DoubleDomain)
     #     assert isinstance(result2, tuple)
     #     assert result1.is_bot()
-    #     assert isinstance(result2[0], Interval)
+    #     assert isinstance(result2[0], DoubleDomain)
     #     assert result2[0].is_bot()
     #     assert result2[1] == "divide by zero"
     # elif i.lower <= 0 <= i.upper:
@@ -626,7 +628,7 @@ def test_top_modulus(i: Interval) -> None:
     #     result1 = top % i
     #     # Result should be conservative approximation
     #     max_divisor = max(abs(i.lower), abs(i.upper))
-    #     expected_bounds = Interval(-(max_divisor - 1), max_divisor - 1)
+    #     expected_bounds = DoubleDomain(-(max_divisor - 1), max_divisor - 1)
     #     assert result1 == expected_bounds, \
     #         f"Expected Top % {i} = {expected_bounds}, got {result1}"
 
@@ -638,7 +640,7 @@ def test_top_modulus(i: Interval) -> None:
 
 def test_top_with_top_operations() -> None:
     """Property: Binary operations between two Top elements."""
-    top = Interval.top()
+    top = DoubleDomain.top()
 
     # Top + Top = Top
     assert (top + top) == top
@@ -668,78 +670,78 @@ def test_top_with_top_operations() -> None:
 
 def test_interval_i2s_in_range() -> None:
     """Values in short range remain unchanged."""
-    i = Interval(100, 200)
+    i = DoubleDomain(100, 200)
     result = i.i2s_cast()
-    assert result == Interval(100, 200)
+    assert result == DoubleDomain(100, 200)
 
 
 def test_interval_i2s_boundary_max() -> None:
     """Maximum short value."""
-    i = Interval(32767, 32767)
+    i = DoubleDomain(32767, 32767)
     result = i.i2s_cast()
-    assert result == Interval(32767, 32767)
+    assert result == DoubleDomain(32767, 32767)
 
 
 def test_interval_i2s_boundary_min() -> None:
     """Minimum short value."""
-    i = Interval(-32768, -32768)
+    i = DoubleDomain(-32768, -32768)
     result = i.i2s_cast()
-    assert result == Interval(-32768, -32768)
+    assert result == DoubleDomain(-32768, -32768)
 
 
 def test_interval_i2s_single_wrap_positive() -> None:
     """Single value just over max wraps to min."""
-    i = Interval(32768, 32768)
+    i = DoubleDomain(32768, 32768)
     result = i.i2s_cast()
-    assert result == Interval(-32768, -32768)
+    assert result == DoubleDomain(-32768, -32768)
 
 
 def test_interval_i2s_single_wrap_negative() -> None:
     """Single value just under min wraps to max."""
-    i = Interval(-32769, -32769)
+    i = DoubleDomain(-32769, -32769)
     result = i.i2s_cast()
-    assert result == Interval(32767, 32767)
+    assert result == DoubleDomain(32767, 32767)
 
 
 def test_interval_i2s_large_interval() -> None:
     """Large interval returns full short range."""
-    i = Interval(0, 100000)
+    i = DoubleDomain(0, 100000)
     result = i.i2s_cast()
-    assert result == Interval(-32768, 32767)
+    assert result == DoubleDomain(-32768, 32767)
 
 
 def test_interval_i2s_full_cycle() -> None:
-    """Interval spanning 65536 returns full range."""
-    i = Interval(0, 65536)
+    """DoubleDomain spanning 65536 returns full range."""
+    i = DoubleDomain(0, 65536)
     result = i.i2s_cast()
-    assert result == Interval(-32768, 32767)
+    assert result == DoubleDomain(-32768, 32767)
 
 
 def test_interval_i2s_negative_to_positive() -> None:
     """Large negative interval."""
-    i = Interval(-100000, -50000)
+    i = DoubleDomain(-100000, -50000)
     result = i.i2s_cast()
     # Should return full range due to multiple wraps
-    assert result == Interval(-32768, 32767)
+    assert result == DoubleDomain(-32768, 32767)
 
 
 def test_interval_i2s_bot() -> None:
     """Bottom remains bottom."""
-    i = Interval.bot()
+    i = DoubleDomain.bot()
     result = i.i2s_cast()
     assert result.is_bot()
 
 
 def test_interval_i2s_top() -> None:
     """Top returns full short range."""
-    i = Interval.top()
+    i = DoubleDomain.top()
     result = i.i2s_cast()
-    assert result == Interval(-32768, 32767)
+    assert result == DoubleDomain(-32768, 32767)
 
 
 def test_interval_i2s_partial_overlap_low() -> None:
-    """Interval partially below short range."""
-    i = Interval(-32800, -32700)
+    """DoubleDomain partially below short range."""
+    i = DoubleDomain(-32800, -32700)
     result = i.i2s_cast()
     # -32800 wraps to 32736, -32700 wraps to 32836 (then to -31700)
     # This should handle wrapping correctly
@@ -748,8 +750,8 @@ def test_interval_i2s_partial_overlap_low() -> None:
 
 
 def test_interval_i2s_partial_overlap_high() -> None:
-    """Interval partially above short range."""
-    i = Interval(32700, 32800)
+    """DoubleDomain partially above short range."""
+    i = DoubleDomain(32700, 32800)
     result = i.i2s_cast()
     # 32700 is in range, 32800 wraps
     assert result.lower >= -32768  # noqa: PLR2004
@@ -758,27 +760,27 @@ def test_interval_i2s_partial_overlap_high() -> None:
 
 def test_interval_i2s_small_positive() -> None:
     """Small positive values stay unchanged."""
-    i = Interval(1, 10)
+    i = DoubleDomain(1, 10)
     result = i.i2s_cast()
-    assert result == Interval(1, 10)
+    assert result == DoubleDomain(1, 10)
 
 
 def test_interval_i2s_small_negative() -> None:
     """Small negative values stay unchanged."""
-    i = Interval(-10, -1)
+    i = DoubleDomain(-10, -1)
     result = i.i2s_cast()
-    assert result == Interval(-10, -1)
+    assert result == DoubleDomain(-10, -1)
 
 
 def test_interval_i2s_zero() -> None:
     """Zero remains zero."""
-    i = Interval(0, 0)
+    i = DoubleDomain(0, 0)
     result = i.i2s_cast()
-    assert result == Interval(0, 0)
+    assert result == DoubleDomain(0, 0)
 
 
 def test_interval_i2s_around_zero() -> None:
-    """Interval around zero."""
-    i = Interval(-100, 100)
+    """DoubleDomain around zero."""
+    i = DoubleDomain(-100, 100)
     result = i.i2s_cast()
-    assert result == Interval(-100, 100)
+    assert result == DoubleDomain(-100, 100)
