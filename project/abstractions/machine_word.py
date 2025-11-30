@@ -15,7 +15,7 @@ class MachineWordDomain(Abstraction[int]):
 
     def is_bot(self) -> bool:
         """Bottom is represented by an empty residue set."""
-        return self.residues == set()
+        return len(self.residues) == 0
 
     @classmethod
     def has_finite_lattice(cls) -> bool:
