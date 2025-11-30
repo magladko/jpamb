@@ -676,10 +676,10 @@ class AbsInterpreter:
             k_set = {-100, -10, -1, 0, 1, 10, 100}
 
         final: set[str] = set()
-        lines_executed = {methodid: set()}
         total_lines_executed = set()
         for av in abstractions:
             # Initialize with entry state
+            self.lines_executed = set()
             sts = StateSet[av].initialstate_from_method(methodid, av, k_set)
 
             iteration = 0
@@ -705,8 +705,12 @@ class AbsInterpreter:
                 if not sts.needswork:
                     logger.debug("Fixed point reached!")
                     break
-            logger.debug(f"Executed lines {lines_executed}")
-            total_lines_executed |= lines_executed[methodid]
+            logger.debug(f"Executed lines {self.lines_executed}")
+            if len(total_lines_executed) == 0:
+                total_lines_executed = self.lines_executed
+            else:
+                # Rely on the most precise execution path
+                total_lines_executed &= self.lines_executed
 
         logger.debug(f"[final] Executed lines {total_lines_executed}")
         return total_lines_executed
