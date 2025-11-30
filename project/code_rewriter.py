@@ -55,15 +55,40 @@ class CodeRewriter:
             RewriteResult with original and debloated source
 
         """
-        # Read source file
-        source_file = self.suite.sourcefile(methodid.classname)
-        with Path.open(source_file, "r") as f:
-            original_source = f.read()
+        return self.rewrite_incremental(methodid, lines_executed, current_source=None)
 
-        # Parse with tree-sitter
-        tree = self.syntactic_helper.parse_source_file(
-            self.syntactic_helper.parser, methodid
-        )
+    def rewrite_incremental(
+        self,
+        methodid: jvm.AbsMethodID,
+        lines_executed: set[int],
+        current_source: str | None = None,
+    ) -> RewriteResult:
+        """
+        Rewrite Java source incrementally, using provided source state.
+
+        This method supports incremental rewrites by accepting the current source
+        state. This allows multiple methods in the same file to be debloated
+        sequentially without overwriting previous changes.
+
+        Args:
+            methodid: Method to debloat
+            lines_executed: Set of line numbers that were executed
+            current_source: Current source state (or None to read from disk)
+
+        Returns:
+            RewriteResult with original and debloated source
+
+        """
+        # Read source file only if not provided
+        if current_source is None:
+            source_file = self.suite.sourcefile(methodid.classname)
+            with Path.open(source_file, "r") as f:
+                original_source = f.read()
+        else:
+            original_source = current_source
+
+        # Parse with tree-sitter (parse the provided source, not from disk)
+        tree = self.syntactic_helper.parser.parse(original_source.encode("utf-8"))
 
         # Find method node
         class_name = str(methodid.classname.name)
