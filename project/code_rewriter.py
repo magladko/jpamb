@@ -167,12 +167,12 @@ class CodeRewriter:
         self, method_node: tree_sitter.Node
     ) -> list[StatementInfo]:
         """
-        Extract all statements from method body with their line ranges.
+        Extract all statements from method body recursively.
+
+        This includes nested statements inside control flow blocks.
 
         Args:
             method_node: The method declaration node
-            source: Original source code
-
         Returns:
             List of StatementInfo objects
 
@@ -182,10 +182,21 @@ class CodeRewriter:
             return []
 
         statements = []
+        self._extract_statements_recursive(body_node, statements)
+        return statements
 
-        # Query for all direct children of the method body block
-        # We want top-level statements, not nested ones
-        for child in body_node.children:
+    def _extract_statements_recursive(
+        self, parent_node: tree_sitter.Node, statements: list[StatementInfo]
+    ) -> None:
+        """
+        Recursively extract statements, descending into control flow bodies.
+
+        Args:
+            parent_node: The parent node to extract statements from
+            statements: List to append extracted statements to
+
+        """
+        for child in parent_node.children:
             # Skip braces and whitespace
             if child.type in ("{", "}", "comment", "line_comment", "block_comment"):
                 continue
@@ -202,7 +213,26 @@ class CodeRewriter:
                 )
             )
 
-        return statements
+            # Recurse into control flow bodies
+            if child.type in ("if_statement", "while_statement", "for_statement"):
+                # Extract statements from body
+                body_node = child.child_by_field_name(
+                    "consequence"
+                ) or child.child_by_field_name("body")
+                if body_node and body_node.type == "block":
+                    self._extract_statements_recursive(body_node, statements)
+
+                # For if-statements, also handle else/else-if
+                if child.type == "if_statement":
+                    alternative = child.child_by_field_name("alternative")
+                    if alternative:
+                        if alternative.type == "block":
+                            self._extract_statements_recursive(alternative, statements)
+                        elif alternative.type == "if_statement":
+                            # else-if case: the alternative is itself an if_statement
+                            # It will be processed in the main loop,
+                            # so no need to recurse
+                            pass
 
     def _is_executed(self, stmt: StatementInfo, lines_executed: set[int]) -> bool:
         """
