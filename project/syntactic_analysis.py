@@ -30,7 +30,7 @@ def clean_annotations(source):
     cleaned_lines = []
     for line in source.splitlines():
         if line.strip().startswith("@"):
-            cleaned_lines.append("")  # behold en tom linje for at bevare line numbering
+            cleaned_lines.append("") 
         else:
             cleaned_lines.append(line)
     return "\n".join(cleaned_lines)
@@ -170,7 +170,8 @@ def analyze_java_file(file_path):
             "deadByConstant": [],
             "dependencies": [],
             "isRecursive": False,
-            "removableCode": []
+            "removableCode": [],
+            "typeOfAnalysis": "dynamic"
         }
 
         # Parameters
@@ -183,6 +184,7 @@ def analyze_java_file(file_path):
             elif pname:
                 params.append(pname)
         info["parameters"] = params
+        info["typeOfAnalysis"] = "abstract" if len(params) > 0 else "dynamic"
 
 
         # Variables

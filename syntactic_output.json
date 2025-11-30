@@ -15,7 +15,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "dynamic"
     },
     {
         "fileName": "Calls.java",
@@ -33,7 +34,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "dynamic"
     },
     {
         "fileName": "Calls.java",
@@ -53,7 +55,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "abstract"
     },
     {
         "fileName": "Calls.java",
@@ -71,7 +74,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "dynamic"
     },
     {
         "fileName": "Calls.java",
@@ -89,7 +93,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "dynamic"
     },
     {
         "fileName": "Calls.java",
@@ -109,7 +114,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "abstract"
     },
     {
         "fileName": "Calls.java",
@@ -127,7 +133,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "dynamic"
     },
     {
         "fileName": "Calls.java",
@@ -153,7 +160,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": true,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "abstract"
     },
     {
         "fileName": "Calls.java",
@@ -175,7 +183,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "abstract"
     },
     {
         "fileName": "Calls.java",
@@ -218,7 +227,8 @@
         "isRecursive": false,
         "removableCode": [
             "Break used outside of any loop \u2013 meaningless"
-        ]
+        ],
+        "typeOfAnalysis": "abstract"
     },
     {
         "fileName": "Calls.java",
@@ -244,7 +254,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "abstract"
     },
     {
         "fileName": "Calls.java",
@@ -268,7 +279,8 @@
             "Empty block {}",
             "Unreachable while(false) loop",
             "If(false) \u2013 main branch never executes"
-        ]
+        ],
+        "typeOfAnalysis": "dynamic"
     },
     {
         "fileName": "Calls.java",
@@ -301,7 +313,39 @@
         "isRecursive": false,
         "removableCode": [
             "Variable 'world' declared after return \u2013 dead code"
-        ]
+        ],
+        "typeOfAnalysis": "dynamic"
+    },
+    {
+        "fileName": "Calls.java",
+        "className": "Calls",
+        "methodName": "testexample",
+        "parameters": [],
+        "start_line": 124,
+        "end_line": 138,
+        "variables": [
+            "a",
+            "b"
+        ],
+        "forLoops": [],
+        "whileLoops": [],
+        "constants": [
+            "5",
+            "3",
+            "10",
+            "0",
+            "30"
+        ],
+        "comments": [],
+        "keywordComments": [],
+        "deadByConstant": [],
+        "dependencies": [],
+        "isRecursive": false,
+        "removableCode": [
+            "If(true) \u2013 else branch never executes",
+            "Variable 'b' declared after return \u2013 dead code"
+        ],
+        "typeOfAnalysis": "dynamic"
     },
     {
         "fileName": "Loops.java",
@@ -324,7 +368,8 @@
         "removableCode": [
             "Empty block {}",
             "Infinite while(true) loop \u2013 may cause unreachable code after it"
-        ]
+        ],
+        "typeOfAnalysis": "dynamic"
     },
     {
         "fileName": "Loops.java",
@@ -351,7 +396,8 @@
         "isRecursive": false,
         "removableCode": [
             "Empty block {}"
-        ]
+        ],
+        "typeOfAnalysis": "dynamic"
     },
     {
         "fileName": "Loops.java",
@@ -380,7 +426,8 @@
         "isRecursive": false,
         "removableCode": [
             "Empty block {}"
-        ]
+        ],
+        "typeOfAnalysis": "dynamic"
     },
     {
         "fileName": "Loops.java",
@@ -407,7 +454,8 @@
         "isRecursive": false,
         "removableCode": [
             "Empty block {}"
-        ]
+        ],
+        "typeOfAnalysis": "dynamic"
     },
     {
         "fileName": "Dependent.java",
@@ -433,7 +481,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "abstract"
     },
     {
         "fileName": "Dependent.java",
@@ -466,7 +515,8 @@
             "y depends on MemberReference(member=y, postfix_operators=[], prefix_operators=['-'], qualifier=, selectors=[])"
         ],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "abstract"
     },
     {
         "fileName": "Dependent.java",
@@ -497,7 +547,8 @@
             "y depends on MemberReference(member=y, postfix_operators=[], prefix_operators=['-'], qualifier=, selectors=[])"
         ],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "abstract"
     },
     {
         "fileName": "Dependent.java",
@@ -530,7 +581,8 @@
             "n depends on Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=2)"
         ],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "abstract"
     },
     {
         "fileName": "Tricky.java",
@@ -563,7 +615,8 @@
             "n depends on BinaryOperation(operandl=BinaryOperation(operandl=MemberReference(member=n, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=3), operator=*), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=1), operator=+)"
         ],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "abstract"
     },
     {
         "fileName": "Arrays.java",
@@ -590,7 +643,8 @@
             "array depends on Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=0)"
         ],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "dynamic"
     },
     {
         "fileName": "Arrays.java",
@@ -617,7 +671,8 @@
             "array depends on Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=1)"
         ],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "dynamic"
     },
     {
         "fileName": "Arrays.java",
@@ -641,7 +696,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "dynamic"
     },
     {
         "fileName": "Arrays.java",
@@ -666,7 +722,8 @@
             "array depends on Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=10)"
         ],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "dynamic"
     },
     {
         "fileName": "Arrays.java",
@@ -688,7 +745,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "dynamic"
     },
     {
         "fileName": "Arrays.java",
@@ -717,7 +775,8 @@
             "array depends on Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=10)"
         ],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "abstract"
     },
     {
         "fileName": "Arrays.java",
@@ -748,7 +807,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "dynamic"
     },
     {
         "fileName": "Arrays.java",
@@ -789,7 +849,8 @@
             "r depends on BinaryOperation(operandl=MemberReference(member=m, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]), operandr=Literal(postfix_operators=[], prefix_operators=[], qualifier=None, selectors=[], value=1), operator=-)"
         ],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "abstract"
     },
     {
         "fileName": "Arrays.java",
@@ -811,7 +872,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "abstract"
     },
     {
         "fileName": "Arrays.java",
@@ -837,7 +899,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "abstract"
     },
     {
         "fileName": "Arrays.java",
@@ -868,7 +931,8 @@
             "sum depends on MemberReference(member=array, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[ArraySelector(index=MemberReference(member=i, postfix_operators=[], prefix_operators=[], qualifier=, selectors=[]))])"
         ],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "abstract"
     },
     {
         "fileName": "Simple.java",
@@ -886,7 +950,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "dynamic"
     },
     {
         "fileName": "Simple.java",
@@ -906,7 +971,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "abstract"
     },
     {
         "fileName": "Simple.java",
@@ -928,7 +994,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "abstract"
     },
     {
         "fileName": "Simple.java",
@@ -950,7 +1017,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "abstract"
     },
     {
         "fileName": "Simple.java",
@@ -971,7 +1039,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "dynamic"
     },
     {
         "fileName": "Simple.java",
@@ -993,7 +1062,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "abstract"
     },
     {
         "fileName": "Simple.java",
@@ -1014,7 +1084,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "abstract"
     },
     {
         "fileName": "Simple.java",
@@ -1037,7 +1108,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "abstract"
     },
     {
         "fileName": "Simple.java",
@@ -1060,7 +1132,8 @@
         "isRecursive": false,
         "removableCode": [
             "If(true) \u2013 else branch never executes"
-        ]
+        ],
+        "typeOfAnalysis": "dynamic"
     },
     {
         "fileName": "Simple.java",
@@ -1083,7 +1156,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "abstract"
     },
     {
         "fileName": "Simple.java",
@@ -1108,7 +1182,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "abstract"
     },
     {
         "fileName": "Simple.java",
@@ -1132,7 +1207,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "abstract"
     },
     {
         "fileName": "Simple.java",
@@ -1152,7 +1228,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "dynamic"
     },
     {
         "fileName": "Simple.java",
@@ -1173,7 +1250,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "abstract"
     },
     {
         "fileName": "Simple.java",
@@ -1194,7 +1272,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "abstract"
     },
     {
         "fileName": "Simple.java",
@@ -1212,7 +1291,8 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "dynamic"
     },
     {
         "fileName": "Simple.java",
@@ -1235,6 +1315,7 @@
         "deadByConstant": [],
         "dependencies": [],
         "isRecursive": false,
-        "removableCode": []
+        "removableCode": [],
+        "typeOfAnalysis": "abstract"
     }
 ]

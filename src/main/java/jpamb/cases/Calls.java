@@ -110,15 +110,4 @@ public class Calls {
     }
   }
 
-  public static int weirdfunction(){ int hello;
-    for(hello=0;hello<10;hello++){
-      if(hello%2==0){
-        System.out.println("Even number: "+hello);
-      }else{
-        System.out.println("Odd number: "+hello);
-      }
-    }
-    return 1;
-  int world;}
-
 }
