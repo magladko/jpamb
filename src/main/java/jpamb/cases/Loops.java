@@ -95,7 +95,60 @@ public class Loops {
     if (n == -99) {
       return 1 / 0; // unreach_000_marked
     }
-    return acc; 
+    return acc;
+  }
+
+  @Case("() -> assertion error")
+  @Tag({ LOOP, INTEGER_OVERFLOW })
+  public static void terminates() {
+    short i = 0;
+    while (i++ != 0) {
+    }
+    assert false;
+  }
+
+@Case("() -> ok")
+  @Tag({ LOOP })
+  public static int boundedLoopWithDeadTail() {
+    int sum = 0;
+    for (int i = 0; i < 3; i++) {
+      if (false) {
+        return 1 / 0; // unreach_000_marked
+      }
+      sum += i;
+    }
+
+    if (sum == 3) {
+      return sum;
+    }
+
+    if (sum == 42) {
+      assert false; // unreach_000_marked
+    }
+    return 1 / 0; // unreach_000_marked
+  }
+
+  @Case("() -> ok")
+  @Tag({ LOOP })
+  public static int nestedLoopsDeadBranch() {
+    int acc = 0;
+
+    for (int i = 0; i < 2; i++) {
+      for (int j = 0; j < 2; j++) {
+        acc += i + j;
+        if (i > 10 && j < 0) {
+          return 1 / 0; // unreach_000_marked
+        }
+      }
+    }
+    if (acc == 4) {
+      return acc;
+    }
+
+    if (acc < 0) {
+      assert false; // unreach_000_marked
+    }
+    return 1 / 0; // unreach_000_marked
   }
 
   @Case("() -> assertion error")
