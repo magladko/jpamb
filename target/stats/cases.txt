@@ -32,8 +32,10 @@ jpamb.cases.Dependent.divisionLoop:(I)V                      (1) -> ok
 jpamb.cases.Dependent.normalizedDistance:(II)I               (0, 0) -> ok
 jpamb.cases.Dependent.safeDivByN:(I)I                        (0) -> ok
 jpamb.cases.Dependent.safeDivByN:(I)I                        (1) -> ok
+jpamb.cases.Loops.bloatedLoopDeadBranches:()I                () -> ok
 jpamb.cases.Loops.forever:()V                                () -> *
 jpamb.cases.Loops.foreverIncrement:()V                       () -> *
+jpamb.cases.Loops.loopGuardedDeadBranch:()I                  () -> ok
 jpamb.cases.Loops.neverAsserts:()V                           () -> *
 jpamb.cases.Loops.neverDivides:()I                           () -> *
 jpamb.cases.Loops.terminates:()V                             () -> assertion error
@@ -44,6 +46,7 @@ jpamb.cases.Simple.assertInteger:(I)V                        (0) -> assertion er
 jpamb.cases.Simple.assertInteger:(I)V                        (1) -> ok
 jpamb.cases.Simple.assertPositive:(I)V                       (-1) -> assertion error
 jpamb.cases.Simple.assertPositive:(I)V                       (1) -> ok
+jpamb.cases.Simple.bloatedDeadBranches:()I                   () -> ok
 jpamb.cases.Simple.checkBeforeAssert:(I)V                    (-1) -> assertion error
 jpamb.cases.Simple.checkBeforeAssert:(I)V                    (0) -> ok
 jpamb.cases.Simple.checkBeforeDivideByN2:(I)I                (0) -> ok
@@ -62,8 +65,10 @@ jpamb.cases.Simple.justAdd:(II)I                             (1, 2) -> ok
 jpamb.cases.Simple.justMulitply:(II)I                        (1, 2) -> ok
 jpamb.cases.Simple.justReturn:()I                            () -> ok
 jpamb.cases.Simple.justReturnNothing:()V                     () -> ok
+jpamb.cases.Simple.layeredDeadCodeOne:()I                    () -> ok
 jpamb.cases.Simple.multiError:(Z)I                           (false) -> assertion error
 jpamb.cases.Simple.multiError:(Z)I                           (true) -> divide by zero
+jpamb.cases.Simple.nestedDeadCodePaths:()I                   () -> ok
 jpamb.cases.Simple.safeDivByN:(I)I                           (0) -> ok
 jpamb.cases.Simple.safeDivByN:(I)I                           (1) -> ok
 jpamb.cases.Tricky.collatz:(I)V                              (0) -> assertion error
