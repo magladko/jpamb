@@ -17,7 +17,7 @@ class Interval(Abstraction[JvmNumberAbs]):
     @classmethod
     def abstract(cls, items: set[int] | set[float] | set[int | float]) -> Self:
         """Create interval from a set of concrete integers."""
-        if not items:
+        if not items or any(i is None for i in items):
             return cls.bot()
         return cls(min(items), max(items))
 
@@ -247,33 +247,114 @@ class Interval(Abstraction[JvmNumberAbs]):
         return result if not has_zero else (result, "divide by zero")
 
     def __mod__(self, other: Self) -> Abstraction.DivisionResult:
-        """Interval modulus operation."""
+        """
+        Interval modulus operation (JVM behavior).
+
+        Semantics:
+        - Result has the sign of the dividend (self).
+        - |Result| < |divisor|.
+        - Division by zero logic matches __div__.
+        """
         if self.is_bot() or other.is_bot():
             return type(self).bot()
 
-        raise NotImplementedError("__mod__ not implemented yet")
-        # TODO(kornel): review
-        # Check for modulus by zero
-        # has_zero = other.lower <= 0 <= other.upper
-        # if other == 0:
-        #     return "divide by zero"
+        # 1. Check for division by zero
+        # If other spans 0 (e.g., [-1, 1]), 0 is a possible divisor.
+        has_zero = other.lower <= 0 <= other.upper
 
-        # # Conservative approximation based on JVM semantics:
-        # # Result sign matches dividend sign
-        # # Result magnitude is less than divisor magnitude
+        # If the interval is exactly [0, 0], it's purely an error
+        if other == 0:
+            return "divide by zero"
 
-        # # Find the maximum absolute value in the divisor
-        # max_divisor = max(abs(other.lower), abs(other.upper))
+        # 2. Determine Divisor Magnitude Constraints
+        # The remainder is bounded by the largest absolute value in the divisor - 1.
+        # We calculate max(|other|)
+        max_div_abs = max(abs(other.lower), abs(other.upper))
 
-        # # Conservative bounds
-        # if self.lower >= 0:
-        #     # Positive dividend: result in [0, max_divisor - 1]
-        #     return type(self)(0, max_divisor - 1)
-        # if self.upper <= 0:
-        #     # Negative dividend: result in [-(max_divisor - 1), 0]
-        #     return type(self)(-(max_divisor - 1), 0)
-        # # Mixed signs: result in [-(max_divisor - 1), max_divisor - 1]
-        # return type(self)(-(max_divisor - 1), max_divisor - 1)
+        # limit is the maximum possible magnitude of the result (exclusive of divisor)
+        # effectively: result <= limit.
+        # Note: inf - 1 is still inf, which correctly models uncertainty.
+        limit = max_div_abs - 1
+
+        # We also need the minimum absolute value of the divisor (excluding 0)
+        # to detect "no-op" cases (e.g. 2 % [10, 20] == 2).
+        if other.lower > 0:
+            min_div_abs = other.lower
+        elif other.upper < 0:
+            min_div_abs = abs(other.upper)
+        else:
+            # If divisor spans 0, we can't guarantee a "no-op" because
+            # dividend could be larger than the small numbers near 0 in divisor.
+            min_div_abs = 0
+
+        results = []
+
+        # 3. Handle Positive Part of Dividend (Result must be >= 0)
+        if self.upper >= 0:
+            # Restrict dividend to non-negative part
+            pos_lower = max(0, self.lower)
+            pos_upper = self.upper
+
+            if pos_lower > pos_upper:
+                pass  # self was strictly negative, handled below
+            else:
+                # Calculate bounds
+                # Lower bound is always 0 for modulo
+                new_lower = 0
+
+                # Upper bound:
+                # If dividend < min_divisor, the operation is identity: returns dividend
+                # Otherwise, it is bounded by min(dividend_max, limit).
+                if pos_upper < min_div_abs:
+                    new_upper = pos_upper
+                    new_lower = pos_lower  # Keep original lower if it's identity
+                else:
+                    new_upper = min(pos_upper, limit)
+
+                results.append(type(self)(new_lower, new_upper))
+
+        # 4. Handle Negative Part of Dividend (Result must be <= 0)
+        if self.lower <= 0:
+            # Restrict dividend to non-positive part
+            neg_lower = self.lower
+            neg_upper = min(0, self.upper)
+
+            if neg_lower > neg_upper:
+                pass  # self was strictly positive, handled above
+            else:
+                # Calculate bounds
+                # Upper bound is always 0
+                new_upper = 0
+
+                # Lower bound:
+                # If |dividend| < min_divisor, operation is identity.
+                # Otherwise, it is bounded by max(dividend_min, -limit).
+                if abs(neg_lower) < min_div_abs:
+                    new_lower = neg_lower
+                    new_upper = neg_upper  # Keep original upper if it's identity
+                else:
+                    new_lower = max(neg_lower, -limit)
+
+                results.append(type(self)(new_lower, new_upper))
+
+        # 5. Combine Results
+        if not results:
+            result = type(self).bot()
+        elif len(results) == 1:
+            result = results[0]
+        else:
+            # Join the positive and negative results
+            result = results[0] | results[1]
+
+        # 6. Return with Error State if necessary
+        # Handle the infinite case explicitly if needed, but float('inf') logic
+        # in min/max usually handles this correctly.
+        if any(float("inf") in map(abs, (x.lower, x.upper)) for x in [self, other]):
+            # If inputs are infinite, we double check bounds.
+            # But the logic above (min/max) propagates inf correctly for bounds.
+            pass
+
+        return result if not has_zero else (result, "divide by zero")
 
     def __neg__(self) -> Self:
         # TODO(kornel): Negation overflow for smallest numbers
