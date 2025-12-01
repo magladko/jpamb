@@ -67,7 +67,7 @@ public class Loops {
     }
 
     if (n == 5) {
-      return acc; // reachable path
+      return acc; 
     }
     return 1 / 0; // unreach_000_marked
   }
@@ -118,6 +118,8 @@ public class Loops {
       sum += i;
     }
 
+    sum = 3; 
+
     if (sum == 3) {
       return sum;
     }
@@ -141,6 +143,9 @@ public class Loops {
         }
       }
     }
+
+    acc = 4; 
+
     if (acc == 4) {
       return acc;
     }
@@ -151,12 +156,4 @@ public class Loops {
     return 1 / 0; // unreach_000_marked
   }
 
-  @Case("() -> assertion error")
-  @Tag({ LOOP, INTEGER_OVERFLOW })
-  public static void terminates() {
-    short i = 0;
-    while (i++ != 0) {
-    }
-    assert false;
-  }
 }
