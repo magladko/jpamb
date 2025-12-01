@@ -1022,6 +1022,7 @@ def debloat(suite, source_dir, target, filter, with_python):
 
     total_bytes = 0
     total_removed = 0
+    marker = "// unreach_000_marked"
     for result in results:
         if result.success:
             log.info(f"✓ {result.methodid}")
@@ -1040,6 +1041,35 @@ def debloat(suite, source_dir, target, filter, with_python):
     log.info(f"Debloated files saved to: {target}")
     log.info(f"Intermediate artifacts saved to: {target / 'intermediate'}")
     log.info(f"Total bytes removed: {total_removed}/{total_bytes} ({round((total_removed * 100)/total_bytes, 2)}%)")
+    def _count_markers_and_lines(base: Path) -> tuple[int, int]:
+        total_lines = 0
+        total_markers = 0
+        if not base.exists():
+          return total_lines, total_markers
+        for path in base.rglob("*.java"):
+            try:
+                lines = path.read_text(encoding="utf-8").splitlines()
+            except OSError:
+                continue
+            total_lines += len(lines)
+            total_markers += sum(marker in line for line in lines)
+        return total_lines, total_markers
+
+    src_lines, src_markers = _count_markers_and_lines(Path(source_dir))
+    debloated_dir = Path(target) / "final"
+    deb_lines, deb_markers = _count_markers_and_lines(debloated_dir)
+
+    if src_lines:
+        lines_removed = src_lines - deb_lines
+        log.info(
+            f"Total lines removed: {lines_removed}/{src_lines} "
+            f"({round((lines_removed * 100)/src_lines, 2)}%)"
+        )
+        markers_removed = src_markers - deb_markers
+        log.info(
+            f"Markers '{marker}' removed: {markers_removed}/{src_markers} "
+            f"({round((markers_removed * 100)/src_markers, 2) if src_markers else 0}%)"
+        )
     log.info(f"{'='*60}\n")
 
 

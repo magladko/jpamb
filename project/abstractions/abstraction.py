@@ -10,7 +10,7 @@ type JvmNumberAbs = (
 )
 
 
-class Abstraction[T: jvm.Type](ABC):
+class Abstraction[T](ABC):
     type DivisionResult = (
         Self | Literal["divide by zero"] | tuple[Self, Literal["divide by zero"]]
     )

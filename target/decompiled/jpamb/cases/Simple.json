@@ -2239,6 +2239,1363 @@
     },
     {
       "access": [
+        "public",
+        "static"
+      ],
+      "annotations": [
+        {
+          "is_runtime_visible": true,
+          "type": "jpamb/utils/Case",
+          "values": {
+            "value": {
+              "type": "string",
+              "value": "() -> ok"
+            }
+          }
+        }
+      ],
+      "code": {
+        "annotations": [],
+        "bytecode": [
+          {
+            "offset": 0,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 5
+            }
+          },
+          {
+            "index": 0,
+            "offset": 1,
+            "opr": "store",
+            "type": "int"
+          },
+          {
+            "offset": 2,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 0
+            }
+          },
+          {
+            "index": 1,
+            "offset": 3,
+            "opr": "store",
+            "type": "int"
+          },
+          {
+            "index": 0,
+            "offset": 4,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "condition": "ge",
+            "offset": 5,
+            "opr": "ifz",
+            "target": 12
+          },
+          {
+            "field": {
+              "class": "jpamb/cases/Simple",
+              "name": "$assertionsDisabled",
+              "type": "boolean"
+            },
+            "offset": 8,
+            "opr": "get",
+            "static": true
+          },
+          {
+            "condition": "ne",
+            "offset": 11,
+            "opr": "ifz",
+            "target": 19
+          },
+          {
+            "class": "java/lang/AssertionError",
+            "offset": 14,
+            "opr": "new"
+          },
+          {
+            "offset": 17,
+            "opr": "dup",
+            "words": 1
+          },
+          {
+            "access": "special",
+            "method": {
+              "args": [],
+              "is_interface": false,
+              "name": "<init>",
+              "ref": {
+                "kind": "class",
+                "name": "java/lang/AssertionError"
+              },
+              "returns": null
+            },
+            "offset": 18,
+            "opr": "invoke"
+          },
+          {
+            "offset": 21,
+            "opr": "throw"
+          },
+          {
+            "index": 0,
+            "offset": 22,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "offset": 23,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 10
+            }
+          },
+          {
+            "condition": "le",
+            "offset": 25,
+            "opr": "if",
+            "target": 19
+          },
+          {
+            "offset": 28,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 1
+            }
+          },
+          {
+            "offset": 29,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 0
+            }
+          },
+          {
+            "offset": 30,
+            "operant": "div",
+            "opr": "binary",
+            "type": "int"
+          },
+          {
+            "offset": 31,
+            "opr": "return",
+            "type": "int"
+          },
+          {
+            "index": 0,
+            "offset": 32,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "offset": 33,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": -1
+            }
+          },
+          {
+            "condition": "ne",
+            "offset": 34,
+            "opr": "if",
+            "target": 24
+          },
+          {
+            "access": "static",
+            "method": {
+              "args": [],
+              "is_interface": false,
+              "name": "divideByZero",
+              "ref": {
+                "kind": "class",
+                "name": "jpamb/cases/Simple"
+              },
+              "returns": "int"
+            },
+            "offset": 37,
+            "opr": "invoke"
+          },
+          {
+            "offset": 40,
+            "opr": "return",
+            "type": "int"
+          },
+          {
+            "index": 0,
+            "offset": 41,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "offset": 42,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 42
+            }
+          },
+          {
+            "condition": "ne",
+            "offset": 44,
+            "opr": "if",
+            "target": 33
+          },
+          {
+            "field": {
+              "class": "jpamb/cases/Simple",
+              "name": "$assertionsDisabled",
+              "type": "boolean"
+            },
+            "offset": 47,
+            "opr": "get",
+            "static": true
+          },
+          {
+            "condition": "ne",
+            "offset": 50,
+            "opr": "ifz",
+            "target": 37
+          },
+          {
+            "class": "java/lang/AssertionError",
+            "offset": 53,
+            "opr": "new"
+          },
+          {
+            "offset": 56,
+            "opr": "dup",
+            "words": 1
+          },
+          {
+            "access": "special",
+            "method": {
+              "args": [],
+              "is_interface": false,
+              "name": "<init>",
+              "ref": {
+                "kind": "class",
+                "name": "java/lang/AssertionError"
+              },
+              "returns": null
+            },
+            "offset": 57,
+            "opr": "invoke"
+          },
+          {
+            "offset": 60,
+            "opr": "throw"
+          },
+          {
+            "index": 1,
+            "offset": 61,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "index": 0,
+            "offset": 62,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "offset": 63,
+            "operant": "add",
+            "opr": "binary",
+            "type": "int"
+          },
+          {
+            "index": 1,
+            "offset": 64,
+            "opr": "store",
+            "type": "int"
+          },
+          {
+            "index": 0,
+            "offset": 65,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "offset": 66,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 5
+            }
+          },
+          {
+            "condition": "ne",
+            "offset": 67,
+            "opr": "if",
+            "target": 42
+          },
+          {
+            "index": 1,
+            "offset": 70,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "offset": 71,
+            "opr": "return",
+            "type": "int"
+          },
+          {
+            "offset": 72,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 1
+            }
+          },
+          {
+            "offset": 73,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 0
+            }
+          },
+          {
+            "offset": 74,
+            "operant": "div",
+            "opr": "binary",
+            "type": "int"
+          },
+          {
+            "offset": 75,
+            "opr": "return",
+            "type": "int"
+          }
+        ],
+        "exceptions": [],
+        "lines": [
+          {
+            "line": 126,
+            "offset": 0
+          },
+          {
+            "line": 127,
+            "offset": 2
+          },
+          {
+            "line": 133,
+            "offset": 4
+          },
+          {
+            "line": 134,
+            "offset": 6
+          },
+          {
+            "line": 135,
+            "offset": 12
+          },
+          {
+            "line": 136,
+            "offset": 15
+          },
+          {
+            "line": 139,
+            "offset": 19
+          },
+          {
+            "line": 140,
+            "offset": 22
+          },
+          {
+            "line": 141,
+            "offset": 24
+          },
+          {
+            "line": 142,
+            "offset": 27
+          },
+          {
+            "line": 144,
+            "offset": 33
+          },
+          {
+            "line": 147,
+            "offset": 37
+          },
+          {
+            "line": 148,
+            "offset": 40
+          },
+          {
+            "line": 150,
+            "offset": 42
+          }
+        ],
+        "max_locals": 2,
+        "max_stack": 2,
+        "stack_map": [
+          {
+            "index": 12,
+            "info": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "append_frame"
+          },
+          {
+            "index": 19,
+            "type": "same"
+          },
+          {
+            "index": 24,
+            "type": "same"
+          },
+          {
+            "index": 33,
+            "type": "same"
+          },
+          {
+            "index": 37,
+            "type": "same"
+          },
+          {
+            "index": 42,
+            "type": "same"
+          }
+        ]
+      },
+      "default": null,
+      "exceptions": [],
+      "name": "bloatedDeadBranches",
+      "params": [],
+      "returns": {
+        "annotations": [],
+        "type": {
+          "base": "int"
+        }
+      },
+      "typeparams": []
+    },
+    {
+      "access": [
+        "public",
+        "static"
+      ],
+      "annotations": [
+        {
+          "is_runtime_visible": true,
+          "type": "jpamb/utils/Case",
+          "values": {
+            "value": {
+              "type": "string",
+              "value": "() -> ok"
+            }
+          }
+        }
+      ],
+      "code": {
+        "annotations": [],
+        "bytecode": [
+          {
+            "offset": 0,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 7
+            }
+          },
+          {
+            "index": 0,
+            "offset": 2,
+            "opr": "store",
+            "type": "int"
+          },
+          {
+            "offset": 3,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 0
+            }
+          },
+          {
+            "index": 1,
+            "offset": 4,
+            "opr": "store",
+            "type": "int"
+          },
+          {
+            "index": 0,
+            "offset": 5,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "condition": "lt",
+            "offset": 6,
+            "opr": "ifz",
+            "target": 9
+          },
+          {
+            "index": 0,
+            "offset": 9,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "offset": 10,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 10
+            }
+          },
+          {
+            "condition": "le",
+            "offset": 12,
+            "opr": "if",
+            "target": 13
+          },
+          {
+            "offset": 15,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 1
+            }
+          },
+          {
+            "offset": 16,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 0
+            }
+          },
+          {
+            "offset": 17,
+            "operant": "div",
+            "opr": "binary",
+            "type": "int"
+          },
+          {
+            "offset": 18,
+            "opr": "return",
+            "type": "int"
+          },
+          {
+            "offset": 19,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 0
+            }
+          },
+          {
+            "index": 2,
+            "offset": 20,
+            "opr": "store",
+            "type": "int"
+          },
+          {
+            "index": 2,
+            "offset": 21,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "offset": 22,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 2
+            }
+          },
+          {
+            "condition": "ge",
+            "offset": 23,
+            "opr": "if",
+            "target": 33
+          },
+          {
+            "index": 0,
+            "offset": 26,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "offset": 27,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 999
+            }
+          },
+          {
+            "condition": "ne",
+            "offset": 30,
+            "opr": "if",
+            "target": 27
+          },
+          {
+            "field": {
+              "class": "jpamb/cases/Simple",
+              "name": "$assertionsDisabled",
+              "type": "boolean"
+            },
+            "offset": 33,
+            "opr": "get",
+            "static": true
+          },
+          {
+            "condition": "ne",
+            "offset": 36,
+            "opr": "ifz",
+            "target": 27
+          },
+          {
+            "class": "java/lang/AssertionError",
+            "offset": 39,
+            "opr": "new"
+          },
+          {
+            "offset": 42,
+            "opr": "dup",
+            "words": 1
+          },
+          {
+            "access": "special",
+            "method": {
+              "args": [],
+              "is_interface": false,
+              "name": "<init>",
+              "ref": {
+                "kind": "class",
+                "name": "java/lang/AssertionError"
+              },
+              "returns": null
+            },
+            "offset": 43,
+            "opr": "invoke"
+          },
+          {
+            "offset": 46,
+            "opr": "throw"
+          },
+          {
+            "index": 1,
+            "offset": 47,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "index": 2,
+            "offset": 48,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "offset": 49,
+            "operant": "add",
+            "opr": "binary",
+            "type": "int"
+          },
+          {
+            "index": 1,
+            "offset": 50,
+            "opr": "store",
+            "type": "int"
+          },
+          {
+            "amount": 1,
+            "index": 2,
+            "offset": 51,
+            "opr": "incr"
+          },
+          {
+            "offset": 54,
+            "opr": "goto",
+            "target": 15
+          },
+          {
+            "index": 0,
+            "offset": 57,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "condition": "ne",
+            "offset": 58,
+            "opr": "ifz",
+            "target": 37
+          },
+          {
+            "access": "static",
+            "method": {
+              "args": [],
+              "is_interface": false,
+              "name": "divideByZero",
+              "ref": {
+                "kind": "class",
+                "name": "jpamb/cases/Simple"
+              },
+              "returns": "int"
+            },
+            "offset": 61,
+            "opr": "invoke"
+          },
+          {
+            "offset": 64,
+            "opr": "return",
+            "type": "int"
+          },
+          {
+            "index": 0,
+            "offset": 65,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "offset": 66,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 13
+            }
+          },
+          {
+            "condition": "ne",
+            "offset": 68,
+            "opr": "if",
+            "target": 46
+          },
+          {
+            "field": {
+              "class": "jpamb/cases/Simple",
+              "name": "$assertionsDisabled",
+              "type": "boolean"
+            },
+            "offset": 71,
+            "opr": "get",
+            "static": true
+          },
+          {
+            "condition": "ne",
+            "offset": 74,
+            "opr": "ifz",
+            "target": 50
+          },
+          {
+            "class": "java/lang/AssertionError",
+            "offset": 77,
+            "opr": "new"
+          },
+          {
+            "offset": 80,
+            "opr": "dup",
+            "words": 1
+          },
+          {
+            "access": "special",
+            "method": {
+              "args": [],
+              "is_interface": false,
+              "name": "<init>",
+              "ref": {
+                "kind": "class",
+                "name": "java/lang/AssertionError"
+              },
+              "returns": null
+            },
+            "offset": 81,
+            "opr": "invoke"
+          },
+          {
+            "offset": 84,
+            "opr": "throw"
+          },
+          {
+            "index": 1,
+            "offset": 85,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "index": 0,
+            "offset": 86,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "offset": 87,
+            "operant": "add",
+            "opr": "binary",
+            "type": "int"
+          },
+          {
+            "index": 1,
+            "offset": 88,
+            "opr": "store",
+            "type": "int"
+          },
+          {
+            "index": 0,
+            "offset": 89,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "offset": 90,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 7
+            }
+          },
+          {
+            "condition": "ne",
+            "offset": 92,
+            "opr": "if",
+            "target": 55
+          },
+          {
+            "index": 1,
+            "offset": 95,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "offset": 96,
+            "opr": "return",
+            "type": "int"
+          },
+          {
+            "offset": 97,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 1
+            }
+          },
+          {
+            "offset": 98,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 0
+            }
+          },
+          {
+            "offset": 99,
+            "operant": "div",
+            "opr": "binary",
+            "type": "int"
+          },
+          {
+            "offset": 100,
+            "opr": "return",
+            "type": "int"
+          }
+        ],
+        "exceptions": [],
+        "lines": [
+          {
+            "line": 155,
+            "offset": 0
+          },
+          {
+            "line": 156,
+            "offset": 2
+          },
+          {
+            "line": 162,
+            "offset": 4
+          },
+          {
+            "line": 163,
+            "offset": 9
+          },
+          {
+            "line": 166,
+            "offset": 13
+          },
+          {
+            "line": 167,
+            "offset": 18
+          },
+          {
+            "line": 168,
+            "offset": 21
+          },
+          {
+            "line": 170,
+            "offset": 27
+          },
+          {
+            "line": 166,
+            "offset": 31
+          },
+          {
+            "line": 173,
+            "offset": 33
+          },
+          {
+            "line": 174,
+            "offset": 35
+          },
+          {
+            "line": 175,
+            "offset": 37
+          },
+          {
+            "line": 176,
+            "offset": 40
+          },
+          {
+            "line": 178,
+            "offset": 46
+          },
+          {
+            "line": 181,
+            "offset": 50
+          },
+          {
+            "line": 182,
+            "offset": 53
+          },
+          {
+            "line": 184,
+            "offset": 55
+          }
+        ],
+        "max_locals": 3,
+        "max_stack": 2,
+        "stack_map": [
+          {
+            "index": 9,
+            "info": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "append_frame"
+          },
+          {
+            "index": 13,
+            "type": "same"
+          },
+          {
+            "index": 15,
+            "info": [
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "append_frame"
+          },
+          {
+            "index": 27,
+            "type": "same"
+          },
+          {
+            "index": 33,
+            "info": 1,
+            "type": "chop_frame"
+          },
+          {
+            "index": 37,
+            "type": "same"
+          },
+          {
+            "index": 46,
+            "type": "same"
+          },
+          {
+            "index": 50,
+            "type": "same"
+          },
+          {
+            "index": 55,
+            "type": "same"
+          }
+        ]
+      },
+      "default": null,
+      "exceptions": [],
+      "name": "layeredDeadCodeOne",
+      "params": [],
+      "returns": {
+        "annotations": [],
+        "type": {
+          "base": "int"
+        }
+      },
+      "typeparams": []
+    },
+    {
+      "access": [
+        "public",
+        "static"
+      ],
+      "annotations": [
+        {
+          "is_runtime_visible": true,
+          "type": "jpamb/utils/Case",
+          "values": {
+            "value": {
+              "type": "string",
+              "value": "() -> ok"
+            }
+          }
+        }
+      ],
+      "code": {
+        "annotations": [],
+        "bytecode": [
+          {
+            "offset": 0,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 1
+            }
+          },
+          {
+            "index": 0,
+            "offset": 1,
+            "opr": "store",
+            "type": "int"
+          },
+          {
+            "offset": 2,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 0
+            }
+          },
+          {
+            "index": 1,
+            "offset": 3,
+            "opr": "store",
+            "type": "int"
+          },
+          {
+            "index": 0,
+            "offset": 4,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "condition": "ne",
+            "offset": 5,
+            "opr": "ifz",
+            "target": 8
+          },
+          {
+            "access": "static",
+            "method": {
+              "args": [],
+              "is_interface": false,
+              "name": "divideByZero",
+              "ref": {
+                "kind": "class",
+                "name": "jpamb/cases/Simple"
+              },
+              "returns": "int"
+            },
+            "offset": 8,
+            "opr": "invoke"
+          },
+          {
+            "offset": 11,
+            "opr": "return",
+            "type": "int"
+          },
+          {
+            "offset": 12,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 0
+            }
+          },
+          {
+            "index": 2,
+            "offset": 13,
+            "opr": "store",
+            "type": "int"
+          },
+          {
+            "index": 2,
+            "offset": 14,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "offset": 15,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 3
+            }
+          },
+          {
+            "condition": "ge",
+            "offset": 16,
+            "opr": "if",
+            "target": 26
+          },
+          {
+            "index": 2,
+            "offset": 19,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "offset": 20,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 10
+            }
+          },
+          {
+            "condition": "le",
+            "offset": 22,
+            "opr": "if",
+            "target": 20
+          },
+          {
+            "offset": 25,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 1
+            }
+          },
+          {
+            "offset": 26,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 0
+            }
+          },
+          {
+            "offset": 27,
+            "operant": "div",
+            "opr": "binary",
+            "type": "int"
+          },
+          {
+            "offset": 28,
+            "opr": "return",
+            "type": "int"
+          },
+          {
+            "index": 1,
+            "offset": 29,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "index": 2,
+            "offset": 30,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "offset": 31,
+            "operant": "add",
+            "opr": "binary",
+            "type": "int"
+          },
+          {
+            "index": 1,
+            "offset": 32,
+            "opr": "store",
+            "type": "int"
+          },
+          {
+            "amount": 1,
+            "index": 2,
+            "offset": 33,
+            "opr": "incr"
+          },
+          {
+            "offset": 36,
+            "opr": "goto",
+            "target": 10
+          },
+          {
+            "index": 0,
+            "offset": 39,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "offset": 40,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 1
+            }
+          },
+          {
+            "condition": "eq",
+            "offset": 41,
+            "opr": "if",
+            "target": 31
+          },
+          {
+            "access": "static",
+            "method": {
+              "args": [],
+              "is_interface": false,
+              "name": "divideByZero",
+              "ref": {
+                "kind": "class",
+                "name": "jpamb/cases/Simple"
+              },
+              "returns": "int"
+            },
+            "offset": 44,
+            "opr": "invoke"
+          },
+          {
+            "offset": 47,
+            "opr": "return",
+            "type": "int"
+          },
+          {
+            "index": 1,
+            "offset": 48,
+            "opr": "load",
+            "type": "int"
+          },
+          {
+            "offset": 49,
+            "opr": "return",
+            "type": "int"
+          }
+        ],
+        "exceptions": [],
+        "lines": [
+          {
+            "line": 190,
+            "offset": 0
+          },
+          {
+            "line": 191,
+            "offset": 2
+          },
+          {
+            "line": 193,
+            "offset": 4
+          },
+          {
+            "line": 194,
+            "offset": 6
+          },
+          {
+            "line": 199,
+            "offset": 8
+          },
+          {
+            "line": 200,
+            "offset": 13
+          },
+          {
+            "line": 201,
+            "offset": 16
+          },
+          {
+            "line": 203,
+            "offset": 20
+          },
+          {
+            "line": 199,
+            "offset": 24
+          },
+          {
+            "line": 207,
+            "offset": 26
+          },
+          {
+            "line": 208,
+            "offset": 29
+          },
+          {
+            "line": 211,
+            "offset": 31
+          }
+        ],
+        "max_locals": 3,
+        "max_stack": 2,
+        "stack_map": [
+          {
+            "index": 8,
+            "info": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "append_frame"
+          },
+          {
+            "index": 10,
+            "info": [
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "append_frame"
+          },
+          {
+            "index": 20,
+            "type": "same"
+          },
+          {
+            "index": 26,
+            "info": 1,
+            "type": "chop_frame"
+          },
+          {
+            "index": 31,
+            "type": "same"
+          }
+        ]
+      },
+      "default": null,
+      "exceptions": [],
+      "name": "nestedDeadCodePaths",
+      "params": [],
+      "returns": {
+        "annotations": [],
+        "type": {
+          "base": "int"
+        }
+      },
+      "typeparams": []
+    },
+    {
+      "access": [
         "static"
       ],
       "annotations": [],

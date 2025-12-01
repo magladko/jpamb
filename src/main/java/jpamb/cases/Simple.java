@@ -56,7 +56,7 @@ public class Simple {
     if (true) {
       return 0;
     }
-    assert false;
+    assert false; // unreach_000_marked
     return 0;
   }
 
@@ -120,4 +120,95 @@ public class Simple {
     }
     return 0;
   }
+
+  @Case("() -> ok")
+  public static int bloatedDeadBranches() {
+    int n = 5;
+    int acc = 0;
+
+    if (false) {
+      return divideByZero(); // unreach_000_marked
+    }
+
+    if (n < 0) {
+      assert false; // unreach_000_marked
+    } else if (n > 10) {
+      return 1 / 0; // unreach_000_marked
+    }
+
+    if (n == -1) {
+      return divideByZero(); // unreach_000_marked
+    } else if (n == 42) {
+      assert false; // unreach_000_marked
+    } else {
+      acc += n;
+    }
+
+    if (n == 5) {
+      return acc;
+    }
+    return 1 / 0; // unreach_000_marked
+  }
+
+ @Case("() -> ok")
+public static int layeredDeadCodeOne() {
+    int n = 7;
+    int acc = 0;
+
+    if (false) {
+        return divideByZero(); // unreach_000_marked
+    }
+
+    if (n < 0 || n > 10) {
+        return 1 / 0; // unreach_000_marked
+    }
+
+    for (int i = 0; i < 2; i++) {
+        if (n == 999) {
+            assert false; // unreach_000_marked
+        }
+        acc += i;
+    }
+
+    if (n == 0) {
+        return divideByZero(); // unreach_000_marked
+    } else if (n == 13) {
+        assert false; // unreach_000_marked
+    } else {
+        acc += n;
+    }
+
+    if (n == 7) {
+        return acc; 
+    }
+    return 1 / 0; // unreach_000_marked
+}
+
+
+  @Case("() -> ok")
+  public static int nestedDeadCodePaths() {
+    int flag = 1;
+    int acc = 0;
+
+    if (flag == 0) {
+      return divideByZero(); // unreach_000_marked
+    } else {
+      if (false) {
+        assert false; // unreach_000_marked
+      }
+      for (int i = 0; i < 3; i++) {
+        if (i > 10) {
+          return 1 / 0; // unreach_000_marked
+        }
+        acc += i;
+      }
+    }
+
+    if (flag != 1) {
+      return divideByZero(); // unreach_000_marked
+    }
+
+    return acc; 
+  }
+
 }

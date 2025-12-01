@@ -95,4 +95,61 @@ public class Calls {
     }
   }
 
+  @Case("() -> ok")
+  @Tag({ CALL })
+  public static int callGuardedDeadBranches() {
+    if (false) {
+      return assertFalseReturn(); // unreach_000_marked
+    }
+    if (true && false) {
+      assert false; // unreach_000_marked
+    }
+    int n = 1;
+    if (n < 0) {
+      return 1 / n; // unreach_000_marked
+    }
+    return assertTrueReturn();
+  }
+
+  @Case("() -> ok")
+  @Tag({ CALL })
+  public static int doubleCallDeadBranch() {
+    boolean flag = true;
+    if (!flag) {
+      assertFalse(); // unreach_000_marked
+      return 1 / 0; // unreach_000_marked
+    }
+    int val = assertTrueReturn();
+    if (false) {
+      return val + assertFalseReturn(); // unreach_000_marked
+    }
+    return val;
+  }
+
+  @Case("() -> ok")
+  @Tag({ CALL })
+  public static int nestedCallDeadBranch() {
+    int acc = 0;
+    if (false) {
+      acc += assertFalseReturn(); // unreach_000_marked
+    }
+    if (acc > 100) {
+      return assertFalseReturn(); // unreach_000_marked
+    }
+    if (acc < 0) {
+      assert false; // unreach_000_marked
+    }
+    return assertTrueReturn();
+  }
+
+  private static int assertTrueReturn() {
+    assert true;
+    return 0;
+  }
+
+  private static int assertFalseReturn() {
+    assert false;
+    return 1;
+  }
+
 }

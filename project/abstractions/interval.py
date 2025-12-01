@@ -2,11 +2,11 @@ from dataclasses import dataclass
 from numbers import Number
 from typing import Self
 
-from .abstraction import Abstraction, JvmNumberAbs
+from .abstraction import Abstraction
 
 
 @dataclass
-class Interval(Abstraction[JvmNumberAbs]):
+class Interval(Abstraction[int | float]):
     lower: int | float
     upper: int | float
 
