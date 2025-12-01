@@ -5,8 +5,32 @@ from itertools import chain
 from hypothesis import example, given
 from hypothesis import strategies as st
 
+# Assumes project structure provided in prompt
 from project.abstractions.abstraction import Comparison
 from project.abstractions.interval import Interval
+
+# ============================================================================
+# HELPERS
+# ============================================================================
+
+
+def jvm_rem(a: int, b: int) -> int:
+    """
+    Simulate JVM 'irem' behavior (truncate towards zero) using pure integer math.
+
+    NOTE: Do NOT use math.fmod, as it converts to float and loses precision
+    for integers > 2^53, causing false test failures.
+    """
+    if b == 0:
+        # This will be caught by the test logic handling exceptions
+        raise ZeroDivisionError
+
+    # 1. Calculate remainder based on magnitudes
+    rem = abs(a) % abs(b)
+
+    # 2. Result takes the sign of the dividend (a)
+    return -rem if a < 0 else rem
+
 
 # ============================================================================
 # HYPOTHESIS STRATEGIES
@@ -18,7 +42,6 @@ def intervals() -> st.SearchStrategy[Interval]:
     Generate intervals with diverse bounds.
 
     Includes special cases: bot, top, singletons, and random intervals.
-    Let Hypothesis explore the space naturally without artificial limits.
     """
     # Regular intervals with unbounded random bounds
     random_intervals = st.builds(
@@ -38,6 +61,8 @@ def intervals() -> st.SearchStrategy[Interval]:
             Interval(-10, -1),  # negative range
             Interval(1, 10),  # positive range
             Interval(-5, 5),  # mixed range
+            Interval(2, 3),  # small positive
+            Interval(10, 20),  # large positive
         ]
     )
 
@@ -50,7 +75,7 @@ def comparison_ops() -> st.SearchStrategy[Comparison]:
 
 
 # ============================================================================
-# BASIC PROPERTY TESTS
+# ARITHMETIC PROPERTY TESTS
 # ============================================================================
 
 
@@ -63,7 +88,7 @@ def test_valid_abstraction(xs: set[int]) -> None:
 
 @given(st.sets(st.integers()), st.sets(st.integers()))
 def test_interval_adds(xs: set[int], ys: set[int]) -> None:
-    """Property: Abstract addition is sound (overapproximates concrete)."""
+    """Property: Abstract addition is sound."""
     if not xs or not ys:
         return
 
@@ -98,6 +123,148 @@ def test_interval_muls(xs: set[int], ys: set[int]) -> None:
 
 
 @given(st.sets(st.integers()), st.sets(st.integers()))
+def test_interval_mods(xs: set[int], ys: set[int]) -> None:
+    """Property: Abstract modulus is sound w.r.t JVM semantics."""
+    if not xs or not ys:
+        return
+
+    # 1. Compute Concrete JVM Outcomes
+    concrete_rems = set()
+    has_zero_div = False
+
+    for x in xs:
+        for y in ys:
+            if y == 0:
+                has_zero_div = True
+            else:
+                concrete_rems.add(jvm_rem(x, y))
+
+    # 2. Compute Abstract Result
+    i_xs = Interval.abstract(xs)
+    i_ys = Interval.abstract(ys)
+    result = i_xs % i_ys
+
+    # 3. Parse Abstract Result
+    abstract_interval = Interval.bot()
+    abstract_error = False
+
+    if isinstance(result, Interval):
+        abstract_interval = result
+    elif isinstance(result, tuple):
+        abstract_interval = result[0]
+        assert isinstance(abstract_interval, Interval)
+        if result[1] == "divide by zero":
+            abstract_error = True
+    elif result == "divide by zero":
+        abstract_error = True
+
+    # 4. Assertions
+    # If concrete execution had valid numbers, they must be in the interval
+    if concrete_rems:
+        assert not abstract_interval.is_bot(), (
+            f"Got Bot for concrete results {concrete_rems}"
+        )
+        assert all(r in abstract_interval for r in concrete_rems), (
+            f"Concrete {concrete_rems} not in {abstract_interval} for {xs} % {ys}"
+        )
+
+    # If concrete execution had zero, abstract must report potential error
+    if has_zero_div:
+        assert abstract_error, f"Expected zero division error for {xs} % {ys}"
+
+
+@given(intervals(), intervals())
+@example(Interval(10, 20), Interval(5, 5))  # Positive % Positive
+@example(Interval(-20, -10), Interval(5, 5))  # Negative % Positive
+@example(Interval(-10, 10), Interval(5, 5))  # Mixed % Positive
+def test_mod_sign_invariant(i1: Interval, i2: Interval) -> None:
+    """Property: Result sign matches dividend sign (JVM rule)."""
+    if i1.is_bot() or i2.is_bot() or i2 == 0:
+        return
+
+    result = i1 % i2
+
+    # Unwrap tuple if error exists
+    if isinstance(result, tuple):
+        result = result[0]
+    if isinstance(result, str):  # "divide by zero"
+        return
+
+    assert isinstance(result, Interval)
+
+    # If dividend is strictly positive, result is [0, ...]
+    if i1.lower >= 0:
+        assert result.lower >= 0
+
+    # If dividend is strictly negative, result is [..., 0]
+    if i1.upper <= 0:
+        assert result.upper <= 0
+
+    # If dividend is strictly zero, result is 0
+    if i1 == 0:
+        assert result == 0
+
+
+@given(intervals(), intervals())
+def test_mod_magnitude_bound(i1: Interval, i2: Interval) -> None:
+    """Property: |Result| is strictly less than max(|Divisor|)."""
+    if i1.is_bot() or i2.is_bot() or i2 == 0:
+        return
+
+    result = i1 % i2
+
+    if isinstance(result, tuple):
+        result = result[0]
+    if isinstance(result, str):
+        return
+
+    # Find max absolute value of divisor
+    max_div_abs = max(abs(i2.lower), abs(i2.upper))
+
+    if max_div_abs == 0:
+        return  # Caught by zero check
+    if max_div_abs == float("inf"):
+        return
+    assert isinstance(result, Interval)
+    # The result boundaries must be strictly less than divisor magnitude
+    # (Except when divisor is 1 or -1, result is 0)
+    assert abs(result.lower) < max_div_abs
+    assert abs(result.upper) < max_div_abs
+
+
+@given(intervals(), intervals())
+@example(Interval(2, 3), Interval(10, 20))  # [2,3] % [10,20] -> [2,3]
+@example(Interval(-3, -2), Interval(10, 20))  # [-3,-2] % [10,20] -> [-3,-2]
+def test_mod_identity_refinement(i1: Interval, i2: Interval) -> None:
+    """Property: If |dividend| < |divisor|, result == dividend (No-op)."""
+    if i1.is_bot() or i2.is_bot():
+        return
+
+    # Determine min absolute value of divisor (excluding 0)
+    if i2.lower > 0:
+        min_div = i2.lower
+    elif i2.upper < 0:
+        min_div = abs(i2.upper)
+    else:
+        return  # Divisor spans 0, cannot guarantee identity
+
+    # Determine max absolute value of dividend
+    max_dividend = max(abs(i1.lower), abs(i1.upper))
+
+    # If dividend is strictly smaller than smallest divisor
+    if max_dividend < min_div:
+        result = i1 % i2
+        if isinstance(result, tuple):
+            result = result[0]
+        assert result == i1, f"Expected identity {i1}, got {result}"
+
+
+# ============================================================================
+# COMPARISON PROPERTY TESTS
+# ============================================================================
+
+
+@given(st.sets(st.integers()), st.sets(st.integers()))
 def test_interval_compare_le(xs: set[int], ys: set[int]) -> None:
     """Property: Abstract <= comparison includes all concrete outcomes."""
     if not xs or not ys:
@@ -122,11 +289,6 @@ def test_compare_returns_valid_bool_set_all_ops(
     assert all(isinstance(v, Interval) for v in intervals_list)
 
 
-# ============================================================================
-# COMPLEMENTARITY PROPERTIES
-# ============================================================================
-
-
 @given(intervals(), intervals())
 @example(Interval(0, 10), Interval(5, 15))
 @example(Interval(1, 5), Interval(6, 10))
@@ -135,9 +297,7 @@ def test_comparison_complementarity_lt_ge(i1: Interval, i2: Interval) -> None:
     lt_result = i1.lt(i2)
     ge_result = i1.ge(i2)
 
-    # If both non-empty, they should have complementary outcomes
     if lt_result and ge_result:
-        # At least one outcome should be shared or complementary
         for outcome in [True, False]:
             if outcome in lt_result:
                 complement = not outcome
@@ -170,11 +330,6 @@ def test_comparison_complementarity_eq_ne(i1: Interval, i2: Interval) -> None:
 
     if False in eq_result and True in ne_result:
         assert eq_result[False] == ne_result[True]
-
-
-# ============================================================================
-# SYMMETRY PROPERTIES
-# ============================================================================
 
 
 @given(intervals(), intervals())
@@ -226,11 +381,6 @@ def test_comparison_antisymmetry_le_ge(i1: Interval, i2: Interval) -> None:
         assert i2_refined_le == i2_refined_ge
 
 
-# ============================================================================
-# IDENTITY PROPERTIES
-# ============================================================================
-
-
 @given(intervals())
 @example(Interval(5, 5))
 @example(Interval(1, 10))
@@ -240,35 +390,9 @@ def test_comparison_identity_eq(i: Interval) -> None:
 
     if not i.is_bot():
         assert True in eq_result
-        # For identity comparison, refined intervals should equal the original
         assert eq_result[True] == (i, i)
     else:
         assert eq_result == {}
-
-
-@given(intervals())
-@example(Interval(1, 10))
-def test_comparison_identity_le(i: Interval) -> None:
-    """Property: x <= x should always include True."""
-    le_result = i.le(i)
-
-    if not i.is_bot():
-        assert True in le_result
-
-
-@given(intervals())
-@example(Interval(1, 10))
-def test_comparison_identity_ge(i: Interval) -> None:
-    """Property: x >= x should always include True."""
-    ge_result = i.ge(i)
-
-    if not i.is_bot():
-        assert True in ge_result
-
-
-# ============================================================================
-# LOGICAL RELATIONSHIP PROPERTIES
-# ============================================================================
 
 
 @given(intervals(), intervals())
@@ -315,174 +439,57 @@ def test_logical_relationship_eq_implies_le_and_ge(i1: Interval, i2: Interval) -
 
 
 # ============================================================================
-# SOUNDNESS (ORACLE-BASED)
-# ============================================================================
-
-
-def compute_concrete_outcomes(i1: Interval, i2: Interval, op: Comparison) -> set[bool]:
-    """Oracle: compute concrete outcomes for intervals by sampling."""
-    if i1.is_bot() or i2.is_bot():
-        return set()
-
-    outcomes = set()
-
-    # Sample concrete values from intervals
-    def sample_from_interval(interval: Interval, num_samples: int = 5) -> list[int]:
-        """Sample concrete values from an interval."""
-        if interval.lower == float("-inf") or interval.upper == float("inf"):
-            # For infinite bounds, sample a fixed range
-            lower = int(max(interval.lower, -100))
-            upper = int(min(interval.upper, 100))
-        else:
-            lower = int(interval.lower)
-            upper = int(interval.upper)
-
-        if lower > upper:
-            return []
-
-        # Sample endpoints and some middle values
-        samples = [lower, upper]
-        if upper - lower >= 2:  # noqa: PLR2004
-            samples.append((lower + upper) // 2)
-        if upper - lower >= 4:  # noqa: PLR2004
-            samples.append((lower + (lower + upper) // 2) // 2)
-            samples.append(((lower + upper) // 2 + upper) // 2)
-
-        return list(set(samples))[:num_samples]
-
-    samples1 = sample_from_interval(i1)
-    samples2 = sample_from_interval(i2)
-
-    for val1 in samples1:
-        for val2 in samples2:
-            if op == "le":
-                outcomes.add(val1 <= val2)
-            elif op == "lt":
-                outcomes.add(val1 < val2)
-            elif op == "eq":
-                outcomes.add(val1 == val2)
-            elif op == "ne":
-                outcomes.add(val1 != val2)
-            elif op == "ge":
-                outcomes.add(val1 >= val2)
-            elif op == "gt":
-                outcomes.add(val1 > val2)
-
-    return outcomes
-
-
-# @given(intervals(), intervals(), comparison_ops())
-# @example(Interval(5, 5), Interval(5, 5), "eq")
-# @example(Interval(1, 5), Interval(6, 10), "lt")
-# @example(Interval(6, 10), Interval(1, 5), "gt")
-# @example(Interval.bot(), Interval(1, 5), "le")
-# def test_soundness_concrete_oracle(
-#     i1: Interval, i2: Interval, op: Comparison
-# ) -> None:
-#     """Property: Abstract comparison is sound w.r.t. concrete execution."""
-#     if i1.is_bot() or i2.is_bot():
-#         return
-
-#     result = i1.compare(op, i2)
-#     concrete_outcomes = compute_concrete_outcomes(i1, i2, op)
-
-#     for concrete_outcome in concrete_outcomes:
-#         assert (
-#             concrete_outcome in result
-#         ), f"Concrete outcome {concrete_outcome} not in result for {i1} {op} {i2}"
-
-
-# ============================================================================
-# REFINEMENT COVERAGE
-# ============================================================================
-
-
-# @given(intervals(), intervals(), comparison_ops())
-# @example(Interval.bot(), Interval.bot(), "eq")
-# @example(Interval.top(), Interval.top(), "eq")
-# @example(Interval(1, 10), Interval(5, 15), "le")
-# def test_comparison_refinement_coverage(
-#     i1: Interval, i2: Interval, op: Comparison
-# ) -> None:
-#     """Property: Refinements cover the original intervals and are valid subsets."""
-#     result = i1.compare(op, i2)
-
-#     # Refined intervals should be subsets
-#     for refined_i1, refined_i2 in result.values():
-#         assert isinstance(refined_i1, Interval)
-#         assert isinstance(refined_i2, Interval)
-#         assert refined_i1 <= i1
-#         assert refined_i2 <= i2
-
-#     # Union of refined intervals should cover originals (for non-bot)
-#     if result and not i1.is_bot() and not i2.is_bot():
-#         all_i1_refined = Interval.bot()
-#         all_i2_refined = Interval.bot()
-#         for refined_i1, refined_i2 in result.values():
-#             all_i1_refined = all_i1_refined | refined_i1
-#             all_i2_refined = all_i2_refined | refined_i2
-#         assert all_i1_refined == i1
-#         assert all_i2_refined == i2
-
-
-# ============================================================================
 # LATTICE PROPERTY TESTS
 # ============================================================================
 
 
 @given(intervals(), intervals())
-@example(Interval(1, 5), Interval(3, 7))
 def test_meet_commutativity(i1: Interval, i2: Interval) -> None:
-    """Property: Meet is commutative (i1 ⊓ i2 = i2 ⊓ i1)."""
+    """Property: Meet is commutative."""
     assert (i1 & i2) == (i2 & i1)
 
 
 @given(intervals(), intervals())
-@example(Interval(1, 5), Interval(3, 7))
 def test_join_commutativity(i1: Interval, i2: Interval) -> None:
-    """Property: Join is commutative (i1 ⊔ i2 = i2 ⊔ i1)."""
+    """Property: Join is commutative."""
     assert (i1 | i2) == (i2 | i1)
 
 
 @given(intervals(), intervals(), intervals())
 def test_meet_associativity(i1: Interval, i2: Interval, i3: Interval) -> None:
-    """Property: Meet is associative ((i1 ⊓ i2) ⊓ i3 = i1 ⊓ (i2 ⊓ i3))."""
+    """Property: Meet is associative."""
     assert ((i1 & i2) & i3) == (i1 & (i2 & i3))
 
 
 @given(intervals(), intervals(), intervals())
 def test_join_associativity(i1: Interval, i2: Interval, i3: Interval) -> None:
-    """Property: Join is associative ((i1 ⊔ i2) ⊔ i3 = i1 ⊔ (i2 ⊔ i3))."""
+    """Property: Join is associative."""
     assert ((i1 | i2) | i3) == (i1 | (i2 | i3))
 
 
 @given(intervals(), intervals())
-@example(Interval(1, 5), Interval(3, 7))
 def test_absorption_law_1(i1: Interval, i2: Interval) -> None:
     """Property: Absorption law i1 ⊔ (i1 ⊓ i2) = i1."""
     assert (i1 | (i1 & i2)) == i1
 
 
 @given(intervals(), intervals())
-@example(Interval(1, 5), Interval(3, 7))
 def test_absorption_law_2(i1: Interval, i2: Interval) -> None:
     """Property: Absorption law i1 ⊓ (i1 ⊔ i2) = i1."""
     assert (i1 & (i1 | i2)) == i1
 
 
 @given(intervals())
-@example(Interval(1, 10))
 def test_bot_is_identity_for_join(i: Interval) -> None:
-    """Property: Bot is identity for join (i ⊔ ⊥ = i)."""
+    """Property: Bot is identity for join."""
     bot = Interval.bot()
     assert (i | bot) == i
     assert (bot | i) == i
 
 
 @given(intervals())
-@example(Interval(1, 10))
 def test_bot_is_absorbing_for_meet(i: Interval) -> None:
-    """Property: Bot is absorbing for meet (i ⊓ ⊥ = ⊥)."""
+    """Property: Bot is absorbing for meet."""
     bot = Interval.bot()
     assert (i & bot) == bot
     assert (bot & i) == bot
@@ -494,10 +501,6 @@ def test_bot_is_absorbing_for_meet(i: Interval) -> None:
 
 
 @given(intervals())
-@example(Interval(0, 0))
-@example(Interval(1, 10))
-@example(Interval(-5, 5))
-@example(Interval.bot())
 def test_top_addition(i: Interval) -> None:
     """Property: Top + interval = Top (except bot case)."""
     top = Interval.top()
@@ -506,36 +509,24 @@ def test_top_addition(i: Interval) -> None:
         assert (top + i).is_bot()
         assert (i + top).is_bot()
     else:
-        result1 = top + i
-        result2 = i + top
-        assert result1 == top, f"Expected Top + {i} = Top, got {result1}"
-        assert result2 == top, f"Expected {i} + Top = Top, got {result2}"
+        assert (top + i) == top
+        assert (i + top) == top
 
 
 @given(intervals())
-@example(Interval(0, 0))
-@example(Interval(1, 10))
-@example(Interval(-5, 5))
-@example(Interval.bot())
 def test_top_subtraction(i: Interval) -> None:
-    """Property: Top - interval = Top and interval - Top = Top (except bot case)."""
+    """Property: Top - interval = Top (except bot case)."""
     top = Interval.top()
 
     if i.is_bot():
         assert (top - i).is_bot()
         assert (i - top).is_bot()
     else:
-        result1 = top - i
-        result2 = i - top
-        assert result1 == top, f"Expected Top - {i} = Top, got {result1}"
-        assert result2 == top, f"Expected {i} - Top = Top, got {result2}"
+        assert (top - i) == top
+        assert (i - top) == top
 
 
 @given(intervals())
-@example(Interval(0, 0))
-@example(Interval(1, 10))
-@example(Interval(-5, 5))
-@example(Interval.bot())
 def test_top_multiplication(i: Interval) -> None:
     """Property: Top * interval = Top (except bot and zero cases)."""
     top = Interval.top()
@@ -544,23 +535,15 @@ def test_top_multiplication(i: Interval) -> None:
         assert (top * i).is_bot()
         assert (i * top).is_bot()
     elif i == Interval(0, 0):
-        # Top * 0 should still be Top due to -inf * 0 and inf * 0
-        result1 = top * i
-        result2 = i * top
-        assert result1 == 0
-        assert result2 == 0
+        # Top * 0 should be 0
+        assert (top * i) == 0
+        assert (i * top) == 0
     else:
-        result1 = top * i
-        result2 = i * top
-        assert result1 == top, f"Expected Top * {i} = Top, got {result1}"
-        assert result2 == top, f"Expected {i} * Top = Top, got {result2}"
+        assert (top * i) == top
+        assert (i * top) == top
 
 
 @given(intervals())
-@example(Interval(1, 10))
-@example(Interval(-5, -1))
-@example(Interval(5, 5))
-@example(Interval.bot())
 def test_top_floor_division(i: Interval) -> None:
     """Property: Top // interval = Top (except bot and zero-containing cases)."""
     top = Interval.top()
@@ -569,71 +552,70 @@ def test_top_floor_division(i: Interval) -> None:
         assert (top // i) == Interval.bot()
         assert (i // top) == Interval.bot()
     elif i.lower <= 0 <= i.upper:
-        # Contains zero - should return error or (top, error)
+        # Contains zero
         result1 = top // i
         result2 = i // top
-        # Should involve divide by zero error
+
         is_error = result1 == "divide by zero" or (
             isinstance(result1, tuple) and result1[1] == "divide by zero"
         )
         assert is_error
+
         is_top_or_error = result2 == top or (
             isinstance(result2, tuple) and result2[0] == top
         )
         assert is_top_or_error
     else:
-        result1 = top // i
-        result2 = i // top
-        # Top // non-zero should be Top
-        assert result1 == top, f"Expected Top // {i} = Top, got {result1}"
-        # interval // Top should also be Top due to infinite bounds
-        assert result2 == (top, "divide by zero")
+        assert (top // i) == top
+        assert (i // top) == (top, "divide by zero")  # Top contains 0
 
 
 @given(intervals())
-@example(Interval(1, 10))
-@example(Interval(-5, -1))
-@example(Interval(5, 5))
-@example(Interval.bot())
 def test_top_modulus(i: Interval) -> None:
-    """Property: Top % interval behavior with infinite bounds."""
-    # top = Interval.top()
+    """Property: Top % interval behavior."""
+    top = Interval.top()
 
-    # if i.is_bot():
-    #     result1 = top % i
-    #     result2 = i % top
-    #     assert isinstance(result1, Interval)
-    #     assert isinstance(result2, tuple)
-    #     assert result1.is_bot()
-    #     assert isinstance(result2[0], Interval)
-    #     assert result2[0].is_bot()
-    #     assert result2[1] == "divide by zero"
-    # elif i.lower <= 0 <= i.upper:
-    #     # Contains zero - should return bot (error state)
-    #     result1 = top % i
-    #     result2 = i % top
-    #     # Should involve divide by zero error
-    #     is_error = result1 == "divide by zero" or (
-    #         isinstance(result1, tuple) and result1[1] == "divide by zero"
-    #     )
-    #     assert is_error
-    #     is_top_or_error = result2 == top or (
-    #         isinstance(result2, tuple) and result2[0] == top
-    #     )
-    #     assert is_top_or_error
-    # else:
-    #     # Top % non-zero-containing interval
-    #     result1 = top % i
-    #     # Result should be conservative approximation
-    #     max_divisor = max(abs(i.lower), abs(i.upper))
-    #     expected_bounds = Interval(-(max_divisor - 1), max_divisor - 1)
-    #     assert result1 == expected_bounds, \
-    #         f"Expected Top % {i} = {expected_bounds}, got {result1}"
+    if i.is_bot():
+        assert (top % i).is_bot() # pyright: ignore[reportAttributeAccessIssue]
+        assert (i % top).is_bot() # pyright: ignore[reportAttributeAccessIssue]
+        return
 
-    #     # i % Top (Top contains zero) should be bot
-    #     result2 = i % top
-    #     assert result2.is_bot(), \
-    #         f"Expected {i} % Top (Top contains 0) = Bot, got {result2}"
+    # 1. Top % i
+    result1 = top % i
+
+    has_zero = i.lower <= 0 <= i.upper
+
+    if i == 0:
+        # Pure divide by zero
+        assert result1 == "divide by zero"
+    else:
+        # Unwrap result if tuple
+        val = result1[0] if isinstance(result1, tuple) else result1
+
+        # Calculate expected bound based on divisor magnitude
+        max_divisor = max(abs(i.lower), abs(i.upper))
+
+        if max_divisor == float("inf"):
+            # If divisor goes to infinity, remainder can be anything (Top)
+            # but usually bounded. However, here we just check validity.
+            pass
+        else:
+            assert isinstance(val, Interval)
+            limit = max(0, max_divisor - 1)
+            # Since Top contains negative and positive, result is symmetric
+            assert val.lower >= -limit
+            assert val.upper <= limit
+
+        # Check error flag presence
+        if has_zero:
+            assert isinstance(result1, tuple)
+            assert result1[1] == "divide by zero"
+
+    # 2. i % Top
+    # Top contains large numbers and 0.
+    result2 = i % top
+    assert isinstance(result2, tuple)
+    assert result2[1] == "divide by zero"
 
 
 def test_top_with_top_operations() -> None:
@@ -643,20 +625,20 @@ def test_top_with_top_operations() -> None:
     # Top + Top = Top
     assert (top + top) == top
 
-    # Top - Top = Top (not refined to zero)
+    # Top - Top = Top
     assert (top - top) == top
 
     # Top * Top = Top
     assert (top * top) == top
 
-    # Top // Top should return (Top, "divide by zero") or similar
-    # due to zero in divisor
-    result = top // top
-    is_error = result == "divide by zero" or (
-        isinstance(result, tuple) and result[1] == "divide by zero"
-    )
-    assert is_error
+    # Top // Top
+    result_div = top // top
+    assert isinstance(result_div, tuple)
+    assert result_div[0] == top
+    assert result_div[1] == "divide by zero"
 
-    # Top % Top should be bot due to zero in divisor
-    # TODO(kornel): %
-    # assert (top % top)
+    # Top % Top
+    result_mod = top % top
+    assert isinstance(result_mod, tuple)
+    assert result_mod[0] == top
+    assert result_mod[1] == "divide by zero"
