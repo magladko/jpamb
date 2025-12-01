@@ -47,4 +47,36 @@ public class Loops {
     }
     assert false;
   }
+
+  @Case("(0) -> ok")
+  @Tag({ LOOP })
+  public static int boundedLoopNoCrash(int n) {
+    for (int i = 0; i < 3; i++) {
+      if (n > 0) {
+        n--;
+      } else if (n < 0) {
+        n++;
+      } else {
+        assert true;
+      }
+    }
+    if (n == 100) {
+      return 1 / 0; // unreachable given bounded updates
+    }
+    return n;
+  }
+
+  @Case("(5) -> ok")
+  @Tag({ LOOP })
+  public static int loopBreaksBeforeCrash(int n) {
+    for (int i = 0; i < n; i++) {
+      if (i == 2) {
+        break; // exits before dangerous code
+      }
+    }
+    if (n < 0) {
+      return 1 / 0; // unreachable for provided case
+    }
+    return n;
+  }
 }

@@ -19,4 +19,27 @@ public class Tricky {
     }
   }
 
+  @Case("(\"x\") -> ok")
+  public static int shadowedNullCheck(String s) {
+    if (s == null) {
+      return s.length(); // unreachable for provided case
+    }
+    String t = s;
+    if (t == null) {
+      return t.length(); // unreachable
+    }
+    return 0;
+  }
+
+  @Case("(\"hello\") -> ok")
+  public static int guardedStringLength(String s) {
+    if (s == null) {
+      return s.length(); // unreachable for provided case
+    }
+    if (s.isEmpty()) {
+      return 1 / 0; // unreachable for provided case
+    }
+    return s.length();
+  }
+
 }

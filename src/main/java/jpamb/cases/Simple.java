@@ -120,4 +120,37 @@ public class Simple {
     }
     return 0;
   }
+
+  @Case("(0) -> ok")
+  public static int zeroSkipsDivision(int n) {
+    if (n == 0) {
+      return 0;
+    }
+    assert n != 0; // unreachable under the provided case
+    return 1 / n;
+  }
+
+  @Case("(true) -> ok")
+  public static int guardedAssert(boolean ok) {
+    if (!ok) {
+      assert false; // unreachable under the provided case
+    }
+    return 1;
+  }
+
+  @Case("(1) -> ok")
+  public static int assertPositiveTwice(int n) {
+    if (n > 0) {
+      return n;
+    }
+    return 1 / 0; // unreachable for provided case
+  }
+
+  @Case("() -> ok")
+  public static int safeAndFalseGuard() {
+    if (false && divideByZero() == 42) {
+      return 1;
+    }
+    return 0;
+  }
 }
