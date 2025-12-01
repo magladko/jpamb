@@ -121,36 +121,43 @@ public class Simple {
     return 0;
   }
 
-  @Case("(0) -> ok")
-  public static int zeroSkipsDivision(int n) {
-    if (n == 0) {
-      return 0;
+  @Case("(5) -> ok")
+  public static int bloatedDeadBranches(int n) {
+    int acc = 0;
+
+    if (false) {
+      return divideByZero(); // unreachable
     }
-    assert n != 0; // unreachable under the provided case
-    return 1 / n;
+
+    if (n < 0) {
+      assert false; // unreachable for the provided case
+    } else if (n > 10) {
+      return 1 / 0; // unreachable for the provided case
+    }
+
+    for (int i = 0; i < 3; i++) {
+      if (n == 999) {
+        acc += divideByZero(); // unreachable
+      }
+      if (i == 1 && false) {
+        acc += divideByZero(); // unreachable
+      }
+    }
+
+    switch (n) {
+      case -1:
+        return divideByZero(); // unreachable
+      case 42:
+        assert false; // unreachable
+        break;
+      default:
+        acc += n;
+    }
+
+    if (n == 5) {
+      return acc; // reachable path
+    }
+    return 1 / 0; // unreachable under the provided case
   }
 
-  @Case("(true) -> ok")
-  public static int guardedAssert(boolean ok) {
-    if (!ok) {
-      assert false; // unreachable under the provided case
-    }
-    return 1;
-  }
-
-  @Case("(1) -> ok")
-  public static int assertPositiveTwice(int n) {
-    if (n > 0) {
-      return n;
-    }
-    return 1 / 0; // unreachable for provided case
-  }
-
-  @Case("() -> ok")
-  public static int safeAndFalseGuard() {
-    if (false && divideByZero() == 42) {
-      return 1;
-    }
-    return 0;
-  }
 }

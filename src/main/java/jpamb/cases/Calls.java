@@ -95,19 +95,4 @@ public class Calls {
     }
   }
 
-  @Case("() -> ok")
-  @Tag({ CALL })
-  public static int alwaysSafeCaller() {
-    if (false) {
-      assert false;
-    }
-    return 1;
-  }
-
-  @Case("() -> ok")
-  @Tag({ CALL })
-  public static void callsAssertIfAlwaysTrue() {
-    assertIf(true); // false branch unreachable
-  }
-
 }
