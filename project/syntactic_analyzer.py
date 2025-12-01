@@ -4,28 +4,15 @@ import os
 import re
 from pathlib import Path
 from typing import cast
-
 import javalang
 import javalang.tree
+import jpamb
+from jpamb import jvm
+
 
 COMMENT_KEYWORDS = [
     "DO NOT DELETE", "FIXME", "TODO", "IMPORTANT", "TEMP", "DEBUG", "HACK"
 ]
-
-def compute_syntactic_removals(file_path: Path) -> tuple[set[int], list[dict]]:
-    results = analyze_java_file(file_path)
-    to_remove = set()
-
-    for m in results:
-        start = m["start_line"]
-        end = m["end_line"]
-
-        if m["deadByConstant"]:
-            to_remove.update(range(start, end + 1))
-        if m["removableCode"]:
-            to_remove.update(range(start, end + 1))
-
-    return to_remove, results
 
 
 def determine_analysis_type(info: dict) -> str:
@@ -173,9 +160,10 @@ def analyze_dependencies(method: javalang.tree.MethodDeclaration) -> list[str]:
     return dependencies
 
 
-def analyze_java_file(file_path: Path) -> list[dict]:
+def analyze_java_file(methodid: jvm.AbsMethodID) -> list[dict]:
     """Analyze one .java file."""
-    with Path(file_path).open(encoding="utf-8") as f:
+    srcfile = jpamb.Suite().sourcefile(methodid.classname)
+    with Path(srcfile).open(encoding="utf-8") as f:
         source = f.read()
     source_lines = source.splitlines()
 
@@ -185,7 +173,7 @@ def analyze_java_file(file_path: Path) -> list[dict]:
     try:
         tree = javalang.parse.parse(source)
     except javalang.parser.JavaSyntaxError as e:
-        print(f"Could not parse {file_path}: {e}")
+        print(f"Could not parse {srcfile}: {e}")
         return []
 
 
@@ -204,7 +192,7 @@ def analyze_java_file(file_path: Path) -> list[dict]:
         end_line = find_method_end_line(source_lines, start_line)
 
         info = {
-            "fileName": Path(file_path).name,
+            "fileName": Path(srcfile).name,
             "className": class_name or "(anonymous)",
             "methodName": getattr(method, "name", "(unknown)"),
             "parameters": [],
@@ -234,7 +222,6 @@ def analyze_java_file(file_path: Path) -> list[dict]:
             elif pname:
                 params.append(pname)
         info["parameters"] = params
-        info["typeOfAnalysis"] = determine_analysis_type(info)
 
         # Method calls
         calls = []
@@ -304,6 +291,9 @@ def analyze_java_file(file_path: Path) -> list[dict]:
             if call_name == info["methodName"]:
                 info["isRecursive"] = True
                 break
+
+        info["typeOfAnalysis"] = determine_analysis_type(info)
+
 
         results.append(info)
 

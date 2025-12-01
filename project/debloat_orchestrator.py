@@ -13,6 +13,7 @@ from code_rewriter import CodeRewriter, RewriteResult
 from debloat_config import generate_k_set
 from interpreter import Frame, Stack, State, lines_executed, step
 from syntactic_helper import SyntacticHelper
+import syntactic_analyzer
 
 import jpamb
 import jpamb.model
@@ -252,9 +253,25 @@ class DebloatOrchestrator:
                     methodid
                 )
 
+                # FULL syntactic analysis for the *entire file*
+                infos = syntactic_analyzer.analyze_java_file(methodid)
+
+                # Identify the correct method-name in AST
+                method_name = methodid.extension.name
+
+                param_count = len(methodid.extension.params)
+
+                info = next(
+                    i for i in infos
+                    if i["methodName"] == method_name and len(i["parameters"]) == param_count
+                )
+
+                # Now use your determine_analysis_type
+                analysis_type = syntactic_analyzer.determine_analysis_type(info)
+                print(f'Min:{analysis_type} hans: {triviality}')
+
                 # Stage 2: Coverage analysis
-                if triviality["is_trivial"]:
-                    # NOTE: Trivial case should not have any arguments
+                if analysis_type == "dynamic":
                     lines_executed_set = self._run_concrete(methodid, None)
                 else:
                     k_set = generate_k_set(interesting_vals)
