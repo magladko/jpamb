@@ -1009,7 +1009,7 @@ def debloat(suite, source_dir, target, filter, with_python):
     results = orch.run(filter_pattern=filter)
 
     # Print summary
-    log.info(f"\n{'='*60}")
+    log.info(f"{'='*60}")
     log.info("Debloating Summary")
     log.info(f"{'='*60}")
 
@@ -1020,20 +1020,26 @@ def debloat(suite, source_dir, target, filter, with_python):
     log.info(f"Successful: {successful}")
     log.info(f"Failed: {failed}")
 
+    total_bytes = 0
+    total_removed = 0
     for result in results:
         if result.success:
-            log.info(f"\n✓ {result.methodid}")
-            log.info(f"  Triviality: {result.triviality['justification']}")
-            log.info(f"  Lines executed: {len(result.lines_executed)}")
+            log.info(f"✓ {result.methodid}")
+            log.info(f"\tTriviality: {result.triviality['justification']}")
+            log.info(f"\tLines executed: {len(result.lines_executed)}")
             if result.rewrite_result:
-                log.info(f"  Transformations: {result.rewrite_result.transformations}")
+                log.info(f"\tTransformations: {result.rewrite_result.transformations}")
+                og_len = len(result.rewrite_result.original_source)
+                total_bytes += og_len
+                total_removed += og_len - len(result.rewrite_result.debloated_source)
         else:
-            log.error(f"\n✗ {result.methodid}")
-            log.error(f"  Error: {result.error}")
+            log.error(f"✗ {result.methodid}")
+            log.error(f"\tError: {result.error}")
 
-    log.info(f"\n{'='*60}")
+    log.info(f"{'='*60}")
     log.info(f"Debloated files saved to: {target}")
     log.info(f"Intermediate artifacts saved to: {target / 'intermediate'}")
+    log.info(f"Total bytes removed: {total_removed}/{total_bytes} ({round((total_removed * 100)/total_bytes, 2)}%)")
     log.info(f"{'='*60}\n")
 
 

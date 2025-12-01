@@ -1,4 +1,4 @@
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from typing import Literal, Self
 
@@ -12,8 +12,10 @@ class SignSet(Abstraction[JvmNumberAbs]):
     signs: set[Sign]
 
     @classmethod
-    def abstract(cls, items: set[JvmNumberAbs | int | float]) -> Self:
+    def abstract(cls, items: Iterable[JvmNumberAbs | int | float]) -> Self:
         signset = set()
+        if not items or any(x is None for x in items):
+            return cls.bot()
         if 0 in items:
             signset.add("0")
         if any(x for x in items if x > 0):

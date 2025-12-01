@@ -136,7 +136,7 @@ class CodeRewriter:
 
         # Build new source by omitting dead lines
         if kept_statements:
-            debloated_source = self._replace_method_body_by_lines(
+            debloated_source = self.apply_line_removals(
                 original_source, lines_to_remove
             )
         else:
@@ -233,6 +233,9 @@ class CodeRewriter:
                             # It will be processed in the main loop,
                             # so no need to recurse
                             pass
+            # Recurse into bare/anonymous blocks
+            elif child.type == "block":
+                self._extract_statements_recursive(child, statements)
 
     def _is_executed(self, stmt: StatementInfo, lines_executed: set[int]) -> bool:
         """
@@ -333,27 +336,6 @@ class CodeRewriter:
 
         # Rejoin
         return "\n".join(kept_lines)
-
-    def _replace_method_body_by_lines(
-        self,
-        source: str,
-        lines_to_remove: set[int],
-    ) -> str:
-        """
-        Reconstruct source by omitting dead lines.
-
-        Deprecated: Use apply_line_removals instead.
-        This method is kept for backward compatibility.
-
-        Args:
-            source: Original source code
-            lines_to_remove: Set of line numbers to omit (1-indexed)
-
-        Returns:
-            Modified source with dead lines removed
-
-        """
-        return self.apply_line_removals(source, lines_to_remove)
 
     def _replace_method_body_with_text(
         self, source: str, method_node: tree_sitter.Node, body_text: str
