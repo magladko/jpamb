@@ -389,8 +389,9 @@ class StateSet[AV: Abstraction]:
 
 
 class AbsInterpreter:
-    def __init__(self) -> None:
+    def __init__(self, debloater: bool = False) -> None:  # noqa: FBT001, FBT002
         self.lines_executed: set[int] = set()
+        self.debloater = debloater
 
     def step[AV: Abstraction](
         self, state: AState[AV], abstraction_cls: type[AV]
@@ -408,7 +409,9 @@ class AbsInterpreter:
 
         match opr:
             case jvm.Push(value=v):
-                assert isinstance(v.value, int), f"Unsupported value type: {v.value!r}"
+                assert v.value is None or isinstance(v.value, int), (
+                    f"Unsupported value type: {v!r}"
+                )
                 # Create fresh named value for constant
                 name = state.constraints.fresh_name()
                 state.constraints[name] = abstraction_cls.abstract({v.value})
@@ -644,6 +647,11 @@ class AbsInterpreter:
                         )
 
             case a:
+                if self.debloater:
+                    logger.warning(f"Skipping debloat: {a.help()}")
+                    raise NotImplementedError(
+                        f"Not implemented command: {a} ({a.help()})"
+                    )
                 a.help()
                 sys.exit(-1)
 
@@ -677,40 +685,54 @@ class AbsInterpreter:
 
         final: set[str] = set()
         total_lines_executed = set()
-        for av in abstractions:
-            # Initialize with entry state
-            self.lines_executed = set()
-            sts = StateSet[av].initialstate_from_method(methodid, av, k_set)
+        all_failed = True  # Check if all runs failed
+        for i, av in enumerate(abstractions):
+            try:
+                # Initialize with entry state
+                self.lines_executed = set()
+                sts = StateSet[av].initialstate_from_method(methodid, av, k_set)
 
-            iteration = 0
-            while True:
-                iteration += 1
-                # Step all states that need processing
-                for s in self.manystep(sts, av):
-                    if isinstance(s, str):
-                        # Terminal state (ok/error)
-                        final.add(s)
-                    else:
-                        # Successor state: join into per_inst
-                        sts |= s
+                iteration = 0
+                while True:
+                    iteration += 1
+                    # Step all states that need processing
+                    for s in self.manystep(sts, av):
+                        if isinstance(s, str):
+                            # Terminal state (ok/error)
+                            final.add(s)
+                        else:
+                            # Successor state: join into per_inst
+                            sts |= s
 
+                    logger.debug(
+                        f"Iteration {iteration}: {len(sts.needswork)} PCs need work"
+                    )
+                    # logger.debug("Needs work: " + ", ".join(map(str, sts.needswork)))
+                    # logger.debug(f"sts:\n{sts}")
+                    logger.debug(f"Final states: {final}")
+
+                    # If needswork is empty, we've reached fixed point
+                    if not sts.needswork:
+                        logger.debug("Fixed point reached!")
+                        break
+                logger.debug(f"Executed lines {self.lines_executed}")
+                if len(total_lines_executed) == 0:
+                    total_lines_executed = self.lines_executed
+                else:
+                    # Rely on the most precise execution path
+                    total_lines_executed &= self.lines_executed
+            except Exception as e:
+                logger.debug(f"{av} failed... ({e!r})")
+                if i < len(abstractions) - 1:  # Try others first
+                    logger.debug("Trying next abstraction.")
+                    continue
+                if all_failed:
+                    logger.debug("All abstractions failed - escalating")
+                    raise
                 logger.debug(
-                    f"Iteration {iteration}: {len(sts.needswork)} PCs need work"
+                    "Last abstraction failed, but there was at least one successfull"
                 )
-                # logger.debug("Needs work: " + ", ".join(map(str, sts.needswork)))
-                # logger.debug(f"sts:\n{sts}")
-                logger.debug(f"Final states: {final}")
-
-                # If needswork is empty, we've reached fixed point
-                if not sts.needswork:
-                    logger.debug("Fixed point reached!")
-                    break
-            logger.debug(f"Executed lines {self.lines_executed}")
-            if len(total_lines_executed) == 0:
-                total_lines_executed = self.lines_executed
-            else:
-                # Rely on the most precise execution path
-                total_lines_executed &= self.lines_executed
+            all_failed = False
 
         logger.debug(f"[final] Executed lines {total_lines_executed}")
         return total_lines_executed
