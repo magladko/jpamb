@@ -8,6 +8,7 @@ from pathlib import Path
 
 import abstract_interpreter
 from abstractions.interval import Interval
+from abstractions.signset import SignSet
 from code_rewriter import CodeRewriter, RewriteResult
 from debloat_config import generate_k_set
 from interpreter import Frame, Stack, State, lines_executed, step
@@ -131,7 +132,7 @@ class DebloatOrchestrator:
     ) -> set[int]:
         """Run abstract interpreter to get coverage."""
         return abstract_interpreter.AbsInterpreter(debloater=True).analyze_coverage(
-            methodid, {Interval}, k_set
+            methodid, {Interval, SignSet}, k_set
         )
 
     def _persist_code(self, methodid: jvm.AbsMethodID, source: str) -> None:
