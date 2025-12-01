@@ -469,7 +469,6 @@ def test_meet_different_dimensions() -> None:
     poly_2d = PolyhedralDomain.abstract({(1.0, 2.0)})
 
     result = poly_1d & poly_2d
-    # CORRECT: The intersection of a 1D line and a 2D plane (without casting) is Empty.
     assert result.is_bot()
 
 
