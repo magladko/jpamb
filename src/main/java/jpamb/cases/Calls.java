@@ -95,4 +95,44 @@ public class Calls {
     }
   }
 
+  @Case("(0) -> ok")
+  @Case("(1) -> ok")
+  @Tag({ DEADCODE, CONDITIONAL })
+  public static int deadCodeMethod1(int x) {
+    if (x == 0) {
+      return 1;
+    }
+
+    if (x > 0) {
+      return 2;
+    } else {
+      if (false) {
+        System.out.println("Dead"); //unreach_000_marked
+      }
+      int y = 5;
+      y = y + 1; //unreach_000_marked
+      return 3;
+    }
+  }
+
+  @Case("() -> ok")
+  @Tag({ DEADCODE, LOOP })
+  public static void deadCodeMethod2() {
+    int i = 0;
+    while (true) {
+      if (i < 5) {
+        i++;
+        if (i == 5) {
+          break;
+        }
+      }
+    }
+
+    if (1 == 0) {
+      int z = 100; //unreach_000_marked
+      z = z * 2; //unreach_000_marked
+      System.out.println("Still dead"); //unreach_000_marked
+    }
+  }
+
 }
