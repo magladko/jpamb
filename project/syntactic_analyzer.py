@@ -16,29 +16,12 @@ COMMENT_KEYWORDS = [
 
 
 def determine_analysis_type(info: dict) -> str:
-    # 1. Recursion → abstract
     if info["isRecursive"]:
         return "abstract"
-
-    # 2. Method calls → abstract
-    if len(info["methodCalls"]) > 0:
-        return "abstract"
-
-    # 3. Complex loops → abstract
-    if len(info["whileLoops"]) > 0:
-        return "abstract"
-    if any("for" in loop for loop in info["forLoops"]):
-        return "abstract"
-
-    # 4. Parameters → abstract
     if len(info["parameters"]) > 0:
         return "abstract"
-
-    # 5. Variable dependencies → abstract
-    if len(info["dependencies"]) > 0:
+    if len(info["whileLoops"]) > 0 or len(info["forLoops"]) > 0:
         return "abstract"
-
-    # Otherwise → concrete
     return "dynamic"
 
 
