@@ -1,6 +1,4 @@
-from project.abstractions.string_set import (
-    StringDomain
-)
+from project.abstractions.string_set import StringDomain
 
 
 def test_string_domain_concatenation() -> None:

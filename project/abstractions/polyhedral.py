@@ -33,7 +33,7 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
 
     # Internal helpers
     @classmethod
-    def _as_point(cls, value: tuple[float, ...] | float | int) -> tuple[float, ...]:
+    def _as_point(cls, value: tuple[float, ...] | float) -> tuple[float, ...]:
         if isinstance(value, tuple):
             return tuple(float(v) for v in value)
         if isinstance(value, list):
@@ -72,14 +72,14 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
         return cls(dim, None)
 
     def _is_absorbing_top(self) -> bool:
-        """Special top created by meet on mismatched dimensions."""
+        """Indicate special top created by meet on mismatched dimensions."""
         return self.bounds is None and self.dimension < 0
 
     def _is_identity_top(self) -> bool:
-        """Normal top, e.g. from top() or join on mismatched dimensions."""
+        """Indicate normal top, e.g. from top() or join on mismatched dimensions."""
         return self.bounds is None and self.dimension >= 0
 
-    def __contains__(self, member: tuple[float, ...] | float | int) -> bool:
+    def __contains__(self, member: tuple[float, ...] | float) -> bool:
         if self.is_bot():
             return False
         if self.bounds is None:
@@ -171,7 +171,8 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
     # Meet and Join
 
     def __and__(self, other: Self) -> Self:
-        """Lattice meet (intersection).
+        """
+        Lattice meet (intersection).
 
         Logic:
         1. Bot is absorbing (0 & x = 0)
@@ -185,9 +186,9 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
         if other.is_bot():
             return other
 
-        # 2. ⊤ is identity
+        # 2. Top is identity
         # We handle this BEFORE checking dimensions.
-        # If 'other' is Top (even 2D Top), it imposes no constraints, so we return 'self' (1D).
+        # If 'other' is Top (even 2D Top), it imposes no constraints
         if self.bounds is None:
             return other
         if other.bounds is None:
@@ -211,7 +212,8 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
         return type(self)(self.dimension, intersected)
 
     def __or__(self, other: Self) -> Self:
-        """Lattice join (hull).
+        """
+        Lattice join (hull).
 
         Bottom is neutral and dimension-agnostic.
         Dimension mismatches between non-bottom elements yield top.
@@ -242,7 +244,7 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
         if self.is_bot():
             return "⊥poly"
         if self.bounds is None:
-            return "⊤poly"  # absorbing or identity top look the same externally
+            return "⊤poly"      # noqa: RUF001
         parts = [f"{lo}≤x{idx}≤{hi}" for idx, (lo, hi) in enumerate(self.bounds)]
         return "{" + ", ".join(parts) + "}"
 

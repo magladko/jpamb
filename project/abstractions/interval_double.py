@@ -165,16 +165,7 @@ class DoubleDomain(Abstraction[float]):
 
     __truediv__ = __div__
 
-    def __floordiv__(self, other: Self):
-        """
-        Special semantics to satisfy test_top_floor_division:
-
-        - bot involved => bot
-        - divisor is top           => (Top, "divide by zero")
-        - divisor crosses 0        => "divide by zero"
-        - self is top, divisor ok  => Top
-        - otherwise                 => same as / (interval result)
-        """
+    def __floordiv__(self, other: Self) -> Self:
         top = type(self).top()
 
         if self.is_bot() or other.is_bot():

@@ -5,6 +5,7 @@ from typing import Self
 
 from .abstraction import Abstraction
 
+
 @dataclass
 class StringDomain(Abstraction[str]):
     """Finite-set abstraction for string values."""
@@ -14,10 +15,6 @@ class StringDomain(Abstraction[str]):
 
     def is_bot(self) -> bool:
         return self.values == set()
-
-    @classmethod
-    def has_finite_lattice(cls) -> bool:
-        return True
 
     @classmethod
     def has_finite_lattice(cls) -> bool:
@@ -135,7 +132,7 @@ class StringDomain(Abstraction[str]):
         if self.is_bot() or other.is_bot():
             return {}
 
-        # If either is ⊤, we can’t refine -> unknown
+        # If either is T, we nonrefine so unknown
         if self.values is None or other.values is None:
             return self._unknown(other)
 
@@ -148,7 +145,7 @@ class StringDomain(Abstraction[str]):
                 rhs_set.add(rhs)
 
         if not results:
-            # finite but no pairs (shouldn’t really happen now, but keep fallback)
+            # keep fallback
             return self._unknown(other)
 
         translated: dict[bool, tuple[Self, Self]] = {}
