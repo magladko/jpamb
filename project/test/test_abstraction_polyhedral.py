@@ -464,12 +464,13 @@ def test_operations_on_different_dimensions_return_top() -> None:
 
 
 def test_meet_different_dimensions() -> None:
-    """Meet on different dimensions returns top."""
+    """Meet on different dimensions returns Bot (Empty Intersection)."""
     poly_1d = PolyhedralDomain.abstract({1.0, 2.0})
     poly_2d = PolyhedralDomain.abstract({(1.0, 2.0)})
 
     result = poly_1d & poly_2d
-    assert result.bounds is None  # Top
+    # CORRECT: The intersection of a 1D line and a 2D plane (without casting) is Empty.
+    assert result.is_bot()
 
 
 def test_join_different_dimensions() -> None:

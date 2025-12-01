@@ -171,44 +171,44 @@ class PolyhedralDomain(Abstraction[tuple[float, ...]]):
     # Meet and Join
 
     def __and__(self, other: Self) -> Self:
-        """Lattice meet (intersection) with cross-dimension handling."""
+        """Lattice meet (intersection).
 
-        dim1, dim2 = self.dimension, other.dimension
-        maxdim = max(dim1, dim2)
-
-        # 1. ⊥ is absorbing, keep its own dimension
+        Logic:
+        1. Bot is absorbing (0 & x = 0)
+        2. Top is identity (1 & x = x) - IGNORE dimension here!
+        3. Mismatched dimensions = Bot (Disjoint sets)
+        4. Matching dimensions = Component-wise meet
+        """
+        # 1. ⊥ is absorbing
         if self.is_bot():
             return self
         if other.is_bot():
             return other
 
-        # 2. ⊤ handling
-        if self.bounds is None and other.bounds is None:
-            # top ∧ top = top (in higher dimension, but dimension doesn't matter
-            # logically; this keeps things symmetric)
-            return type(self).top(dimension=maxdim)
+        # 2. ⊤ is identity
+        # We handle this BEFORE checking dimensions.
+        # If 'other' is Top (even 2D Top), it imposes no constraints, so we return 'self' (1D).
         if self.bounds is None:
-            # top ∧ x = x
             return other
         if other.bounds is None:
-            # x ∧ top = x
             return self
 
-        # 3. Both are proper boxes (non-top, non-bot)
-        if dim1 != dim2:
-            # Different dimensions -> lose precision, go to ⊤ in higher dim
-            return type(self).top(dimension=maxdim)
+        # 3. Dimension Mismatch
+        # If neither is Top/Bot, but dimensions differ, the sets are disjoint.
+        # Intersection of {x} and {x,y} is Empty.
+        if self.dimension != other.dimension:
+            return self.bot(max(self.dimension, other.dimension))
 
-        # Same dimension: coordinate-wise intersection
+        # 4. Same-dimension boxes: coordinate-wise intersection
         intersected: list[tuple[float, float]] = []
         for (lo1, hi1), (lo2, hi2) in zip(self.bounds, other.bounds, strict=True):
             lo = max(lo1, lo2)
             hi = min(hi1, hi2)
             if lo > hi:
-                # Empty intersection -> ⊥ in this dimension
-                return type(self).bot(dimension=dim1)
+                return type(self).bot(self.dimension)
             intersected.append((lo, hi))
-        return type(self)(dim1, intersected)
+
+        return type(self)(self.dimension, intersected)
 
     def __or__(self, other: Self) -> Self:
         """Lattice join (hull).
