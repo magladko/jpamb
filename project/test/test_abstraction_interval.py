@@ -576,8 +576,8 @@ def test_top_modulus(i: Interval) -> None:
     top = Interval.top()
 
     if i.is_bot():
-        assert (top % i).is_bot() # pyright: ignore[reportAttributeAccessIssue]
-        assert (i % top).is_bot() # pyright: ignore[reportAttributeAccessIssue]
+        assert (top % i).is_bot()  # pyright: ignore[reportAttributeAccessIssue]
+        assert (i % top).is_bot()  # pyright: ignore[reportAttributeAccessIssue]
         return
 
     # 1. Top % i
