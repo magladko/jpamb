@@ -95,4 +95,19 @@ public class Calls {
     }
   }
 
+  public static void redundantExamples() 
+  {
+    {}
+
+    if (false) {
+        System.out.println("Never runs");
+    } else {
+        System.out.println("Always runs");
+    }
+
+    while (false) {
+        System.out.println("Unreachable loop");
+    }
+  }
+
 }
